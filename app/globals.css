@@ -1,0 +1,38 @@
+@import "katex/dist/katex.min.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  body {
+    @apply bg-bg text-fg antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background-color: rgba(28, 28, 26, 0.14);
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-border bg-bg-raised shadow-card;
+  }
+  .card-raised {
+    @apply rounded-lg border border-border bg-bg-raised shadow-card;
+  }
+  .pill {
+    @apply inline-flex items-center rounded-full border border-border bg-bg-subtle px-2.5 py-0.5 text-xs font-medium text-fg-muted;
+  }
+}
+
+/* KaTeX tweaks: keep block math from clipping descenders */
+.katex-display {
+  margin: 0.6em 0 !important;
+}
+.katex {
+  font-size: 1.05em;
+}
