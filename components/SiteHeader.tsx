@@ -19,8 +19,6 @@ async function loadProfile(anonId: string): Promise<ProfileSummary | null> {
     if (error || !data) return null;
     return data as ProfileSummary;
   } catch {
-    // Supabase project unreachable (network/auth). Header still renders;
-    // we just hide the streak chip.
     return null;
   }
 }
@@ -46,9 +44,8 @@ export async function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-1 sm:flex">
-          <HeaderLink href="/researcher" label="Researcher" />
-          <HeaderLink href="/trader" label="Trader" disabled />
-          <HeaderLink href="/dev" label="Dev" disabled />
+          <HeaderLink href="/questions" label="Questions" />
+          <HeaderLink href="/playlists" label="Playlists" />
         </nav>
 
         <div className="flex items-center gap-2 text-xs">
@@ -74,22 +71,7 @@ export async function SiteHeader() {
   );
 }
 
-function HeaderLink({
-  href,
-  label,
-  disabled,
-}: {
-  href: string;
-  label: string;
-  disabled?: boolean;
-}) {
-  if (disabled) {
-    return (
-      <span className="cursor-not-allowed rounded-md px-3 py-1.5 text-sm text-fg-subtle">
-        {label}
-      </span>
-    );
-  }
+function HeaderLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}

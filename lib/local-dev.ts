@@ -1,9 +1,35 @@
-import { RESEARCHER_SEED, type SeedQuestion } from "@/content/researcher-seed";
+/**
+ * Local-dev fallback for the entire app.
+ *
+ * When `.env.local` still has placeholder values, the app boots in this
+ * mode: questions come from the topic-keyed seed bundle, attempts and
+ * profile updates live in process memory, and the freeform/code paths
+ * use the keyword grader and a mock Piston runner respectively.
+ *
+ * This module's surface mirrors the Supabase paths so the API routes and
+ * pages can branch on `isSupabaseConfigured()` and otherwise call the
+ * same shapes.
+ */
+
+import type {
+  PlaylistDef,
+  SeedQuestion,
+  Topic,
+} from "@/content/question-types";
+import { ALL_SEED_QUESTIONS } from "@/content/seed";
+import { PLAYLISTS } from "@/content/playlists";
 import { checkAnswer } from "@/lib/answer-check";
+import { checkMcq } from "@/lib/check-mcq";
 import { scrubAnswer, type NudgeInput } from "@/lib/anthropic";
 
-export interface LocalQuestion extends SeedQuestion {
+export interface LocalQuestion extends Omit<SeedQuestion, "answer_value"> {
   id: string;
+  /**
+   * Stored as `string | null` to match the v2 schema (code/freeform may
+   * not have an answer_value). For numeric/fraction/exact/mcq it's still
+   * a string and matches the original SeedQuestion field exactly.
+   */
+  answer_value: string | null;
 }
 
 interface LocalAttempt {
@@ -19,7 +45,8 @@ interface LocalAttempt {
 interface LocalProfile {
   streak_count: number;
   total_points: number;
-  researcher_level: number;
+  /** Per-topic XP-style level. Replaces the v1 per-track levels. */
+  topic_levels: Partial<Record<Topic, number>>;
   last_correct_at: string | null;
 }
 
@@ -27,24 +54,32 @@ interface CachedHint {
   hint_text: string;
 }
 
+interface CachedGrade {
+  passed: boolean;
+  feedback: string;
+  provider: string;
+}
+
 const POINTS_BY_DIFFICULTY = [0, 5, 10, 20, 35, 60];
 const DAILY_NUDGE_LIMIT = 30;
 
-const localQuestions: LocalQuestion[] = RESEARCHER_SEED.map((q, idx) => ({
+const localQuestions: LocalQuestion[] = ALL_SEED_QUESTIONS.map((q, idx) => ({
   ...q,
   id: `00000000-0000-4000-8000-${String(idx + 1).padStart(12, "0")}`,
+  answer_value: (q as { answer_value?: string | null }).answer_value ?? null,
 }));
 
 const attemptsByUser = new Map<string, LocalAttempt[]>();
 const profilesByUser = new Map<string, LocalProfile>();
 const hintsCache = new Map<string, CachedHint>();
+const gradeCache = new Map<string, CachedGrade>();
 const usageByUserDay = new Map<string, number>();
 
 function defaultProfile(): LocalProfile {
   return {
     streak_count: 0,
     total_points: 0,
-    researcher_level: 1,
+    topic_levels: {},
     last_correct_at: null,
   };
 }
@@ -59,13 +94,13 @@ function levelFromPoints(totalPoints: number): number {
 
 function awardLocalCorrect(
   anonId: string,
+  topic: Topic,
   difficulty: number,
   hintLevelsUsed: number
 ): LocalProfile {
   const profile = profilesByUser.get(anonId) ?? defaultProfile();
   const basePoints =
-    POINTS_BY_DIFFICULTY[Math.min(difficulty, POINTS_BY_DIFFICULTY.length - 1)] ??
-    5;
+    POINTS_BY_DIFFICULTY[Math.min(difficulty, POINTS_BY_DIFFICULTY.length - 1)] ?? 5;
   const awarded = Math.max(
     1,
     basePoints - hintLevelsUsed * Math.ceil(basePoints / 4)
@@ -79,7 +114,9 @@ function awardLocalCorrect(
   profile.total_points += awarded;
   profile.streak_count = withinStreakWindow ? profile.streak_count + 1 : 1;
   profile.last_correct_at = now.toISOString();
-  profile.researcher_level = levelFromPoints(profile.total_points);
+  const nextLevel = levelFromPoints(profile.total_points);
+  const current = profile.topic_levels[topic] ?? 1;
+  profile.topic_levels[topic] = Math.max(current, nextLevel);
 
   profilesByUser.set(anonId, profile);
   return profile;
@@ -93,8 +130,16 @@ function ensureProfile(anonId: string): LocalProfile {
   return fresh;
 }
 
-export function getLocalResearcherQuestions(): LocalQuestion[] {
-  return [...localQuestions];
+// ---------------------------------------------------------------------------
+// Question lookups
+// ---------------------------------------------------------------------------
+
+export function getAllLocalQuestions(): LocalQuestion[] {
+  return localQuestions;
+}
+
+export function getLocalQuestionsForTopic(topic: Topic): LocalQuestion[] {
+  return localQuestions.filter((q) => q.topic === topic);
 }
 
 export function getLocalQuestionBySlug(slug: string): LocalQuestion | undefined {
@@ -104,6 +149,16 @@ export function getLocalQuestionBySlug(slug: string): LocalQuestion | undefined 
 export function getLocalQuestionById(id: string): LocalQuestion | undefined {
   return localQuestions.find((q) => q.id === id);
 }
+
+export function getLocalQuestionByAnyKey(
+  key: string
+): LocalQuestion | undefined {
+  return getLocalQuestionById(key) ?? getLocalQuestionBySlug(key);
+}
+
+// ---------------------------------------------------------------------------
+// Profile + attempts
+// ---------------------------------------------------------------------------
 
 export function getLocalProfile(anonId: string | null): LocalProfile {
   if (!anonId) return defaultProfile();
@@ -121,7 +176,9 @@ export function getLocalAttemptsForQuestion(
   anonId: string | null,
   questionId: string
 ): LocalAttempt[] {
-  return getLocalAttemptsForUser(anonId).filter((a) => a.question_id === questionId);
+  return getLocalAttemptsForUser(anonId).filter(
+    (a) => a.question_id === questionId
+  );
 }
 
 export function getLocalAttemptById(
@@ -131,32 +188,72 @@ export function getLocalAttemptById(
   return (attemptsByUser.get(anonId) ?? []).find((a) => a.id === attemptId);
 }
 
-export function recordLocalAttempt(input: {
+interface RecordLocalAttemptInput {
   anonId: string;
   questionId: string;
   submittedAnswer: string;
   hintLevelsUsed: number;
-}) {
+  /** Override correctness — used for freeform/code where the kind-specific
+   *  evaluator already produced a verdict before we hit this writer. */
+  precomputedCorrect?: boolean;
+  precomputedErrorSignature?: string;
+}
+
+export function recordLocalAttempt(input: RecordLocalAttemptInput) {
   const question = getLocalQuestionById(input.questionId);
   if (!question) return null;
 
   ensureProfile(input.anonId);
 
-  const result = checkAnswer(
-    {
-      answer_kind: question.answer_kind,
-      answer_value: question.answer_value,
-      answer_tolerance: question.answer_tolerance,
-    },
-    input.submittedAnswer
-  );
+  let correct: boolean;
+  let errorSignature: string;
+
+  if (typeof input.precomputedCorrect === "boolean") {
+    correct = input.precomputedCorrect;
+    errorSignature =
+      input.precomputedErrorSignature ??
+      `${question.answer_kind}:${input.submittedAnswer.trim().toLowerCase()}`;
+  } else if (question.answer_kind === "mcq") {
+    const meta =
+      question.answer_meta && "options" in question.answer_meta
+        ? question.answer_meta
+        : { options: [] };
+    const r = checkMcq(
+      {
+        answer_value: question.answer_value ?? "",
+        answer_meta: meta,
+      },
+      input.submittedAnswer
+    );
+    correct = r.correct;
+    errorSignature = r.errorSignature;
+  } else if (
+    question.answer_kind === "numeric" ||
+    question.answer_kind === "fraction" ||
+    question.answer_kind === "exact"
+  ) {
+    const r = checkAnswer(
+      {
+        answer_kind: question.answer_kind,
+        answer_value: question.answer_value ?? "",
+        answer_tolerance: question.answer_tolerance ?? null,
+      },
+      input.submittedAnswer
+    );
+    correct = r.correct;
+    errorSignature = r.errorSignature;
+  } else {
+    // freeform / code without a precomputed verdict: refuse to mark correct.
+    correct = false;
+    errorSignature = `unevaluated:${question.answer_kind}`;
+  }
 
   const attempt: LocalAttempt = {
     id: crypto.randomUUID(),
     anon_user_id: input.anonId,
     question_id: question.id,
     submitted_answer: input.submittedAnswer,
-    is_correct: result.correct,
+    is_correct: correct,
     hint_levels_used: input.hintLevelsUsed,
     created_at: new Date().toISOString(),
   };
@@ -165,12 +262,25 @@ export function recordLocalAttempt(input: {
   list.unshift(attempt);
   attemptsByUser.set(input.anonId, list);
 
-  if (result.correct) {
-    awardLocalCorrect(input.anonId, question.difficulty, input.hintLevelsUsed);
+  if (correct) {
+    awardLocalCorrect(
+      input.anonId,
+      question.topic,
+      question.difficulty,
+      input.hintLevelsUsed
+    );
   }
 
-  return { attempt, result, question };
+  return {
+    attempt,
+    result: { correct, errorSignature },
+    question,
+  };
 }
+
+// ---------------------------------------------------------------------------
+// Nudge usage + hint cache
+// ---------------------------------------------------------------------------
 
 export function bumpLocalNudgeUsage(anonId: string): number {
   const key = todayKey(anonId);
@@ -192,7 +302,10 @@ export function getLocalCachedHint(
   errorSignature: string,
   level: number
 ): string | null {
-  return hintsCache.get(hintCacheKey(questionId, errorSignature, level))?.hint_text ?? null;
+  return (
+    hintsCache.get(hintCacheKey(questionId, errorSignature, level))?.hint_text ??
+    null
+  );
 }
 
 export function setLocalCachedHint(
@@ -205,6 +318,58 @@ export function setLocalCachedHint(
     hint_text: hintText,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Grade cache (freeform)
+// ---------------------------------------------------------------------------
+
+export function getLocalCachedGrade(
+  questionId: string,
+  answerHash: string
+): CachedGrade | null {
+  return gradeCache.get(`${questionId}:${answerHash}`) ?? null;
+}
+
+export function setLocalCachedGrade(
+  questionId: string,
+  answerHash: string,
+  grade: CachedGrade
+) {
+  gradeCache.set(`${questionId}:${answerHash}`, grade);
+}
+
+// ---------------------------------------------------------------------------
+// Playlists
+// ---------------------------------------------------------------------------
+
+export interface LocalPlaylist extends PlaylistDef {
+  id: string;
+}
+
+const localPlaylists: LocalPlaylist[] = PLAYLISTS.map((p, idx) => ({
+  ...p,
+  id: `00000000-0000-4000-9000-${String(idx + 1).padStart(12, "0")}`,
+}));
+
+export function getLocalPlaylists(): LocalPlaylist[] {
+  return localPlaylists;
+}
+
+export function getLocalPlaylistBySlug(slug: string): LocalPlaylist | undefined {
+  return localPlaylists.find((p) => p.slug === slug);
+}
+
+export function getLocalPlaylistQuestions(slug: string): LocalQuestion[] {
+  const pl = getLocalPlaylistBySlug(slug);
+  if (!pl) return [];
+  return pl.question_slugs
+    .map((qs) => getLocalQuestionBySlug(qs))
+    .filter((q): q is LocalQuestion => !!q);
+}
+
+// ---------------------------------------------------------------------------
+// Tag-driven nudge generator (offline + no Anthropic key)
+// ---------------------------------------------------------------------------
 
 function tagDrivenHint(question: LocalQuestion, level: 1 | 2 | 3): string {
   const tags = new Set(question.tags);
@@ -259,6 +424,111 @@ function tagDrivenHint(question: LocalQuestion, level: 1 | 2 | 3): string {
     return "Your next intermediate quantity should be the total number of equally likely outcomes in the sample space.";
   }
 
+  if (tags.has("ev") || tags.has("risk-reward")) {
+    if (level === 1) {
+      return "Separate upside, downside, and their probabilities before you do any arithmetic.";
+    }
+    if (level === 2) {
+      return "Write expected value explicitly as probability-weighted payoff minus any fixed cost to enter the trade.";
+    }
+    return "Your next intermediate step is the full EV expression with each scenario written out term by term.";
+  }
+
+  if (tags.has("market-making") || tags.has("spread") || tags.has("fill-probability")) {
+    if (level === 1) {
+      return "Be careful about where you start relative to the mid, because crossing or capturing half the spread changes the sign of the edge.";
+    }
+    if (level === 2) {
+      return "Split the problem into spread capture, directional move, and fill probability, then combine them in one expectation.";
+    }
+    return "Your next intermediate quantity should be either the half-spread cost or the conditional EV given a fill, depending on the prompt.";
+  }
+
+  if (tags.has("mental-math") || tags.has("percentages") || tags.has("bps")) {
+    if (level === 1) {
+      return "Use benchmark percentages like $1\\%$, $10\\%$, or half the spread first, then scale from there mentally.";
+    }
+    if (level === 2) {
+      return "Rewrite the computation into an easy base unit, such as basis points, one percent, or half a quoted spread.";
+    }
+    return "Your next intermediate number should be the clean benchmark quantity before you adjust it up or down.";
+  }
+
+  if (tags.has("options") || tags.has("payoff") || tags.has("greeks")) {
+    if (level === 1) {
+      return "First decide whether the option finishes in the money at all before you compute any payoff.";
+    }
+    if (level === 2) {
+      return "Use the expiry payoff formula directly: for a call take $\\max(S-K,0)$, and for a put take $\\max(K-S,0)$.";
+    }
+    return "Your next intermediate step is the intrinsic value before considering any premium or transaction cost.";
+  }
+
+  if (tags.has("signal-combination")) {
+    if (level === 1) {
+      return "Break the outcome into the three disjoint cases: both right, both wrong, and split signals.";
+    }
+    if (level === 2) {
+      return "Apply the law of total probability across agreement and tie cases, then handle the tiebreak separately.";
+    }
+    return "Your next intermediate quantity should be the probability of a tie, because that is the only part where the coin flip matters.";
+  }
+
+  if (
+    tags.has("hashmap") ||
+    tags.has("arrays") ||
+    tags.has("stack") ||
+    tags.has("strings") ||
+    tags.has("design") ||
+    tags.has("linked-list")
+  ) {
+    if (level === 1) {
+      return "First decide on the right data structure: a hash map for $O(1)$ lookups, a stack for matched pairs, or a linked list for $O(1)$ removal.";
+    }
+    if (level === 2) {
+      return "Write the loop invariant — what each entry in your data structure represents at the moment of insertion — before coding.";
+    }
+    return "Your next intermediate step is to handle the smallest non-trivial test case by hand and confirm the data-structure operations match.";
+  }
+
+  if (
+    tags.has("synchronization") ||
+    tags.has("deadlock") ||
+    tags.has("memory-model") ||
+    tags.has("condition-variables") ||
+    tags.has("semaphores") ||
+    tags.has("singleton") ||
+    tags.has("lock-free")
+  ) {
+    if (level === 1) {
+      return "Identify exactly which invariant breaks under interleaved execution before reaching for a primitive.";
+    }
+    if (level === 2) {
+      return "Match the right primitive to that invariant: a mutex for shared state, condition variables for waiting, atomics with acquire/release for ordering.";
+    }
+    return "Your next intermediate step is to enumerate the bad interleaving and show how your primitive prevents exactly that interleaving.";
+  }
+
+  if (tags.has("lld") || tags.has("oop") || tags.has("encoding")) {
+    if (level === 1) {
+      return "Sketch the entities and their responsibilities first; the data structures fall out of that, not the other way around.";
+    }
+    if (level === 2) {
+      return "Once entities are clear, give each one a single primary method (park/unpark, shorten/expand, subscribe/publish) and lock concurrency at the smallest aggregate that needs it.";
+    }
+    return "Your next intermediate step is the full method signature on each class, including the return type and the locking scope.";
+  }
+
+  if (tags.has("clt") || tags.has("variance") || tags.has("order-statistics")) {
+    if (level === 1) {
+      return "Identify which moment or limit theorem the question is really probing — variance scaling, the CLT, or the distribution of the min/max.";
+    }
+    if (level === 2) {
+      return "Write the relevant formula directly: $\\mathrm{Var}(X) = E[X^2] - E[X]^2$, the CLT scaling $\\sqrt{n}$, or the order-statistic CDF.";
+    }
+    return "Your next intermediate step is to plug the parameters into that formula symbolically before you simplify.";
+  }
+
   if (level === 1) {
     return "Step back and identify exactly what event or random variable the question is asking you to compute.";
   }
@@ -268,7 +538,9 @@ function tagDrivenHint(question: LocalQuestion, level: 1 | 2 | 3): string {
   return "Your next step should be one clean intermediate quantity, such as the sample-space size, a conditioning split, or a recurrence.";
 }
 
-export function generateLocalNudge(input: NudgeInput & { questionId: string }): string {
+export function generateLocalNudge(
+  input: NudgeInput & { questionId: string }
+): string {
   const question = getLocalQuestionById(input.questionId);
   const base =
     question != null

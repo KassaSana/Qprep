@@ -116,12 +116,14 @@ $$;
 
 -- Award points and update streak when an attempt is correct.
 -- Streak resets to 1 if the previous correct attempt was more than 36 hours ago.
-create or replace function public.award_correct(p_anon uuid, p_points int)
+create or replace function public.award_correct(p_anon uuid, p_points int, p_track text)
 returns void
 language plpgsql
 as $$
 declare
   v_last timestamptz;
+  v_total int;
+  v_level int;
 begin
   insert into public.anon_users (id) values (p_anon)
   on conflict (id) do nothing;
@@ -137,6 +139,15 @@ begin
         else streak_count + 1
       end,
       last_seen_at = now()
+  where id = p_anon
+  returning total_points into v_total;
+
+  v_level := 1 + floor(v_total / 100.0);
+
+  update public.anon_users
+  set researcher_level = case when p_track = 'researcher' then v_level else researcher_level end,
+      trader_level = case when p_track = 'trader' then v_level else trader_level end,
+      dev_level = case when p_track = 'dev' then v_level else dev_level end
   where id = p_anon;
 end
 $$;

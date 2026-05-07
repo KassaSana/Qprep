@@ -1,8 +1,20 @@
 /**
- * Answer validation for QPrep.
+ * Numeric / fraction / exact answer validation.
  *
- * Three "kinds" of answers are supported on a Question row:
+ * After the v2 plan there are six answer kinds total — see `AnswerKind` —
+ * but only `numeric | fraction | exact` are evaluated by this file. The
+ * other three (`mcq`, `freeform`, `code`) live in their own modules:
  *
+ *   - `mcq`      -> lib/check-mcq.ts
+ *   - `freeform` -> lib/grade-freeform.ts
+ *   - `code`     -> lib/runner.ts (judging) plus check via test-case results
+ *
+ * The dispatcher in `app/api/check/route.ts` picks the right module by
+ * `answer_kind`. This file's surface (`checkAnswer`, `parseNumeric`,
+ * `CheckResult`, `QuestionAnswerSpec`) is unchanged from v1 so existing
+ * unit tests still pass.
+ *
+ * Numeric / fraction / exact contract:
  *   numeric  -> answer_value parses as a float, compared with answer_tolerance
  *   fraction -> answer_value is "p/q" (or any of the numeric forms below);
  *               the user's answer is normalized to a float and compared with
@@ -14,10 +26,23 @@
  * (e.g. "1/4" vs "0.25") share a cached hint.
  */
 
-export type AnswerKind = "numeric" | "fraction" | "exact";
+export type AnswerKind =
+  | "numeric"
+  | "fraction"
+  | "exact"
+  | "mcq"
+  | "freeform"
+  | "code";
+
+/**
+ * Subset of `AnswerKind` that this module knows how to evaluate. The
+ * dispatcher narrows incoming kinds to this union before calling
+ * `checkAnswer`.
+ */
+export type NumericAnswerKind = "numeric" | "fraction" | "exact";
 
 export interface QuestionAnswerSpec {
-  answer_kind: AnswerKind;
+  answer_kind: NumericAnswerKind;
   answer_value: string;
   answer_tolerance: number | null;
 }

@@ -92,7 +92,7 @@ export async function POST(req: Request) {
             questionTitle: question.title,
             questionPromptMd: question.prompt_md,
             submittedAnswer: attempt.submitted_answer,
-            canonicalAnswer: question.answer_value,
+            canonicalAnswer: question.answer_value ?? "",
           })
         : generateLocalNudge({
             level: payload.level as NudgeLevel,
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
             questionTitle: question.title,
             questionPromptMd: question.prompt_md,
             submittedAnswer: attempt.submitted_answer,
-            canonicalAnswer: question.answer_value,
+            canonicalAnswer: question.answer_value ?? "",
           });
 
     setLocalCachedHint(question.id, errorSignature, payload.level, hint);
@@ -192,7 +192,7 @@ export async function POST(req: Request) {
       questionTitle: question.title as string,
       questionPromptMd: question.prompt_md as string,
       submittedAnswer: attempt.submitted_answer as string,
-      canonicalAnswer: question.answer_value as string,
+      canonicalAnswer: (question.answer_value as string | null) ?? "",
     });
   } catch (err) {
     console.error("generateNudge failed", err);

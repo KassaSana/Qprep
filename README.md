@@ -1,10 +1,15 @@
 # QPrep
 
-An agent-first quant interview practice site. v1 ships the **Quant Researcher**
-track: probability and stochastic problems with KaTeX-rendered LaTeX, server-side
-answer validation, and a 3-level **Agentic Nudge Engine** powered by
-Claude 4.7 Opus that points at your specific reasoning gap without revealing
-the final number.
+An agent-first quant interview practice site. The current build ships two
+tracks:
+
+- **Quant Researcher**: probability and stochastic problems
+- **Quant Trader**: expected-value, market-making intuition, payoffs, and fast
+  mental-math prompts
+
+Both use KaTeX-rendered LaTeX, server-side answer validation, and a 3-level
+**Agentic Nudge Engine** powered by Claude 4.7 Opus that points at your
+specific reasoning gap without revealing the final number.
 
 ## Stack
 
@@ -65,8 +70,8 @@ so equivalent mistakes don't pay for a second model call.
    npm run seed
    ```
 
-   This upserts ~20 researcher problems (Bayes, Monty Hall, expected value,
-   random walks, etc.) into the `questions` table.
+   This upserts the current researcher and trader problem sets into the
+   `questions` table.
 
 5. **Run the app**
 
@@ -77,12 +82,8 @@ so equivalent mistakes don't pay for a second model call.
    Then open <http://localhost:3000>.
 
    If `.env.local` is still using placeholder values, the app now boots in a
-   local preview mode: the Researcher track reads from the built-in seed bank,
-   stores progress in memory, and serves deterministic fallback nudges so you
-   can explore the full flow before wiring real services.
-
-   If `.env.local` is still using placeholder values, the app now boots in a
-   local preview mode: the Researcher track reads from the built-in seed bank,
+   local preview mode: the Researcher and Trader tracks read from the built-in
+   seed bank,
    stores progress in memory, and serves deterministic fallback nudges so you
    can explore the full flow before wiring real services.
 
@@ -99,9 +100,11 @@ equivalence, exact string normalization, and stable error signatures.
 
 ```
 app/
-  page.tsx                       # track picker (Researcher only in v1)
+  page.tsx                       # track picker
   researcher/page.tsx            # question list + streak/points dashboard
   researcher/q/[slug]/page.tsx   # question view with KaTeX + AnswerForm
+  trader/page.tsx                # trader list + streak/points dashboard
+  trader/q/[slug]/page.tsx       # trader question view with KaTeX + AnswerForm
   api/check/route.ts             # validate answer + log attempt + award points
   api/nudge/route.ts             # 3-level Claude hint with cache + rate limit
 components/
@@ -110,11 +113,14 @@ components/
   NudgePanel.tsx                 # 3-level escalating hint UI
   ui/{button,input}.tsx
 content/
-  researcher-seed.ts             # typed problem fixtures
+  researcher-seed.ts             # typed probability / stochastic fixtures
+  trader-seed.ts                 # typed trader EV / payoff / mental-math fixtures
+  question-types.ts              # shared SeedQuestion / Track types
 lib/
   anon.ts                        # getAnonId() helper for cookie session
   answer-check.ts                # numeric/fraction/exact validator
   anthropic.ts                   # Claude client + scrubAnswer()
+  local-dev.ts                   # in-memory local preview bank + progress store
   supabase/{server,client}.ts
 proxy.ts                         # Next.js 16 proxy: sets `qprep_anon` cookie
 scripts/
@@ -128,8 +134,8 @@ supabase/
 
 - Real auth (Supabase Auth) — `anon_users.id` is a UUID so the migration is a
   rename, not a rewrite.
-- Quant Trader track — Rapid Fire mental-math timer (sub-10ms JS interval, no
-  AI in the hot loop).
+- Quant Trader Rapid Fire mode — sub-10ms timer and hot-loop drills (separate
+  from the current trader problem bank).
 - Quant Dev (SWE) track — algorithmic prompts.
 - Question mutation pipeline — Claude-driven variants of seed problems so users
   can't memorize an answer key from a PDF.

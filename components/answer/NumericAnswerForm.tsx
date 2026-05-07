@@ -15,13 +15,15 @@ export interface PriorAttempt {
   createdAt: string;
 }
 
-interface AnswerFormProps {
+interface NumericAnswerFormProps {
   questionId: string;
   questionTitle: string;
   solutionMd: string | null;
   priorAttempts?: PriorAttempt[];
   /** True if any prior attempt was correct. We unlock the solution from the start in that case. */
   alreadySolved?: boolean;
+  /** Placeholder shown in the input. */
+  placeholder?: string;
 }
 
 type Status =
@@ -32,22 +34,21 @@ type Status =
 
 const SURRENDER_AFTER_WRONG_ATTEMPTS = 3;
 
-export function AnswerForm({
+export function NumericAnswerForm({
   questionId,
   questionTitle,
   solutionMd,
   priorAttempts = [],
   alreadySolved = false,
-}: AnswerFormProps) {
+  placeholder = "Your answer (e.g. 1/3, 0.5, 6)",
+}: NumericAnswerFormProps) {
   const router = useRouter();
   const [value, setValue] = React.useState("");
   const [status, setStatus] = React.useState<Status>({ kind: "idle" });
   const [hintLevelsUsed, setHintLevelsUsed] = React.useState(0);
   const [showSolution, setShowSolution] = React.useState(alreadySolved);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
-  const [sessionAttempts, setSessionAttempts] = React.useState<PriorAttempt[]>(
-    []
-  );
+  const [sessionAttempts, setSessionAttempts] = React.useState<PriorAttempt[]>([]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,11 +87,7 @@ export function AnswerForm({
         setStatus({ kind: "correct", attemptId: data.attemptId });
         router.refresh();
       } else {
-        setStatus({
-          kind: "wrong",
-          attemptId: data.attemptId,
-          submitted,
-        });
+        setStatus({ kind: "wrong", attemptId: data.attemptId, submitted });
       }
     } catch (err) {
       console.error(err);
@@ -141,7 +138,7 @@ export function AnswerForm({
         <Input
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Your answer (e.g. 1/3, 0.5, 6)"
+          placeholder={placeholder}
           disabled={isCorrect || isChecking}
           autoFocus
           aria-label={`Answer for ${questionTitle}`}

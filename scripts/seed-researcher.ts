@@ -1,18 +1,68 @@
 /**
- * Seed Supabase with the Quant Researcher question bank.
+ * Seed Supabase with the current question bank and curated playlists.
  *
  * Usage:
  *   npm run seed
  *
  * Requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local.
- * Idempotent: upserts on the unique `slug` column.
+ * Idempotent: questions upsert on `slug`, playlists upsert on `slug`,
+ * playlist_questions are wiped and reinserted per playlist.
+ *
+ * The script writes the v2 columns (topic, companies, answer_meta, is_premium)
+ * and also fills in the legacy `track` column (when a question carries one)
+ * so installations still on the v1 schema keep working until they apply
+ * `0002_unified_bank.sql`.
  */
 
 import { config as loadEnv } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
-import { RESEARCHER_SEED } from "../content/researcher-seed";
+import { ALL_SEED_QUESTIONS } from "../content/seed";
+import { PLAYLISTS } from "../content/playlists";
+import type { SeedQuestion } from "../content/question-types";
 
 loadEnv({ path: ".env.local" });
+
+interface QuestionRow {
+  slug: string;
+  topic: string;
+  track: string | null;
+  title: string;
+  prompt_md: string;
+  solution_md: string;
+  answer_kind: string;
+  answer_value: string | null;
+  answer_tolerance: number | null;
+  answer_meta: unknown;
+  difficulty: number;
+  tags: string[];
+  companies: string[];
+  is_premium: boolean;
+  source: string;
+}
+
+function toQuestionRow(q: SeedQuestion): QuestionRow {
+  const answer_value = (q as { answer_value?: string | null }).answer_value ?? null;
+  const answer_tolerance =
+    (q as { answer_tolerance?: number | null }).answer_tolerance ?? null;
+  const answer_meta = (q as { answer_meta?: unknown }).answer_meta ?? null;
+  return {
+    slug: q.slug,
+    topic: q.topic,
+    track: q.track ?? null,
+    title: q.title,
+    prompt_md: q.prompt_md,
+    solution_md: q.solution_md,
+    answer_kind: q.answer_kind,
+    answer_value,
+    answer_tolerance,
+    answer_meta,
+    difficulty: q.difficulty,
+    tags: q.tags,
+    companies: q.companies ?? [],
+    is_premium: q.is_premium ?? false,
+    source: q.source,
+  };
+}
 
 async function main() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -28,22 +78,82 @@ async function main() {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  console.log(`Seeding ${RESEARCHER_SEED.length} researcher problems...`);
+  const rows = ALL_SEED_QUESTIONS.map(toQuestionRow);
+  console.log(
+    `Seeding ${rows.length} questions across ${new Set(rows.map((r) => r.topic)).size} topics...`
+  );
 
-  const { data, error } = await sb
+  const { data: questions, error } = await sb
     .from("questions")
-    .upsert(RESEARCHER_SEED, { onConflict: "slug" })
-    .select("id, slug, title");
+    .upsert(rows, { onConflict: "slug" })
+    .select("id, slug, title, topic, answer_kind");
 
   if (error) {
-    console.error("Seed failed:", error.message);
+    console.error("Question upsert failed:", error.message);
     process.exit(1);
   }
 
-  for (const row of data ?? []) {
-    console.log(`  ${row.slug.padEnd(38)}  ${row.title}`);
+  for (const row of questions ?? []) {
+    console.log(
+      `  [${String(row.topic).padEnd(15)}] ${String(row.answer_kind).padEnd(8)} ${String(row.slug).padEnd(38)}  ${row.title}`
+    );
   }
-  console.log(`Done. Inserted/updated ${data?.length ?? 0} rows.`);
+
+  // Build slug -> id map for playlist linkage.
+  const slugToId = new Map<string, string>();
+  for (const q of questions ?? []) {
+    slugToId.set(q.slug as string, q.id as string);
+  }
+
+  console.log(`\nUpserting ${PLAYLISTS.length} playlists...`);
+  const playlistRows = PLAYLISTS.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    description: p.description,
+    hero_emoji: p.hero_emoji,
+    is_premium: !!p.is_premium,
+  }));
+  const { data: playlists, error: plErr } = await sb
+    .from("playlists")
+    .upsert(playlistRows, { onConflict: "slug" })
+    .select("id, slug, name");
+  if (plErr) {
+    console.error("Playlist upsert failed:", plErr.message);
+    process.exit(1);
+  }
+
+  const playlistSlugToId = new Map<string, string>();
+  for (const p of playlists ?? []) {
+    playlistSlugToId.set(p.slug as string, p.id as string);
+  }
+
+  for (const def of PLAYLISTS) {
+    const playlistId = playlistSlugToId.get(def.slug);
+    if (!playlistId) continue;
+    // Wipe and reinsert so reordering / removal is reflected.
+    await sb.from("playlist_questions").delete().eq("playlist_id", playlistId);
+    const links = def.question_slugs
+      .map((slug, idx) => ({
+        playlist_id: playlistId,
+        question_id: slugToId.get(slug),
+        position: idx,
+      }))
+      .filter((r) => !!r.question_id);
+    if (links.length === 0) {
+      console.warn(`  ! ${def.slug}: no resolvable question slugs`);
+      continue;
+    }
+    const { error: linkErr } = await sb
+      .from("playlist_questions")
+      .insert(links);
+    if (linkErr) {
+      console.error(`  ! playlist_questions insert for ${def.slug} failed:`, linkErr.message);
+      continue;
+    }
+    console.log(`  [${def.slug.padEnd(28)}]  ${def.name}  (${links.length} questions)`);
+  }
+
+  console.log(`\nDone. Inserted/updated ${questions?.length ?? 0} questions and ${playlists?.length ?? 0} playlists.`);
 }
 
 main().catch((err) => {

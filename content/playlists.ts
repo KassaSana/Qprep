@@ -1,0 +1,119 @@
+import type { PlaylistDef } from "@/content/question-types";
+
+/**
+ * Curated playlists for the v2 question bank.
+ *
+ * Each playlist is a hand-ordered list of question slugs. The playlist page
+ * resolves slugs to full Question rows and renders them in this order.
+ *
+ * A question can appear in multiple playlists. The `top-50` showcase
+ * intentionally pulls from every topic so a brand-new visitor sees a
+ * representative sample without first picking a track.
+ */
+export const PLAYLISTS: PlaylistDef[] = [
+  {
+    slug: "researcher-foundations",
+    name: "Researcher Foundations",
+    description:
+      "The probability + statistics core every quant researcher interview leans on. Bayes, expectation, order statistics, random walks.",
+    hero_emoji: "📐",
+    question_slugs: [
+      "two-dice-sum-seven",
+      "geometric-first-head-third-flip",
+      "expected-rolls-until-six",
+      "monty-hall-switch",
+      "two-children-at-least-one-boy",
+      "disease-test-bayes",
+      "birthday-23",
+      "ace-in-five-card-hand",
+      "expected-flips-until-hh",
+      "expected-flips-until-ht",
+      "max-of-two-dice",
+      "coupon-collector-four",
+      "hat-check-fixed-points",
+      "random-walk-return-step-2",
+      "gamblers-ruin-fair",
+      "stick-broken-triangle",
+      "ev-uniform-zero-one-square",
+      "ev-min-two-uniforms",
+      "variance-binomial-100-half",
+      "clt-distribution-mcq",
+    ],
+  },
+  {
+    slug: "quant-trader-core",
+    name: "Quant Trader Core",
+    description:
+      "Mental math, EV, market-making intuition, and option payoff arithmetic. Run through this twice — speed compounds.",
+    hero_emoji: "📈",
+    question_slugs: [
+      "mental-math-eight-percent-of-250",
+      "mental-math-1-point-5-percent-of-640",
+      "mid-from-bid-ask",
+      "spread-in-bps",
+      "break-even-win-rate-even-loss",
+      "coin-game-advantage",
+      "call-option-payoff",
+      "put-option-payoff",
+      "delta-of-call-mcq",
+      "edge-after-spread",
+      "inventory-weighted-mid",
+      "prob-up-after-two-signals",
+      "expected-fill-value",
+    ],
+  },
+  {
+    slug: "quant-dev-essentials",
+    name: "Quant Dev Essentials",
+    description:
+      "Algorithms, data structures, concurrency reasoning, and low-level design — the SWE side of the trading-firm interview loop.",
+    hero_emoji: "⚙️",
+    question_slugs: [
+      "two-sum",
+      "valid-parens",
+      "lru-cache-ops",
+      "dynamic-array-amortized-mcq",
+      "producer-consumer-bounded-buffer",
+      "dining-philosophers-explain",
+      "double-checked-locking-broken",
+      "lld-parking-lot",
+      "lld-url-shortener",
+      "lld-pubsub",
+    ],
+  },
+  {
+    slug: "top-50",
+    name: "Top 50",
+    description:
+      "A mixed showcase across every topic. Use this if you don't know where to start.",
+    hero_emoji: "⭐",
+    question_slugs: [
+      "monty-hall-switch",
+      "two-children-at-least-one-boy",
+      "disease-test-bayes",
+      "expected-flips-until-hh",
+      "max-of-two-dice",
+      "coupon-collector-four",
+      "birthday-23",
+      "stick-broken-triangle",
+      "gamblers-ruin-fair",
+      "secretary-named-theorem",
+      "variance-binomial-100-half",
+      "ev-min-two-uniforms",
+      "clt-distribution-mcq",
+      "break-even-win-rate-even-loss",
+      "edge-after-spread",
+      "expected-fill-value",
+      "delta-of-call-mcq",
+      "prob-up-after-two-signals",
+      "two-sum",
+      "valid-parens",
+      "lru-cache-ops",
+      "producer-consumer-bounded-buffer",
+      "double-checked-locking-broken",
+      "lld-parking-lot",
+      "lld-pubsub",
+      "dynamic-array-amortized-mcq",
+    ],
+  },
+];

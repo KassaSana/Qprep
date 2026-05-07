@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",
+    "@monaco-editor/react": "^4.7.0",
     "@supabase/supabase-js": "^2.105.1",
     "clsx": "^2.1.1",
     "katex": "^0.16.45",

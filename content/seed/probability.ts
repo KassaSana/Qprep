@@ -1,30 +1,18 @@
+import type { SeedQuestion } from "@/content/question-types";
+
 /**
- * Seed problems for the Quant Researcher track.
+ * Probability problems — the largest topic in the bank.
+ * Bayes, expectation, random walks, combinatorial sample-space counting.
  *
- * Each problem stores the prompt as Markdown with KaTeX-style math:
- *   inline:  $E[X] = \\sum x \\, p(x)$
- *   block:   $$ ... $$
- *
- * `answer_kind` controls validation (see lib/answer-check.ts).
+ * Existing v1 researcher questions (mostly probability) are migrated here
+ * unchanged except for the new `topic` discriminator and optional `companies`
+ * column. Tags are preserved so the local-dev tag-driven nudge generator
+ * keeps producing the right hint flavor.
  */
-
-export interface SeedQuestion {
-  slug: string;
-  track: "researcher";
-  title: string;
-  prompt_md: string;
-  solution_md: string;
-  answer_kind: "numeric" | "fraction" | "exact";
-  answer_value: string;
-  answer_tolerance: number | null;
-  difficulty: 1 | 2 | 3 | 4 | 5;
-  tags: string[];
-  source: string;
-}
-
-export const RESEARCHER_SEED: SeedQuestion[] = [
+export const PROBABILITY_SEED: SeedQuestion[] = [
   {
     slug: "two-dice-sum-seven",
+    topic: "Probability",
     track: "researcher",
     title: "Two Dice, Sum of Seven",
     prompt_md:
@@ -36,10 +24,12 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
     answer_tolerance: 1e-3,
     difficulty: 1,
     tags: ["combinatorics", "uniform", "warm-up"],
+    companies: ["Jane Street"],
     source: "Classic",
   },
   {
     slug: "monty-hall-switch",
+    topic: "Probability",
     track: "researcher",
     title: "Monty Hall — Always Switch",
     prompt_md:
@@ -51,10 +41,12 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
     answer_tolerance: 1e-3,
     difficulty: 2,
     tags: ["bayes", "conditioning", "classic"],
+    companies: ["Citadel", "Two Sigma"],
     source: "Selvin / Savant",
   },
   {
     slug: "two-children-at-least-one-boy",
+    topic: "Probability",
     track: "researcher",
     title: "Two Children — At Least One Boy",
     prompt_md:
@@ -66,10 +58,12 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
     answer_tolerance: 1e-3,
     difficulty: 2,
     tags: ["bayes", "conditioning"],
+    companies: ["Jane Street"],
     source: "Gardner",
   },
   {
     slug: "disease-test-bayes",
+    topic: "Probability",
     track: "researcher",
     title: "Disease Test — Posterior",
     prompt_md:
@@ -81,10 +75,12 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
     answer_tolerance: 0.01,
     difficulty: 2,
     tags: ["bayes", "applied"],
+    companies: ["D. E. Shaw"],
     source: "Classic",
   },
   {
     slug: "expected-rolls-until-six",
+    topic: "Probability",
     track: "researcher",
     title: "Expected Rolls Until a Six",
     prompt_md:
@@ -100,6 +96,7 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
   },
   {
     slug: "expected-flips-until-hh",
+    topic: "Probability",
     track: "researcher",
     title: "Expected Flips Until Two Heads in a Row",
     prompt_md:
@@ -111,10 +108,12 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
     answer_tolerance: 1e-6,
     difficulty: 3,
     tags: ["expectation", "markov-chain"],
+    companies: ["Jane Street", "SIG"],
     source: "Classic interview",
   },
   {
     slug: "expected-flips-until-ht",
+    topic: "Probability",
     track: "researcher",
     title: "Expected Flips Until HT",
     prompt_md:
@@ -130,6 +129,7 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
   },
   {
     slug: "max-of-two-dice",
+    topic: "Probability",
     track: "researcher",
     title: "Expected Max of Two Dice",
     prompt_md:
@@ -145,6 +145,7 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
   },
   {
     slug: "coupon-collector-four",
+    topic: "Probability",
     track: "researcher",
     title: "Coupon Collector (n = 4)",
     prompt_md:
@@ -160,6 +161,7 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
   },
   {
     slug: "birthday-23",
+    topic: "Probability",
     track: "researcher",
     title: "Birthday Problem — 23 People",
     prompt_md:
@@ -171,10 +173,12 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
     answer_tolerance: 0.02,
     difficulty: 2,
     tags: ["combinatorics", "approximation"],
+    companies: ["Two Sigma"],
     source: "Classic",
   },
   {
     slug: "ace-in-five-card-hand",
+    topic: "Probability",
     track: "researcher",
     title: "At Least One Ace in 5 Cards",
     prompt_md:
@@ -190,6 +194,7 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
   },
   {
     slug: "stick-broken-triangle",
+    topic: "Probability",
     track: "researcher",
     title: "Broken Stick — Triangle",
     prompt_md:
@@ -201,10 +206,12 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
     answer_tolerance: 1e-3,
     difficulty: 4,
     tags: ["geometry", "uniform", "classic"],
+    companies: ["Jane Street"],
     source: "50 Challenging Problems",
   },
   {
     slug: "hat-check-fixed-points",
+    topic: "Probability",
     track: "researcher",
     title: "Hat-Check — Expected Matches",
     prompt_md:
@@ -219,21 +226,8 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
     source: "Classic",
   },
   {
-    slug: "variance-binomial-100-half",
-    track: "researcher",
-    title: "Variance of Binomial(100, 1/2)",
-    prompt_md:
-      "Let $X \\sim \\text{Binomial}(n=100, p=1/2)$. Compute $\\mathrm{Var}(X)$.",
-    solution_md: "$\\mathrm{Var}(X) = np(1-p) = 100 \\cdot 1/2 \\cdot 1/2 = 25$.",
-    answer_kind: "numeric",
-    answer_value: "25",
-    answer_tolerance: 1e-9,
-    difficulty: 1,
-    tags: ["variance", "binomial"],
-    source: "Textbook",
-  },
-  {
     slug: "geometric-first-head-third-flip",
+    topic: "Probability",
     track: "researcher",
     title: "First Head on Third Flip",
     prompt_md:
@@ -248,12 +242,12 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
   },
   {
     slug: "random-walk-return-step-2",
+    topic: "Probability",
     track: "researcher",
     title: "Symmetric Random Walk — Back at Origin in 2 Steps",
     prompt_md:
       "A symmetric simple random walk on $\\mathbb{Z}$ starts at $0$ and at each step moves $\\pm 1$ with probability $1/2$. What is the probability it is back at $0$ after exactly $2$ steps?",
-    solution_md:
-      "$P = \\binom{2}{1}(1/2)^2 = 1/2$.",
+    solution_md: "$P = \\binom{2}{1}(1/2)^2 = 1/2$.",
     answer_kind: "fraction",
     answer_value: "1/2",
     answer_tolerance: 1e-9,
@@ -262,36 +256,8 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
     source: "Textbook",
   },
   {
-    slug: "ev-uniform-zero-one-square",
-    track: "researcher",
-    title: "$E[U^2]$ for Uniform(0,1)",
-    prompt_md:
-      "Let $U \\sim \\text{Uniform}(0, 1)$. Compute $E[U^2]$.",
-    solution_md: "$E[U^2] = \\int_0^1 u^2 \\, du = 1/3$.",
-    answer_kind: "fraction",
-    answer_value: "1/3",
-    answer_tolerance: 1e-3,
-    difficulty: 1,
-    tags: ["uniform", "integration"],
-    source: "Textbook",
-  },
-  {
-    slug: "ev-min-two-uniforms",
-    track: "researcher",
-    title: "$E[\\min(U_1, U_2)]$",
-    prompt_md:
-      "Let $U_1, U_2$ be independent $\\text{Uniform}(0, 1)$ random variables. Compute $E[\\min(U_1, U_2)]$.",
-    solution_md:
-      "$P(\\min > t) = (1-t)^2$, so $E[\\min] = \\int_0^1 (1-t)^2 \\, dt = 1/3$.",
-    answer_kind: "fraction",
-    answer_value: "1/3",
-    answer_tolerance: 1e-3,
-    difficulty: 2,
-    tags: ["order-statistics", "uniform"],
-    source: "Textbook",
-  },
-  {
     slug: "gamblers-ruin-fair",
+    topic: "Probability",
     track: "researcher",
     title: "Gambler's Ruin — Fair Game",
     prompt_md:
@@ -303,21 +269,24 @@ export const RESEARCHER_SEED: SeedQuestion[] = [
     answer_tolerance: 1e-6,
     difficulty: 3,
     tags: ["random-walk", "martingale"],
+    companies: ["SIG"],
     source: "Textbook",
   },
   {
-    slug: "secretary-named-theorem",
-    track: "researcher",
-    title: "Theorem Recognition — Optimal Stopping",
+    slug: "prob-up-after-two-signals",
+    topic: "Probability",
+    track: "trader",
+    title: "Combine Two Independent Signals",
     prompt_md:
-      "An interviewer faces $n$ candidates one at a time, in random order, and must immediately accept or reject each. The asymptotic optimal strategy rejects the first $\\lfloor n/e \\rfloor$ candidates and accepts the next who is best so far. By what name is this problem most commonly known? (Answer with two words.)",
+      "Two independent signals each predict an up move correctly with probability $0.6$. You take the majority vote of the two signals, and in case of a tie you flip a fair coin. What is the probability your final directional call is correct?",
     solution_md:
-      "This is the Secretary Problem.",
-    answer_kind: "exact",
-    answer_value: "secretary problem",
-    answer_tolerance: null,
+      "Both correct with probability $0.6^2 = 0.36$. Both wrong with probability $0.4^2 = 0.16$. A tie happens when exactly one is correct, probability $2 \\cdot 0.6 \\cdot 0.4 = 0.48$, and then you are right with probability $1/2$, contributing $0.24$. Total: $0.36 + 0.24 = 0.60$.",
+    answer_kind: "numeric",
+    answer_value: "0.6",
+    answer_tolerance: 1e-3,
     difficulty: 2,
-    tags: ["theorem-recall", "optimal-stopping"],
-    source: "Classic",
+    tags: ["signal-combination", "probability", "ev"],
+    companies: ["Citadel", "Jane Street"],
+    source: "Trader interview staple",
   },
 ];
