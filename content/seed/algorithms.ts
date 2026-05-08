@@ -102,4 +102,87 @@ export const ALGORITHMS_SEED: SeedQuestion[] = [
       memory_limit_mb: 128,
     },
   },
+  {
+    slug: "sliding-window-maximum",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Sliding Window Maximum",
+    prompt_md:
+      "Read an integer $k$ on the first line and a space-separated array of integers $a$ on the second line.\n\nFor each contiguous window of length $k$, print the maximum in that window. Output the maxima as space-separated integers on one line.\n\nExample:\n\nInput:\n```\n3\n1 3 -1 -3 5 3 6 7\n```\nOutput:\n```\n3 3 5 5 6 7\n```",
+    solution_md:
+      "Use a monotonic deque of indices. Maintain the deque in decreasing order of values: pop from the back while the new value is larger; pop from the front if it's outside the window. The front is always the max. Overall $O(n)$ time.",
+    answer_kind: "code",
+    difficulty: 3,
+    tags: ["deque", "sliding-window", "monotonic-queue"],
+    companies: ["Citadel", "Two Sigma", "Jump Trading"],
+    source: "Coding screen staple",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "from collections import deque\n\ndef solve():\n    k = int(input().strip())\n    a = list(map(int, input().split()))\n    dq = deque()  # indices, values decreasing\n    out = []\n    for i, x in enumerate(a):\n        while dq and a[dq[-1]] <= x:\n            dq.pop()\n        dq.append(i)\n        if dq[0] <= i - k:\n            dq.popleft()\n        if i >= k - 1:\n            out.append(str(a[dq[0]]))\n    print(' '.join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "3\n1 3 -1 -3 5 3 6 7", expected: "3 3 5 5 6 7" },
+        { input: "1\n5 4 3", expected: "5 4 3" },
+        { input: "2\n9 8 7 6", expected: "9 8 7" },
+        { input: "4\n2 2 2 2 2", expected: "2 2", hidden: true },
+      ],
+      time_limit_ms: 2500,
+      memory_limit_mb: 128,
+    },
+  },
+  {
+    slug: "subarray-sum-equals-k",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Count Subarrays With Sum = K",
+    prompt_md:
+      "Read an integer $K$ on the first line and a space-separated array of integers $a$ on the second line.\n\nPrint the number of contiguous subarrays whose elements sum to exactly $K$.\n\nExample:\n\nInput:\n```\n2\n1 1 1\n```\nOutput:\n```\n2\n```",
+    solution_md:
+      "Use prefix sums. The sum of subarray (i..j] is `pref[j] - pref[i]`. For each prefix `p`, the number of earlier prefixes equal to `p - K` contributes to the count. Keep a hash map from prefix sum to frequency. $O(n)$ time.",
+    answer_kind: "code",
+    difficulty: 3,
+    tags: ["prefix-sums", "hashmap"],
+    companies: ["Jane Street", "Citadel"],
+    source: "Coding screen staple",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "from collections import defaultdict\n\ndef solve():\n    K = int(input().strip())\n    a = list(map(int, input().split()))\n    freq = defaultdict(int)\n    freq[0] = 1\n    pref = 0\n    ans = 0\n    for x in a:\n        pref += x\n        ans += freq[pref - K]\n        freq[pref] += 1\n    print(ans)\n\nsolve()\n",
+      test_cases: [
+        { input: "2\n1 1 1", expected: "2" },
+        { input: "3\n1 2 3", expected: "2", hidden: true },
+        { input: "0\n1 -1 0", expected: "3" },
+        { input: "-1\n-1 -1 1", expected: "3", hidden: true },
+      ],
+      time_limit_ms: 2500,
+      memory_limit_mb: 128,
+    },
+  },
+  {
+    slug: "rolling-vwap",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Rolling VWAP (Window K)",
+    prompt_md:
+      "Volume-weighted average price (VWAP) over a window is:\n\n\\[\\text{VWAP} = \\frac{\\sum_i p_i v_i}{\\sum_i v_i}\\]\n\nRead an integer $K$ on the first line. Then read $n$ lines each containing `price volume` (both integers).\n\nFor each window of size $K$ ending at position $i$ (1-indexed), output the VWAP as a reduced fraction `A/B`.\n\nExample:\n\nInput:\n```\n2\n100 5\n101 5\n102 10\n```\nOutput:\n```\n201/2\n205/2\n```",
+    solution_md:
+      "Maintain two rolling sums: `sumPV = Σ(p·v)` and `sumV = Σ(v)`. Slide the window by adding the new row and removing the row that falls off. Reduce the fraction by gcd each step. $O(n)$ time.",
+    answer_kind: "code",
+    difficulty: 4,
+    tags: ["sliding-window", "gcd", "finance"],
+    companies: ["Optiver", "IMC"],
+    source: "Execution analytics primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport math\n\ndef solve():\n    lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]\n    if not lines:\n        return\n    K = int(lines[0])\n    rows = [tuple(map(int, ln.split())) for ln in lines[1:]]\n    sumPV = 0\n    sumV = 0\n    out = []\n    for i, (p, v) in enumerate(rows):\n        sumPV += p * v\n        sumV += v\n        if i >= K:\n            p0, v0 = rows[i - K]\n            sumPV -= p0 * v0\n            sumV -= v0\n        if i >= K - 1:\n            g = math.gcd(sumPV, sumV)\n            out.append(f\"{sumPV//g}/{sumV//g}\")\n    sys.stdout.write(\"\\n\".join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "2\n100 5\n101 5\n102 10", expected: "201/2\n205/2" },
+        { input: "3\n10 1\n10 1\n10 1\n10 1", expected: "10/1\n10/1" },
+        { input: "1\n7 3\n8 1", expected: "7/1\n8/1", hidden: true },
+      ],
+      time_limit_ms: 2500,
+      memory_limit_mb: 128,
+    },
+  },
 ];

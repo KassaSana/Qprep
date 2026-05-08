@@ -289,4 +289,37 @@ export const PROBABILITY_SEED: SeedQuestion[] = [
     companies: ["Citadel", "Jane Street"],
     source: "Trader interview staple",
   },
+  {
+    slug: "bus-wait-less-than-3",
+    topic: "Probability",
+    track: "trader",
+    title: "Bus Every 10 Minutes: P(wait < 3)",
+    prompt_md:
+      "A bus arrives exactly every 10 minutes. You arrive at a uniformly random time. What is the probability your waiting time is less than 3 minutes?",
+    solution_md:
+      "The waiting time is uniform on \\([0, 10)\\) minutes. So \\(P(W < 3) = 3/10\\).",
+    answer_kind: "fraction",
+    answer_value: "3/10",
+    answer_tolerance: 1e-3,
+    difficulty: 1,
+    tags: ["uniform", "residual-life", "warm-up"],
+    source: "Classic",
+  },
+  {
+    slug: "competing-exponentials-x-less-y",
+    topic: "Probability",
+    track: "researcher",
+    title: "Competing Exponentials: P(X < Y)",
+    prompt_md:
+      "Let \\(X \\sim \\text{Exp}(\\lambda_1)\\) and \\(Y \\sim \\text{Exp}(\\lambda_2)\\) be independent. Compute \\(P(X < Y)\\).",
+    solution_md:
+      "For competing exponentials, \\(P(X < Y) = \\lambda_1/(\\lambda_1+\\lambda_2)\\).",
+    answer_kind: "exact",
+    answer_value: "lambda1/(lambda1+lambda2)",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["exponential", "memoryless"],
+    companies: ["Two Sigma"],
+    source: "Queueing / reliability classic",
+  },
 ];

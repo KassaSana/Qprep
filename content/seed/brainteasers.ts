@@ -70,4 +70,21 @@ export const BRAINTEASERS_SEED: SeedQuestion[] = [
     tags: ["mental-math", "percentages"],
     source: "Trader screening",
   },
+  {
+    slug: "russian-roulette-adjacent-bullets",
+    topic: "Brainteasers",
+    track: "trader",
+    title: "Russian Roulette: Spin or Pull Again?",
+    prompt_md:
+      "A revolver has 6 chambers with **2 bullets in adjacent chambers**. You pull the trigger once and hear a click (empty).\n\nDo you have a higher survival probability if you **spin** the cylinder again, or if you **pull again without spinning**? Answer with one word: `spin` or `pull`.",
+    solution_md:
+      "After a safe click with adjacent bullets, the current chamber is known empty. Without spinning, the next chamber is a bullet in 1 of the 4 possible remaining positions (conditional), giving survival probability 3/4. Spinning resets to 4/6 survival. So you should **pull** again without spinning.",
+    answer_kind: "exact",
+    answer_value: "pull",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["conditioning", "bayes", "logic"],
+    companies: ["SIG", "Optiver"],
+    source: "Classic brainteaser",
+  },
 ];
