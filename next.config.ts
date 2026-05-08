@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/trader",
-        destination: "/playlists/quant-trader-core",
+        destination: "/playlists/top-50",
         permanent: true,
       },
       {

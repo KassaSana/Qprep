@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { TOPICS, type Topic } from "@/content/question-types";
+import { TARGET_ROLES, TOPICS, type Topic } from "@/content/question-types";
 import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS = [
@@ -41,12 +41,13 @@ export interface FilterSidebarProps {
  * derived view of `useSearchParams`.
  *
  * Filter contract on /questions:
- *   ?topic=Probability&topic=Finance
+ *   ?topic=Probability
  *   &difficulty=1&difficulty=3
  *   &kind=mcq&kind=code
  *   &company=Citadel
+ *   &role=Dev&role=Researcher
  *   &status=unattempted   (single-valued)
- *   &playlist=quant-trader-core   (single-valued)
+ *   &playlist=top-50   (single-valued)
  */
 export function FilterSidebar({ companies }: FilterSidebarProps) {
   const router = useRouter();
@@ -59,6 +60,7 @@ export function FilterSidebar({ companies }: FilterSidebarProps) {
       difficulty: new Set(searchParams.getAll("difficulty")),
       kind: new Set(searchParams.getAll("kind")),
       company: new Set(searchParams.getAll("company")),
+      role: new Set(searchParams.getAll("role")),
       status: searchParams.get("status") ?? "all",
     }),
     [searchParams]
@@ -78,7 +80,10 @@ export function FilterSidebar({ companies }: FilterSidebarProps) {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
-  function toggle(key: "topic" | "difficulty" | "kind" | "company", value: string) {
+  function toggle(
+    key: "topic" | "difficulty" | "kind" | "company" | "role",
+    value: string
+  ) {
     const cur = new Set(selected[key]);
     if (cur.has(value)) cur.delete(value);
     else cur.add(value);
@@ -99,6 +104,7 @@ export function FilterSidebar({ companies }: FilterSidebarProps) {
       selected.kind.size +
       selected.company.size >
       0 ||
+    selected.role.size > 0 ||
     (selected.status !== "all" && selected.status !== "");
 
   return (
@@ -141,6 +147,18 @@ export function FilterSidebar({ companies }: FilterSidebarProps) {
             onClick={() => toggle("topic", t)}
           >
             {t as Topic}
+          </CheckPill>
+        ))}
+      </FilterGroup>
+
+      <FilterGroup label="Role">
+        {TARGET_ROLES.map((r) => (
+          <CheckPill
+            key={r}
+            active={selected.role.has(r)}
+            onClick={() => toggle("role", r)}
+          >
+            {r}
           </CheckPill>
         ))}
       </FilterGroup>

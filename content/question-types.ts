@@ -14,7 +14,6 @@ export type Topic =
   | "Brainteasers"
   | "Statistics"
   | "Pure Math"
-  | "Finance"
   | "Concurrency"
   | "LLD"
   | "System Design"
@@ -26,7 +25,6 @@ export const TOPICS: readonly Topic[] = [
   "Brainteasers",
   "Statistics",
   "Pure Math",
-  "Finance",
   "Concurrency",
   "LLD",
   "System Design",
@@ -40,6 +38,15 @@ export const TOPICS: readonly Topic[] = [
  * reads it for routing or filtering.
  */
 export type Track = "researcher" | "trader" | "dev";
+
+export type TargetRole = "Trader" | "Dev" | "Researcher" | "All";
+
+export const TARGET_ROLES: readonly TargetRole[] = [
+  "Trader",
+  "Dev",
+  "Researcher",
+  "All",
+] as const;
 
 export type AnswerKind =
   | "numeric"
@@ -109,6 +116,14 @@ interface BaseSeedQuestion {
   difficulty: 1 | 2 | 3 | 4 | 5;
   tags: string[];
   source: string;
+  /**
+   * Role(s) this question is relevant for.
+   *
+   * Stored in Postgres as `questions.target_roles text[]`.
+   * When omitted in legacy seed content, the seed script infers a default
+   * from the question's topic.
+   */
+  target_roles?: TargetRole[];
   /** Companies that have asked something like this. Free-text strings. */
   companies?: string[];
   is_premium?: boolean;
@@ -177,4 +192,25 @@ export const DIFFICULTY_LABEL = ["", "Easy", "Easy+", "Medium", "Hard", "Brutal"
 
 export function difficultyLabel(difficulty: number): string {
   return DIFFICULTY_LABEL[difficulty] ?? `D${difficulty}`;
+}
+
+export function inferTargetRolesFromTopic(topic: Topic): TargetRole[] {
+  switch (topic) {
+    case "Algorithms":
+    case "Data Structures":
+    case "Concurrency":
+    case "LLD":
+    case "System Design":
+      return ["Dev"];
+    case "Brainteasers":
+      return ["All"];
+    case "Probability":
+    case "Statistics":
+    case "Pure Math":
+      return ["Researcher"];
+    default: {
+      const _exhaustive: never = topic;
+      return ["All"];
+    }
+  }
 }

@@ -28,6 +28,7 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
     difficulty: readSearchParam(params.difficulty),
     kind: readSearchParam(params.kind),
     company: readSearchParam(params.company),
+    role: readSearchParam(params.role),
     status: readSingleSearchParam(params.status),
     playlist: readSingleSearchParam(params.playlist),
   };

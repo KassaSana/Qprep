@@ -18,7 +18,10 @@ import { config as loadEnv } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 import { ALL_SEED_QUESTIONS } from "../content/seed";
 import { PLAYLISTS } from "../content/playlists";
-import type { SeedQuestion } from "../content/question-types";
+import {
+  inferTargetRolesFromTopic,
+  type SeedQuestion,
+} from "../content/question-types";
 
 loadEnv({ path: ".env.local" });
 
@@ -33,6 +36,7 @@ interface QuestionRow {
   answer_value: string | null;
   answer_tolerance: number | null;
   answer_meta: unknown;
+  target_roles: string[];
   difficulty: number;
   tags: string[];
   companies: string[];
@@ -45,6 +49,7 @@ function toQuestionRow(q: SeedQuestion): QuestionRow {
   const answer_tolerance =
     (q as { answer_tolerance?: number | null }).answer_tolerance ?? null;
   const answer_meta = (q as { answer_meta?: unknown }).answer_meta ?? null;
+  const target_roles = q.target_roles ?? inferTargetRolesFromTopic(q.topic);
   return {
     slug: q.slug,
     topic: q.topic,
@@ -56,6 +61,7 @@ function toQuestionRow(q: SeedQuestion): QuestionRow {
     answer_value,
     answer_tolerance,
     answer_meta,
+    target_roles,
     difficulty: q.difficulty,
     tags: q.tags,
     companies: q.companies ?? [],

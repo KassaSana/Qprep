@@ -14,8 +14,10 @@
 import type {
   PlaylistDef,
   SeedQuestion,
+  TargetRole,
   Topic,
 } from "@/content/question-types";
+import { inferTargetRolesFromTopic } from "@/content/question-types";
 import { ALL_SEED_QUESTIONS } from "@/content/seed";
 import { PLAYLISTS } from "@/content/playlists";
 import { checkAnswer } from "@/lib/answer-check";
@@ -67,6 +69,9 @@ const localQuestions: LocalQuestion[] = ALL_SEED_QUESTIONS.map((q, idx) => ({
   ...q,
   id: `00000000-0000-4000-8000-${String(idx + 1).padStart(12, "0")}`,
   answer_value: (q as { answer_value?: string | null }).answer_value ?? null,
+  target_roles:
+    (q as { target_roles?: TargetRole[] }).target_roles ??
+    inferTargetRolesFromTopic(q.topic),
 }));
 
 const attemptsByUser = new Map<string, LocalAttempt[]>();

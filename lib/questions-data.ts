@@ -34,6 +34,7 @@ export interface LoadedQuestion {
   answer_value: string | null;
   answer_tolerance: number | null;
   answer_meta: unknown;
+  target_roles: string[];
   difficulty: number;
   tags: string[];
   companies: string[];
@@ -95,7 +96,7 @@ export async function loadAllQuestions(
     sb
       .from("questions")
       .select(
-        "id, slug, topic, title, prompt_md, solution_md, answer_kind, answer_value, answer_tolerance, answer_meta, difficulty, tags, companies, source, is_premium"
+        "id, slug, topic, title, prompt_md, solution_md, answer_kind, answer_value, answer_tolerance, answer_meta, target_roles, difficulty, tags, companies, source, is_premium"
       )
       .order("topic", { ascending: true })
       .order("difficulty", { ascending: true })
@@ -126,7 +127,7 @@ export async function loadQuestionBySlug(
   const { data, error } = await sb
     .from("questions")
     .select(
-      "id, slug, topic, title, prompt_md, solution_md, answer_kind, answer_value, answer_tolerance, answer_meta, difficulty, tags, companies, source, is_premium"
+      "id, slug, topic, title, prompt_md, solution_md, answer_kind, answer_value, answer_tolerance, answer_meta, target_roles, difficulty, tags, companies, source, is_premium"
     )
     .eq("slug", slug)
     .single();
@@ -227,7 +228,7 @@ export async function loadPlaylistBySlug(
     const { data } = await sb
       .from("playlist_questions")
       .select(
-        "position, question:questions(id, slug, topic, title, prompt_md, solution_md, answer_kind, answer_value, answer_tolerance, answer_meta, difficulty, tags, companies, source, is_premium)"
+        "position, question:questions(id, slug, topic, title, prompt_md, solution_md, answer_kind, answer_value, answer_tolerance, answer_meta, target_roles, difficulty, tags, companies, source, is_premium)"
       )
       .eq("playlist_id", playlist.id)
       .order("position", { ascending: true });
@@ -246,7 +247,7 @@ export async function loadPlaylistBySlug(
     const { data } = await sb
       .from("questions")
       .select(
-        "id, slug, topic, title, prompt_md, solution_md, answer_kind, answer_value, answer_tolerance, answer_meta, difficulty, tags, companies, source, is_premium"
+        "id, slug, topic, title, prompt_md, solution_md, answer_kind, answer_value, answer_tolerance, answer_meta, target_roles, difficulty, tags, companies, source, is_premium"
       )
       .in("slug", questionSlugs);
     const bySlug = new Map((data ?? []).map((r) => [r.slug as string, r]));
@@ -286,6 +287,7 @@ function toLoadedQuestion(input: Partial<LoadedQuestion>): LoadedQuestion {
     answer_value: (input.answer_value as string | null | undefined) ?? null,
     answer_tolerance: (input.answer_tolerance as number | null | undefined) ?? null,
     answer_meta: input.answer_meta ?? null,
+    target_roles: Array.isArray(input.target_roles) ? (input.target_roles as string[]) : ["All"],
     difficulty: typeof input.difficulty === "number" ? input.difficulty : 1,
     tags: Array.isArray(input.tags) ? (input.tags as string[]) : [],
     companies: Array.isArray(input.companies) ? (input.companies as string[]) : [],
@@ -305,6 +307,7 @@ export interface QuestionFilterParams {
   difficulty?: string[];
   kind?: string[];
   company?: string[];
+  role?: string[];
   status?: string;
   playlist?: string;
 }
@@ -330,6 +333,12 @@ export function applyQuestionFilters(
     }
     if (filters.company && filters.company.length > 0) {
       if (!q.companies.some((c) => filters.company!.includes(c))) {
+        return false;
+      }
+    }
+    if (filters.role && filters.role.length > 0) {
+      const set = new Set(q.target_roles ?? []);
+      if (!set.has("All") && !filters.role.some((r) => set.has(r))) {
         return false;
       }
     }

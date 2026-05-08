@@ -39,38 +39,6 @@ export const BRAINTEASERS_SEED: SeedQuestion[] = [
     source: "Classic trader warm-up",
   },
   {
-    slug: "mental-math-eight-percent-of-250",
-    topic: "Brainteasers",
-    track: "trader",
-    title: "Mental Math: 8% of 250",
-    prompt_md:
-      "Without a calculator, compute $8\\%$ of $250$.",
-    solution_md:
-      "$10\\%$ of $250$ is $25$, and $8\\%$ is $0.8$ of that, so the answer is $20$.",
-    answer_kind: "numeric",
-    answer_value: "20",
-    answer_tolerance: 1e-9,
-    difficulty: 1,
-    tags: ["mental-math", "percentages"],
-    source: "Trader screening",
-  },
-  {
-    slug: "mental-math-1-point-5-percent-of-640",
-    topic: "Brainteasers",
-    track: "trader",
-    title: "Mental Math: 1.5% of 640",
-    prompt_md:
-      "Without a calculator, compute $1.5\\%$ of $640$.",
-    solution_md:
-      "$1\\%$ of $640$ is $6.4$, and $0.5\\%$ is $3.2$, so total is $9.6$.",
-    answer_kind: "numeric",
-    answer_value: "9.6",
-    answer_tolerance: 1e-3,
-    difficulty: 1,
-    tags: ["mental-math", "percentages"],
-    source: "Trader screening",
-  },
-  {
     slug: "russian-roulette-adjacent-bullets",
     topic: "Brainteasers",
     track: "trader",

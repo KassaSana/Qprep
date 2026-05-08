@@ -13,7 +13,6 @@
 import type { SeedQuestion } from "@/content/question-types";
 import { PROBABILITY_SEED } from "./probability";
 import { STATISTICS_SEED } from "./statistics";
-import { FINANCE_SEED } from "./finance";
 import { BRAINTEASERS_SEED } from "./brainteasers";
 import { ALGORITHMS_SEED } from "./algorithms";
 import { CONCURRENCY_SEED } from "./concurrency";
@@ -25,7 +24,6 @@ import { DATA_STRUCTURES_SEED } from "./data_structures";
 export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
   ...PROBABILITY_SEED,
   ...STATISTICS_SEED,
-  ...FINANCE_SEED,
   ...BRAINTEASERS_SEED,
   ...ALGORITHMS_SEED,
   ...CONCURRENCY_SEED,
@@ -38,7 +36,6 @@ export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
 export {
   PROBABILITY_SEED,
   STATISTICS_SEED,
-  FINANCE_SEED,
   BRAINTEASERS_SEED,
   ALGORITHMS_SEED,
   CONCURRENCY_SEED,
