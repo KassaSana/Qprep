@@ -5,15 +5,48 @@
 @tailwind utilities;
 
 @layer base {
-  html {
+  :root {
+    /* Light theme (RGB triplets so Tailwind opacity works). */
+    --bg: 247 246 242;
+    --bg-subtle: 239 238 233;
+    --bg-raised: 255 255 255;
+    --border: 226 225 220;
+    --border-subtle: 236 236 234;
+    --fg: 28 28 26;
+    --fg-muted: 98 98 94;
+    --fg-subtle: 142 141 135;
+    --accent: 28 28 26;
+    --accent-muted: 53 53 50;
+    --success: 59 122 74;
+    --danger: 168 50 50;
+    --warning: 154 106 19;
     color-scheme: light;
   }
+
+  .dark {
+    /* Dark theme. */
+    --bg: 16 16 16;
+    --bg-subtle: 24 24 24;
+    --bg-raised: 30 30 30;
+    --border: 55 55 55;
+    --border-subtle: 42 42 42;
+    --fg: 242 242 242;
+    --fg-muted: 186 186 186;
+    --fg-subtle: 140 140 140;
+    --accent: 242 242 242;
+    --accent-muted: 210 210 210;
+    --success: 95 190 120;
+    --danger: 255 107 107;
+    --warning: 240 180 80;
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-bg text-fg antialiased;
     font-feature-settings: "ss01", "cv11";
   }
   ::selection {
-    background-color: rgba(28, 28, 26, 0.14);
+    background-color: rgb(var(--accent) / 0.18);
   }
 }
 

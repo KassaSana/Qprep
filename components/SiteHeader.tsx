@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAnonId } from "@/lib/anon";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface ProfileSummary {
   streak_count: number;
@@ -49,6 +50,7 @@ export async function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2 text-xs">
+          <ThemeToggle />
           {profile && profile.total_points > 0 && (
             <span className="pill">
               <span className="mr-1 text-fg-subtle">pts</span>

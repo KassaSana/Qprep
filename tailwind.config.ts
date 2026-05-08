@@ -14,27 +14,29 @@ const config: Config = {
         mono: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       colors: {
+        // Theme tokens (light/dark) are defined in app/globals.css as CSS vars.
+        // Use rgb(var(--token) / <alpha-value>) so Tailwind opacity utilities work.
         bg: {
-          DEFAULT: "#f7f6f2",
-          subtle: "#efeee9",
-          raised: "#ffffff",
+          DEFAULT: "rgb(var(--bg) / <alpha-value>)",
+          subtle: "rgb(var(--bg-subtle) / <alpha-value>)",
+          raised: "rgb(var(--bg-raised) / <alpha-value>)",
         },
         border: {
-          DEFAULT: "#e2e1dc",
-          subtle: "#ececea",
+          DEFAULT: "rgb(var(--border) / <alpha-value>)",
+          subtle: "rgb(var(--border-subtle) / <alpha-value>)",
         },
         fg: {
-          DEFAULT: "#1c1c1a",
-          muted: "#62625e",
-          subtle: "#8e8d87",
+          DEFAULT: "rgb(var(--fg) / <alpha-value>)",
+          muted: "rgb(var(--fg-muted) / <alpha-value>)",
+          subtle: "rgb(var(--fg-subtle) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: "#1c1c1a",
-          muted: "#353532",
+          DEFAULT: "rgb(var(--accent) / <alpha-value>)",
+          muted: "rgb(var(--accent-muted) / <alpha-value>)",
         },
-        success: "#3b7a4a",
-        danger: "#a83232",
-        warning: "#9a6a13",
+        success: "rgb(var(--success) / <alpha-value>)",
+        danger: "rgb(var(--danger) / <alpha-value>)",
+        warning: "rgb(var(--warning) / <alpha-value>)",
       },
       boxShadow: {
         card: "0 1px 0 0 rgba(0,0,0,0.02), 0 1px 2px 0 rgba(28,28,26,0.04)",
