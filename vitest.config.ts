@@ -12,4 +12,22 @@ export default defineConfig({
       "@": path.resolve(__dirname),
     },
   },
+  test: {
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary"],
+      exclude: [
+        "**/node_modules/**",
+        ".next/**",
+        "next.config.ts",
+        "postcss.config.*",
+        "tailwind.config.*",
+        "**/*.config.*",
+        "**/*.d.ts",
+        "**/*.test.*",
+        "scripts/**",
+        "supabase/**",
+      ],
+    },
+  },
 });

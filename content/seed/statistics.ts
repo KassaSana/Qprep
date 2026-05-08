@@ -527,6 +527,122 @@ export const STATISTICS_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "likelihood-vs-probability-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Likelihood vs Probability",
+    prompt_md:
+      "In 4–8 sentences, explain the difference between a probability and a likelihood.\n\nInclude a simple example, e.g. coin flips with parameter $p$.",
+    solution_md:
+      "A probability treats parameters as fixed and quantifies uncertainty about random outcomes. A likelihood treats observed data as fixed and views the parameter as the variable, measuring how compatible each parameter value is with the observed data.\n\nExample: for one flip with result H, $P(H\\mid p)=p$ is a probability as a function of outcome given parameter; the likelihood is $L(p\\mid H)=p$ as a function of $p$ given the observed H. Likelihoods need not integrate to 1 over $p$.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["mle", "likelihood", "bayes"],
+    source: "Core conceptual",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 70,
+      rubric: [
+        "States the key viewpoint swap: probability over outcomes vs likelihood over parameters given data: 65%",
+        "Provides a concrete example (coin / Bernoulli) illustrating the same algebra but different interpretation: 25%",
+        "Notes that likelihood doesn't integrate to 1 over parameters (or equivalent): 10%",
+      ],
+      reference_solution_md:
+        "Probability: distribution of data given fixed parameter. Likelihood: function of parameter given fixed observed data; not a probability distribution over the parameter.\n",
+    },
+  },
+  {
+    slug: "mle-normal-mean-known-variance",
+    topic: "Statistics",
+    track: "researcher",
+    title: "MLE of Normal Mean (Known Variance)",
+    prompt_md:
+      "Let $X_1,\\dots,X_n$ be iid $\\mathcal{N}(\\mu,\\sigma^2)$ with **known** $\\sigma^2$.\n\nDerive the MLE for $\\mu$.",
+    solution_md:
+      "Log-likelihood is proportional to $-\\frac{1}{2\\sigma^2}\\sum_i (x_i-\\mu)^2$. Minimizing the sum of squares gives $\\hat\\mu=\\bar X$.",
+    answer_kind: "exact",
+    answer_value: "Xbar",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["mle", "normal", "estimation"],
+    source: "Core fact",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "ols-heteroskedasticity-why-matters-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Heteroskedasticity — What Breaks?",
+    prompt_md:
+      "In OLS regression, what goes wrong if errors are heteroskedastic (variance depends on $X$)?\n\nIn 5–10 sentences: discuss unbiasedness vs standard errors/inference, and one fix.",
+    solution_md:
+      "With exogeneity, OLS coefficients remain unbiased/consistent, but the usual homoskedastic standard error formula is wrong, so $t$-tests and confidence intervals are invalid. Fixes include using heteroskedasticity-robust (White) standard errors, modeling the variance, or using WLS/GLS when structure is known.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["ols", "inference", "heteroskedasticity"],
+    source: "Econometrics staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "States coefficients can stay unbiased/consistent under exogeneity: 35%",
+        "States standard errors/inference break under naive homoskedastic SEs: 45%",
+        "Gives a concrete fix (robust SE, WLS/GLS): 20%",
+      ],
+      reference_solution_md:
+        "Under exogeneity, OLS coefficients can be unbiased/consistent, but homoskedastic SE formula fails → invalid inference. Fix: robust (White) SEs, or WLS/GLS.\n",
+    },
+  },
+  {
+    slug: "bessel-correction-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Bessel's Correction — Intuition",
+    prompt_md:
+      "Give an intuition for why dividing by $n-1$ (instead of $n$) corrects bias in the sample variance.\n\nAnswer in 4–8 sentences.",
+    solution_md:
+      "The sample mean is estimated from the same data, so residuals $X_i-\\bar X$ are constrained to sum to 0, reducing their degrees of freedom by one. This makes the naive average squared residual (dividing by $n$) systematically too small. Dividing by $n-1$ inflates it to make the estimator unbiased under iid sampling.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["variance", "degrees-of-freedom", "unbiasedness"],
+    source: "Classical stats",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 60,
+      rubric: [
+        "Mentions the constraint / one degree of freedom used to estimate mean: 55%",
+        "Explains why this makes the naive variance biased downward: 25%",
+        "States that dividing by $n-1$ corrects the bias: 20%",
+      ],
+      reference_solution_md:
+        "Because estimating $\\bar X$ uses one degree of freedom and forces residuals to sum to zero, the average squared residual divided by $n$ is biased low; dividing by $n-1$ corrects it.\n",
+    },
+  },
+  {
+    slug: "variance-of-sum-independent-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Variance of a Sum (Independent Case)",
+    prompt_md:
+      "Let $X$ and $Y$ be independent with variances $\\sigma_X^2$ and $\\sigma_Y^2$.\n\nCompute $\\mathrm{Var}(X+Y)$ and briefly justify.",
+    solution_md:
+      "For independent variables, covariance is zero, so\n\n$$\\mathrm{Var}(X+Y)=\\mathrm{Var}(X)+\\mathrm{Var}(Y)=\\sigma_X^2+\\sigma_Y^2.$$",
+    answer_kind: "freeform",
+    difficulty: 1,
+    tags: ["variance", "independence", "covariance"],
+    source: "Core identity",
+    target_roles: ["All"],
+    answer_meta: {
+      min_words: 35,
+      rubric: [
+        "States $\\mathrm{Var}(X+Y)=\\mathrm{Var}(X)+\\mathrm{Var}(Y)$ under independence: 75%",
+        "Justifies via covariance term being 0 (or equivalent): 25%",
+      ],
+      reference_solution_md:
+        "$$\\mathrm{Var}(X+Y)=\\mathrm{Var}(X)+\\mathrm{Var}(Y)+2\\mathrm{Cov}(X,Y)=\\sigma_X^2+\\sigma_Y^2$$ since $\\mathrm{Cov}=0$ under independence.\n",
+    },
+  },
+  {
     slug: "clt-does-not-mean-normal-sample-mcq",
     topic: "Statistics",
     track: "researcher",

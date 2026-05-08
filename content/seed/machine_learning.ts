@@ -400,6 +400,31 @@ export const MACHINE_LEARNING_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ml-data-leakage-time-split-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Time-Based Split — What Can Still Leak?",
+    prompt_md:
+      "You correctly do a time-based train/validation split for a forecasting or time-dependent classification problem.\n\nName two ways you can **still** get leakage even with a time split, and give a fix for each.",
+    solution_md:
+      "Leakage can still occur if you compute features using windows that peek into the future (e.g. centered rolling stats, target leakage) or if you fit preprocessing (scalers, PCA, imputation) on the full dataset instead of train only. Fixes: enforce causal feature windows with strict cutoff times; fit transforms only on the training set and apply to validation/test. Also watch for label definition leakage (using future outcomes in labels) and entity leakage (same user/item in both splits) depending on the problem.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["leakage", "time-series", "pipelines"],
+    source: "Practical ML",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 90,
+      rubric: [
+        "Provides two distinct leakage mechanisms that can happen even with time splits: 55%",
+        "Gives a concrete fix for each (causal windows, fit-on-train transforms, etc.): 35%",
+        "Uses at least one specific example (rolling window, scaler/PCA/imputer, label leakage): 10%",
+      ],
+      reference_solution_md:
+        "Even with time split: (1) features computed with future info (centered windows/target leakage) → causal windows; (2) preprocessing fit on full data → fit on train only.\n",
+    },
+  },
+  {
     slug: "ml-cross-validation-when-not-freeform",
     topic: "Statistics",
     track: "researcher",

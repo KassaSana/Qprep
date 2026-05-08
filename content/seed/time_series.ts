@@ -220,6 +220,31 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ts-arch-effects-what-are-they-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "ARCH Effects",
+    prompt_md:
+      "In time series, what does it mean to see ARCH effects in residuals?",
+    solution_md:
+      "ARCH effects mean conditional heteroskedasticity: variance changes over time and depends on past squared residuals; residuals may be uncorrelated but their squares are autocorrelated.",
+    answer_kind: "mcq",
+    answer_value: "cond-var",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["time-series", "heteroskedasticity", "diagnostics"],
+    source: "Time series diagnostics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "cond-var", label: "Conditional variance varies over time; squared residuals are autocorrelated.", correct: true },
+        { id: "unitroot", label: "The series has a unit root (non-stationary mean).", correct: false },
+        { id: "seasonal", label: "The series has deterministic seasonality.", correct: false },
+        { id: "iid", label: "Residuals are iid Gaussian with constant variance.", correct: false },
+      ],
+    },
+  },
+  {
     slug: "ts-seasonality-handling-freeform",
     topic: "Statistics",
     track: "researcher",

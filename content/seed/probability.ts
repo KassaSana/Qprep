@@ -1076,4 +1076,481 @@ export const PROBABILITY_SEED: SeedQuestion[] = [
         "$$\\mathrm{Var}(X)=E[\\mathrm{Var}(X\\mid Y)] + \\mathrm{Var}(E[X\\mid Y]).$$",
     },
   },
+  {
+    slug: "bayes-two-children-born-tuesday",
+    topic: "Probability",
+    track: "researcher",
+    title: "Two Children — One Is a Boy Born on Tuesday",
+    prompt_md:
+      "A family has two children. You are told that **at least one** child is a boy **born on a Tuesday**.\n\nAssume each child's gender is independent and equally likely, and birthdays are uniformly distributed over the 7 days of the week.\n\nWhat is the probability that both children are boys?",
+    solution_md:
+      "Model each child as one of 14 equally likely outcomes (boy/girl × weekday). There are $14^2=196$ ordered pairs.\n\nCondition event: at least one child is (boy, Tuesday). Count complement: pairs with no (boy, Tuesday) are $13^2=169$, so conditioning set has $196-169=27$ outcomes.\n\nFavorable: both are boys and at least one is Tuesday-boy. Total boy-boy outcomes: $7\\cdot7=49$. Exclude the case where neither is Tuesday: $6\\cdot6=36$. Favorable $=49-36=13$.\n\nSo probability $13/27$.",
+    answer_kind: "fraction",
+    answer_value: "13/27",
+    answer_tolerance: 1e-3,
+    difficulty: 5,
+    tags: ["conditioning", "combinatorics", "classic"],
+    source: "Classic 'Tuesday boy' paradox",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "expected-trials-until-first-success-geometric",
+    topic: "Probability",
+    track: "researcher",
+    title: "Geometric Mean",
+    prompt_md:
+      "An experiment succeeds independently with probability $p$ each trial. Let $T$ be the number of trials until the first success.\n\nWhat is $E[T]$?",
+    solution_md:
+      "For geometric($p$) counting trials until first success, $E[T]=1/p$.",
+    answer_kind: "exact",
+    answer_value: "1/p",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["geometric", "expectation"],
+    source: "Core fact",
+    target_roles: ["All"],
+  },
+  {
+    slug: "markov-chain-detailed-balance-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Detailed Balance (Reversibility)",
+    prompt_md:
+      "Define detailed balance for a Markov chain with transition matrix $P$ and distribution $\\pi$.\n\nWhat does detailed balance imply about $\\pi$?",
+    solution_md:
+      "Detailed balance means $\\pi_i P_{ij} = \\pi_j P_{ji}$ for all states $i,j$. Summing over $i$ gives stationarity: $\\pi P = \\pi$, so $\\pi$ is a stationary distribution. It also implies the chain is reversible w.r.t. $\\pi$.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["markov-chain", "stationary", "reversibility"],
+    source: "MCMC / Markov chains",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 55,
+      rubric: [
+        "States the condition $\\pi_i P_{ij}=\\pi_j P_{ji}$: 60%",
+        "Explains that it implies $\\pi$ is stationary ($\\pi P=\\pi$): 30%",
+        "Mentions reversibility / time-reversal interpretation: 10%",
+      ],
+      reference_solution_md:
+        "Detailed balance: $\\pi_iP_{ij}=\\pi_jP_{ji}$. Summing over $i$ gives $\\pi P=\\pi$, so $\\pi$ is stationary; also implies reversibility.\n",
+    },
+  },
+  {
+    slug: "coupon-collector-expected-new-coupon-step",
+    topic: "Probability",
+    track: "researcher",
+    title: "Coupon Collector — Next New Coupon Expectation",
+    prompt_md:
+      "In the coupon collector problem with $n$ types, suppose you have already collected $k$ distinct types.\n\nWhat is the expected number of additional draws to see a **new** type?",
+    solution_md:
+      "Probability the next draw is new is $(n-k)/n$, so the waiting time is geometric with mean $1/((n-k)/n)=n/(n-k)$.",
+    answer_kind: "exact",
+    answer_value: "n/(n-k)",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["coupon-collector", "geometric", "expectation"],
+    source: "Coupon collector decomposition",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "probability-hypergeometric-expected-successes",
+    topic: "Probability",
+    track: "researcher",
+    title: "Hypergeometric Expectation",
+    prompt_md:
+      "An urn has $K$ red balls and $N-K$ blue balls. You draw $n$ balls without replacement. Let $X$ be the number of red balls drawn.\n\nWhat is $E[X]$?",
+    solution_md:
+      "Each draw has marginal probability $K/N$ of being red. By linearity of expectation over indicators, $E[X]=n\\cdot K/N$.",
+    answer_kind: "exact",
+    answer_value: "n*K/N",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["hypergeometric", "linearity-of-expectation", "indicators"],
+    source: "Core fact",
+    target_roles: ["All"],
+  },
+  {
+    slug: "jensen-inequality-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Jensen's Inequality",
+    prompt_md:
+      "Which statement is Jensen's inequality for a convex function $\\varphi$?",
+    solution_md:
+      "For convex $\\varphi$, $\\varphi(E[X])\\le E[\\varphi(X)]$.",
+    answer_kind: "mcq",
+    answer_value: "jensen",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["inequalities", "jensen"],
+    source: "Core inequality",
+    target_roles: ["All"],
+    answer_meta: {
+      options: [
+        { id: "jensen", label: "$\\varphi(E[X])\\le E[\\varphi(X)]$ for convex $\\varphi$", correct: true },
+        { id: "reverse", label: "$\\varphi(E[X])\\ge E[\\varphi(X)]$ for convex $\\varphi$", correct: false },
+        { id: "markov", label: "$P(X\\ge a)\\le E[X]/a$", correct: false },
+        { id: "union", label: "$P(\\cup_i A_i)\\le \\sum_i P(A_i)$", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "chernoff-bound-coin-flips-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Concentration: Hoeffding/Chernoff Flavor",
+    prompt_md:
+      "You flip a fair coin $n$ times. Which statement best captures a standard concentration result for the number of heads?",
+    solution_md:
+      "Deviations of order $\\Theta(\\sqrt{n})$ are typical; large deviations like $\\Theta(n)$ have exponentially small probability in $n$ (Chernoff/Hoeffding bounds).",
+    answer_kind: "mcq",
+    answer_value: "exp-small",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["concentration", "chernoff", "hoeffding"],
+    source: "Core concentration intuition",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "exp-small", label: "$P(|H-n/2|\\ge \\epsilon n)$ decays exponentially in $n$ for fixed $\\epsilon>0$.", correct: true },
+        { id: "linear", label: "$P(|H-n/2|\\ge \\epsilon n)$ stays around a constant for fixed $\\epsilon>0$.", correct: false },
+        { id: "poly", label: "$P(|H-n/2|\\ge \\epsilon n)$ decays like $1/n$ for fixed $\\epsilon>0$.", correct: false },
+        { id: "always-zero", label: "Such deviations are impossible for large $n$.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "expected-inversions-random-permutation",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Inversions in a Random Permutation",
+    prompt_md:
+      "A random permutation of $\\{1,\\dots,n\\}$ is chosen uniformly. An inversion is a pair $(i,j)$ with $i<j$ but $\\pi(i)>\\pi(j)$.\n\nWhat is the expected number of inversions?",
+    solution_md:
+      "For each pair $(i,j)$ with $i<j$, symmetry gives $P(\\pi(i)>\\pi(j))=1/2$. There are $\\binom{n}{2}$ pairs, so expected inversions is $\\binom{n}{2}\\cdot\\tfrac12 = \\frac{n(n-1)}{4}$.",
+    answer_kind: "exact",
+    answer_value: "n(n-1)/4",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["linearity-of-expectation", "indicators", "permutations"],
+    source: "Classic",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "expected-collisions-birthday-general-m",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Collisions (Birthday Generalization)",
+    prompt_md:
+      "You sample $m$ times uniformly from $\\{1,2,\\dots,n\\}$ with replacement.\n\nLet $C$ be the number of colliding pairs: the number of pairs $(i,j)$ with $i<j$ where the samples are equal. Compute $E[C]$.",
+    solution_md:
+      "For each pair $(i,j)$, probability of equality is $1/n$. There are $\\binom{m}{2}$ pairs, so $E[C]=\\binom{m}{2}\\cdot\\frac{1}{n}=\\frac{m(m-1)}{2n}$.",
+    answer_kind: "exact",
+    answer_value: "m(m-1)/(2n)",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["linearity-of-expectation", "birthday", "indicators"],
+    source: "Birthday generalization",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "probability-at-least-one-collision-union-bound",
+    topic: "Probability",
+    track: "researcher",
+    title: "Collision Probability — Union Bound",
+    prompt_md:
+      "You sample $m$ times uniformly from $\\{1,\\dots,n\\}$ with replacement.\n\nUse a union bound to give an upper bound on the probability that there exists a collision (at least one repeated value).",
+    solution_md:
+      "Let $A_{ij}$ be event samples $i$ and $j$ match. Then $P(A_{ij})=1/n$. Union bound:\n\n$$P(\\cup_{i<j} A_{ij})\\le \\sum_{i<j} P(A_{ij})=\\binom{m}{2}\\cdot \\frac{1}{n}.$$",
+    answer_kind: "exact",
+    answer_value: "C(m,2)/n",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["union-bound", "birthday", "inequalities"],
+    source: "Standard bound",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "markov-chain-absorbing-expected-time-setup-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Absorbing Markov Chain — Expected Time Setup",
+    prompt_md:
+      "You have a Markov chain with an absorbing state. In general, how do you compute expected time to absorption from each state?\n\nAnswer in 4–8 sentences. (You do not need to give matrix formulas; a system-of-equations description is enough.)",
+    solution_md:
+      "Let $t(i)$ be expected time to absorption starting from state $i$. For absorbing states, $t(i)=0$. For transient states, use first-step analysis:\n\n$$t(i)=1+\\sum_j P_{ij} t(j).$$\n\nThis yields a linear system over transient states; solve it to get all expected absorption times.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["markov-chain", "recurrence", "expectation"],
+    source: "First-step analysis staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 70,
+      rubric: [
+        "Defines expected time-to-absorption per state with boundary condition 0 on absorbing states: 40%",
+        "Writes the first-step recurrence $t(i)=1+\\sum_j P_{ij}t(j)$ for transient states: 45%",
+        "Mentions solving a linear system over transient states: 15%",
+      ],
+      reference_solution_md:
+        "Let $t(i)$ be expected time to absorption. Absorbing: $t=0$. Transient: $t(i)=1+\\sum_j P_{ij}t(j)$. Solve the linear system.\n",
+    },
+  },
+  {
+    slug: "expected-value-of-min-exponential",
+    topic: "Probability",
+    track: "researcher",
+    title: "$E[\\min(X,Y)]$ for Independent Exponentials",
+    prompt_md:
+      "Let $X\\sim\\text{Exp}(\\lambda_1)$ and $Y\\sim\\text{Exp}(\\lambda_2)$ be independent.\n\nCompute $E[\\min(X,Y)]$.",
+    solution_md:
+      "The minimum of independent exponentials is exponential with rate $\\lambda_1+\\lambda_2$, so the mean is $1/(\\lambda_1+\\lambda_2)$.",
+    answer_kind: "exact",
+    answer_value: "1/(lambda1+lambda2)",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["exponential", "memoryless", "expectation"],
+    source: "Competing exponentials",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "thinning-poisson-sum-property-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Poisson Superposition",
+    prompt_md:
+      "Let $N_1\\sim\\text{Poisson}(\\lambda_1)$ and $N_2\\sim\\text{Poisson}(\\lambda_2)$ be independent.\n\nWhat is the distribution of $N_1+N_2$? Briefly justify.",
+    solution_md:
+      "The sum of independent Poisson variables is Poisson with rate sum: $N_1+N_2\\sim\\text{Poisson}(\\lambda_1+\\lambda_2)$. Justification via mgf/pgf or by thinking of superposition of independent Poisson processes.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["poisson", "superposition"],
+    source: "Core property",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 45,
+      rubric: [
+        "States $N_1+N_2\\sim\\text{Poisson}(\\lambda_1+\\lambda_2)$: 70%",
+        "Provides a valid justification (mgf/pgf or process superposition intuition): 30%",
+      ],
+      reference_solution_md:
+        "$$N_1+N_2\\sim\\text{Poisson}(\\lambda_1+\\lambda_2).$$ Justify via mgf/pgf or superposition.\n",
+    },
+  },
+  {
+    slug: "bayes-conditional-independence-naive-bayes",
+    topic: "Probability",
+    track: "researcher",
+    title: "Conditional Independence (Naive Bayes Intuition)",
+    prompt_md:
+      "Give a precise definition of conditional independence of events $A$ and $B$ given event $C$.\n\nThen explain in 2–4 sentences how conditional independence is used in naive Bayes classifiers.",
+    solution_md:
+      "Conditional independence means $P(A\\cap B\\mid C)=P(A\\mid C)P(B\\mid C)$ (equivalently $P(A\\mid B,C)=P(A\\mid C)$ when defined). Naive Bayes assumes features are conditionally independent given the class label, so the likelihood factorizes as $P(x\\mid y)=\\prod_j P(x_j\\mid y)$.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["conditional-independence", "bayes", "classification"],
+    source: "Core concept",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 60,
+      rubric: [
+        "States the correct conditional independence identity $P(A\\cap B\\mid C)=P(A\\mid C)P(B\\mid C)$ (or equivalent): 70%",
+        "Explains the naive Bayes factorization of likelihood across features given label: 30%",
+      ],
+      reference_solution_md:
+        "Cond. independence: $P(A\\cap B|C)=P(A|C)P(B|C)$. Naive Bayes assumes feature conditional independence given class so $P(x|y)=\\prod_j P(x_j|y)$.\n",
+    },
+  },
+  {
+    slug: "stopping-time-definition-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Stopping Time — Definition",
+    prompt_md:
+      "Define a stopping time $\\tau$ with respect to a filtration $(\\mathcal{F}_t)$.\n\nGive one example.",
+    solution_md:
+      "$\\tau$ is a stopping time if for each $t$, the event $\\{\\tau\\le t\\}\\in\\mathcal{F}_t$ (the decision to stop by time $t$ depends only on information up to time $t$). Example: first hitting time of a random walk to level +1, or first time $B_t$ exceeds 1 for Brownian motion.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["stopping-time", "martingale", "filtration"],
+    source: "Stochastic processes basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 55,
+      rubric: [
+        "States the measurability condition $\\{\\tau\\le t\\}\\in\\mathcal{F}_t$ for all $t$: 75%",
+        "Provides a valid example (hitting time, first passage time, etc.): 25%",
+      ],
+      reference_solution_md:
+        "Stopping time: for all $t$, $\\{\\tau\\le t\\}\\in\\mathcal{F}_t$. Example: first hitting time of a process to a set.\n",
+    },
+  },
+  {
+    slug: "symmetry-random-chord-midpoint",
+    topic: "Probability",
+    track: "researcher",
+    title: "Random Point on a Circle — Symmetry",
+    prompt_md:
+      "Pick a point uniformly at random on the unit circle. What is the expected value of its $x$-coordinate?",
+    solution_md:
+      "By symmetry, the distribution of $x$ is symmetric about 0, so $E[x]=0$.",
+    answer_kind: "numeric",
+    answer_value: "0",
+    answer_tolerance: 1e-9,
+    difficulty: 1,
+    tags: ["symmetry", "expectation"],
+    source: "Symmetry warm-up",
+    target_roles: ["All"],
+  },
+  {
+    slug: "conditional-expectation-bernoulli-given-sum",
+    topic: "Probability",
+    track: "researcher",
+    title: "Conditional Expectation: Bernoulli Given the Sum",
+    prompt_md:
+      "Let $X_1,\\dots,X_n$ be iid Bernoulli($p$), and let $S=\\sum_{i=1}^n X_i$.\n\nCompute $E[X_1\\mid S]$.",
+    solution_md:
+      "By symmetry, conditional on $S=s$, each $X_i$ has the same conditional expectation and they sum to $s$. So $E[X_1\\mid S=s]=s/n$. Therefore $E[X_1\\mid S]=S/n$.",
+    answer_kind: "exact",
+    answer_value: "S/n",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["conditioning", "symmetry", "expectation"],
+    source: "Stat 110 classic",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "probability-borel-cantelli-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Borel–Cantelli Lemma (First)",
+    prompt_md:
+      "Let $(A_n)$ be events. Which statement is the (first) Borel–Cantelli lemma?",
+    solution_md:
+      "If $\\sum_n P(A_n) < \\infty$, then $P(A_n\\ \\text{i.o.})=0$ (only finitely many occur almost surely).",
+    answer_kind: "mcq",
+    answer_value: "bc1",
+    answer_tolerance: null,
+    difficulty: 4,
+    tags: ["measure", "asymptotic", "borel-cantelli"],
+    source: "Classic theorem",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "bc1", label: "If $\\sum_n P(A_n)<\\infty$, then $P(A_n\\ \\text{i.o.})=0$.", correct: true },
+        { id: "reverse", label: "If $\\sum_n P(A_n)<\\infty$, then $P(A_n\\ \\text{i.o.})=1$.", correct: false },
+        { id: "always", label: "$P(A_n\\ \\text{i.o.})=0$ for any events.", correct: false },
+        { id: "indep", label: "If $A_n$ are independent and $\\sum_n P(A_n)<\\infty$, then $P(A_n\\ \\text{i.o.})=1$.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "random-variable-transform-cdf-method-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "CDF Method for Transformations",
+    prompt_md:
+      "Explain the CDF method for finding the distribution of $Y=g(X)$.\n\nIn 4–8 sentences, outline the steps, and mention when monotonicity matters.",
+    solution_md:
+      "Compute $F_Y(y)=P(Y\\le y)=P(g(X)\\le y)$. If $g$ is monotone, this becomes an event of the form $\\{X\\le g^{-1}(y)\\}$ (or $\\{X\\ge g^{-1}(y)\\}$), so you can use $F_X$ directly and then differentiate to get a density. If $g$ is not monotone, you may need to break into multiple regions where $g$ is monotone and sum the probabilities.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["cdf", "transformations", "distributions"],
+    source: "Core technique",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "States $F_Y(y)=P(g(X)\\le y)$ and reduces to an event about $X$: 55%",
+        "Mentions monotone case using inverse $g^{-1}$: 30%",
+        "Mentions non-monotone case requires splitting into monotone regions: 15%",
+      ],
+      reference_solution_md:
+        "CDF method: $F_Y(y)=P(g(X)\\le y)$. If $g$ monotone, rewrite using $g^{-1}$ and apply $F_X$, then differentiate. If not monotone, split into regions.\n",
+    },
+  },
+  {
+    slug: "bayes-three-coins",
+    topic: "Probability",
+    track: "researcher",
+    title: "Bayes: Choose Among Three Coins",
+    prompt_md:
+      "You have three coins: one double-headed (HH), one fair (HT), and one double-tailed (TT). You pick one uniformly at random and flip it once; it lands heads.\n\nWhat is the probability you picked the double-headed coin?",
+    solution_md:
+      "P(H)= (1/3)\\cdot 1 + (1/3)\\cdot (1/2) + (1/3)\\cdot 0 = 1/2. Posterior:\n\n$$P(HH\\mid H)=\\frac{(1/3)\\cdot 1}{1/2}=\\frac{2}{3}.$$",
+    answer_kind: "fraction",
+    answer_value: "2/3",
+    answer_tolerance: 1e-3,
+    difficulty: 2,
+    tags: ["bayes", "conditioning"],
+    source: "Classic",
+    target_roles: ["All"],
+  },
+  {
+    slug: "expected-rolls-until-sum-seven",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Rolls Until Sum 7",
+    prompt_md:
+      "You repeatedly roll two fair dice until the sum is 7. What is the expected number of rolls?",
+    solution_md:
+      "Each roll is a Bernoulli trial with success probability $p=1/6$ (sum 7 has 6 out of 36 outcomes). Geometric mean is $1/p=6$.",
+    answer_kind: "numeric",
+    answer_value: "6",
+    answer_tolerance: 1e-9,
+    difficulty: 1,
+    tags: ["geometric", "expectation", "combinatorics"],
+    source: "Classic",
+    target_roles: ["All"],
+  },
+  {
+    slug: "median-of-three-uniforms",
+    topic: "Probability",
+    track: "researcher",
+    title: "Median of 3 Uniform(0,1) — Expected Value",
+    prompt_md:
+      "Let $U_1,U_2,U_3$ be iid Uniform(0,1). Let $M$ be the median (the 2nd order statistic).\n\nCompute $E[M]$.",
+    solution_md:
+      "The $k$th order statistic of $n$ iid Uniform(0,1) has mean $k/(n+1)$. Here $k=2,n=3$, so $E[M]=2/4=1/2$.",
+    answer_kind: "fraction",
+    answer_value: "1/2",
+    answer_tolerance: 1e-3,
+    difficulty: 3,
+    tags: ["order-statistics", "uniform"],
+    source: "Order statistics fact",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "conditional-expected-dice-sum-given-max",
+    topic: "Probability",
+    track: "researcher",
+    title: "E[Sum | Max] for Two Dice",
+    prompt_md:
+      "Roll two fair dice with outcomes $X$ and $Y$. Let $M=\\max(X,Y)$.\n\nCompute $E[X+Y\\mid M=m]$ for a given $m\\in\\{1,2,3,4,5,6\\}$.",
+    solution_md:
+      "Condition on $M=m$. The valid ordered pairs are $(m,1..m)$ and $(1..m-1,m)$, total $2m-1$ outcomes. Sum of values across these outcomes: for $x=m$, $y$ runs 1..m giving sum $m\\cdot m + \\sum_{y=1}^m y$; for $y=m$, $x$ runs 1..m-1 giving sum $m\\cdot (m-1) + \\sum_{x=1}^{m-1} x$. Total sum is\n\n$$m(2m-1) + \\frac{m(m+1)}{2} + \\frac{(m-1)m}{2} = m(2m-1)+m^2 = m(3m-1).$$\n\nDivide by $2m-1$ to get\n\n$$E[X+Y\\mid M=m]=\\frac{m(3m-1)}{2m-1}.$$",
+    answer_kind: "exact",
+    answer_value: "m(3m-1)/(2m-1)",
+    answer_tolerance: null,
+    difficulty: 4,
+    tags: ["conditioning", "expectation", "combinatorics"],
+    source: "Classic conditioning exercise",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "expected-value-of-exponential-truncated-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Truncated Expectation via Tail Integral",
+    prompt_md:
+      "Let $X\\sim\\text{Exp}(\\lambda)$. Compute $E[\\min(X,t)]$ for a fixed $t>0$.",
+    solution_md:
+      "Use tail integral: $E[\\min(X,t)] = \\int_0^t P(X>s)\\,ds = \\int_0^t e^{-\\lambda s}\\,ds = \\frac{1-e^{-\\lambda t}}{\\lambda}$.",
+    answer_kind: "exact",
+    answer_value: "(1-exp(-lambda*t))/lambda",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["exponential", "tail-integral", "expectation"],
+    source: "Tail integral trick",
+    target_roles: ["Researcher"],
+  },
 ];
