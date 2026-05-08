@@ -91,11 +91,7 @@ export function FilterSidebar({ companies }: FilterSidebarProps) {
   }
 
   function clearAll() {
-    const params = new URLSearchParams();
-    // Preserve playlist filter if it's set (it scopes the page).
-    const playlist = searchParams.get("playlist");
-    if (playlist) params.set("playlist", playlist);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    router.replace(pathname, { scroll: false });
   }
 
   const anySelected =
@@ -105,7 +101,8 @@ export function FilterSidebar({ companies }: FilterSidebarProps) {
       selected.company.size >
       0 ||
     selected.role.size > 0 ||
-    (selected.status !== "all" && selected.status !== "");
+    (selected.status !== "all" && selected.status !== "") ||
+    !!searchParams.get("playlist");
 
   return (
     <aside className="space-y-6">
