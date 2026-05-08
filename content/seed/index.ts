@@ -13,6 +13,9 @@
 import type { SeedQuestion } from "@/content/question-types";
 import { PROBABILITY_SEED } from "./probability";
 import { STATISTICS_SEED } from "./statistics";
+import { MACHINE_LEARNING_SEED } from "./machine_learning";
+import { TIME_SERIES_SEED } from "./time_series";
+import { STOCHASTIC_SEED } from "./stochastic";
 import { BRAINTEASERS_SEED } from "./brainteasers";
 import { ALGORITHMS_SEED } from "./algorithms";
 import { CONCURRENCY_SEED } from "./concurrency";
@@ -24,6 +27,9 @@ import { DATA_STRUCTURES_SEED } from "./data_structures";
 export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
   ...PROBABILITY_SEED,
   ...STATISTICS_SEED,
+  ...MACHINE_LEARNING_SEED,
+  ...TIME_SERIES_SEED,
+  ...STOCHASTIC_SEED,
   ...BRAINTEASERS_SEED,
   ...ALGORITHMS_SEED,
   ...CONCURRENCY_SEED,
@@ -36,6 +42,9 @@ export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
 export {
   PROBABILITY_SEED,
   STATISTICS_SEED,
+  MACHINE_LEARNING_SEED,
+  TIME_SERIES_SEED,
+  STOCHASTIC_SEED,
   BRAINTEASERS_SEED,
   ALGORITHMS_SEED,
   CONCURRENCY_SEED,
