@@ -400,6 +400,31 @@ export const MACHINE_LEARNING_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ml-platt-vs-isotonic-calibration-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Calibration: Platt Scaling vs Isotonic Regression",
+    prompt_md:
+      "Name two common post-hoc probability calibration methods and briefly compare them.\n\nIn 5–10 sentences, mention the parametric vs nonparametric difference and overfitting risk.",
+    solution_md:
+      "Platt scaling fits a logistic regression (sigmoid) mapping from model scores to probabilities (parametric, low-variance). Isotonic regression fits a monotone nonparametric mapping (more flexible, higher variance), which can overfit if calibration data is small. Both require a held-out calibration set (or CV) separate from training and final testing.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["calibration", "evaluation", "classification"],
+    source: "ML evaluation practice",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Names Platt scaling and isotonic regression and describes each: 55%",
+        "Contrasts parametric (sigmoid) vs nonparametric (flexible monotone) and overfitting risk: 35%",
+        "Mentions need for held-out calibration set / CV: 10%",
+      ],
+      reference_solution_md:
+        "Platt: fit sigmoid mapping (parametric). Isotonic: fit monotone nonparametric mapping (flexible, can overfit). Use held-out calibration data.\n",
+    },
+  },
+  {
     slug: "ml-data-leakage-time-split-freeform",
     topic: "Statistics",
     track: "researcher",

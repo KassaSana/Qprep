@@ -73,6 +73,31 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ts-kpss-null-hypothesis-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "KPSS Test — Null Hypothesis",
+    prompt_md:
+      "In the KPSS test, what is the usual null hypothesis (in contrast to ADF)?",
+    solution_md:
+      "KPSS typically has null of stationarity (around a level or trend depending on specification), with alternative of unit root / non-stationarity.",
+    answer_kind: "mcq",
+    answer_value: "stationary",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["time-series", "kpss", "stationarity"],
+    source: "Econometrics basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "stationary", label: "The series is stationary (level- or trend-stationary depending on version).", correct: true },
+        { id: "unitroot", label: "The series has a unit root (non-stationary).", correct: false },
+        { id: "normal", label: "Innovations are Gaussian.", correct: false },
+        { id: "no-autocorr", label: "No autocorrelation at any lag.", correct: false },
+      ],
+    },
+  },
+  {
     slug: "ts-ar1-autocorr-numeric",
     topic: "Statistics",
     track: "researcher",
