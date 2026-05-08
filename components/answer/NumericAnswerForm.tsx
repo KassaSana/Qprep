@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NudgePanel } from "@/components/NudgePanel";
 import { Latex } from "@/components/Latex";
+import { NextQuestionCTA } from "@/components/answer/NextQuestionCTA";
 import { cn } from "@/lib/utils";
 
 export interface PriorAttempt {
@@ -24,6 +25,9 @@ interface NumericAnswerFormProps {
   alreadySolved?: boolean;
   /** Placeholder shown in the input. */
   placeholder?: string;
+  /** Auto-advance target shown after a correct submission. */
+  nextHref?: string | null;
+  nextLabel?: string | null;
 }
 
 type Status =
@@ -41,6 +45,8 @@ export function NumericAnswerForm({
   priorAttempts = [],
   alreadySolved = false,
   placeholder = "Your answer (e.g. 1/3, 0.5, 6)",
+  nextHref = null,
+  nextLabel = null,
 }: NumericAnswerFormProps) {
   const router = useRouter();
   const [value, setValue] = React.useState("");
@@ -182,7 +188,10 @@ export function NumericAnswerForm({
       {isCorrect && (
         <div className="rounded-md border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
           Correct. Streak and points updated.
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {nextHref && (
+              <NextQuestionCTA href={nextHref} label={nextLabel} />
+            )}
             <Button variant="secondary" size="sm" onClick={reset}>
               Try another answer
             </Button>

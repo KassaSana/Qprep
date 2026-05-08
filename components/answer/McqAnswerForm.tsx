@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Latex } from "@/components/Latex";
 import { NudgePanel } from "@/components/NudgePanel";
+import { NextQuestionCTA } from "@/components/answer/NextQuestionCTA";
 import type { McqMeta } from "@/content/question-types";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,8 @@ interface McqAnswerFormProps {
   answerMeta: McqMeta;
   solutionMd: string | null;
   alreadySolved?: boolean;
+  nextHref?: string | null;
+  nextLabel?: string | null;
 }
 
 type Status =
@@ -28,6 +31,8 @@ export function McqAnswerForm({
   answerMeta,
   solutionMd,
   alreadySolved = false,
+  nextHref = null,
+  nextLabel = null,
 }: McqAnswerFormProps) {
   const router = useRouter();
   const [selected, setSelected] = React.useState<string | null>(null);
@@ -142,7 +147,12 @@ export function McqAnswerForm({
 
       {isCorrect && (
         <div className="rounded-md border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
-          Correct. Streak and points updated.
+          <div>Correct. Streak and points updated.</div>
+          {nextHref && (
+            <div className="mt-3">
+              <NextQuestionCTA href={nextHref} label={nextLabel} />
+            </div>
+          )}
         </div>
       )}
 

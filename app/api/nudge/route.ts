@@ -16,10 +16,9 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
 import {
-  generateNudge,
-  isAnthropicConfigured,
   type NudgeLevel,
 } from "@/lib/anthropic";
+import { generateNudgeMultiProvider } from "@/lib/nudge-engine";
 
 const DAILY_NUDGE_LIMIT = 30;
 
@@ -86,22 +85,23 @@ export async function POST(req: Request) {
     }
 
     const hint =
-      isAnthropicConfigured()
-        ? await generateNudge({
-            level: payload.level as NudgeLevel,
-            questionTitle: question.title,
-            questionPromptMd: question.prompt_md,
-            submittedAnswer: attempt.submitted_answer,
-            canonicalAnswer: question.answer_value ?? "",
-          })
-        : generateLocalNudge({
-            level: payload.level as NudgeLevel,
-            questionId: question.id,
-            questionTitle: question.title,
-            questionPromptMd: question.prompt_md,
-            submittedAnswer: attempt.submitted_answer,
-            canonicalAnswer: question.answer_value ?? "",
-          });
+      (
+        await generateNudgeMultiProvider({
+          level: payload.level as NudgeLevel,
+          questionTitle: question.title,
+          questionPromptMd: question.prompt_md,
+          submittedAnswer: attempt.submitted_answer,
+          canonicalAnswer: question.answer_value ?? "",
+        })
+      ).hint ??
+      generateLocalNudge({
+        level: payload.level as NudgeLevel,
+        questionId: question.id,
+        questionTitle: question.title,
+        questionPromptMd: question.prompt_md,
+        submittedAnswer: attempt.submitted_answer,
+        canonicalAnswer: question.answer_value ?? "",
+      });
 
     setLocalCachedHint(question.id, errorSignature, payload.level, hint);
     return NextResponse.json({
@@ -187,13 +187,15 @@ export async function POST(req: Request) {
 
   let hint: string;
   try {
-    hint = await generateNudge({
+    hint = (
+      await generateNudgeMultiProvider({
       level: payload.level as NudgeLevel,
       questionTitle: question.title as string,
       questionPromptMd: question.prompt_md as string,
       submittedAnswer: attempt.submitted_answer as string,
       canonicalAnswer: (question.answer_value as string | null) ?? "",
-    });
+    })
+    ).hint;
   } catch (err) {
     console.error("generateNudge failed", err);
     return NextResponse.json(

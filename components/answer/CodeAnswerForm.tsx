@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Latex } from "@/components/Latex";
 import { NudgePanel } from "@/components/NudgePanel";
+import { NextQuestionCTA } from "@/components/answer/NextQuestionCTA";
 import type { CodeMeta } from "@/content/question-types";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +53,8 @@ interface CodeAnswerFormProps {
   answerMeta: CodeMeta;
   solutionMd: string | null;
   alreadySolved?: boolean;
+  nextHref?: string | null;
+  nextLabel?: string | null;
 }
 
 const LANGUAGE_TO_MONACO: Record<string, string> = {
@@ -93,6 +96,8 @@ export function CodeAnswerForm({
   answerMeta,
   solutionMd,
   alreadySolved = false,
+  nextHref = null,
+  nextLabel = null,
 }: CodeAnswerFormProps) {
   const router = useRouter();
   const [source, setSource] = React.useState(answerMeta.starter_code);
@@ -253,6 +258,11 @@ export function CodeAnswerForm({
           {submittedCorrect
             ? "All test cases pass. Streak and points updated."
             : "Some test cases still fail. See results below."}
+          {submittedCorrect && nextHref && (
+            <div className="mt-3">
+              <NextQuestionCTA href={nextHref} label={nextLabel} />
+            </div>
+          )}
         </div>
       )}
 

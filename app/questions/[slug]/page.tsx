@@ -9,17 +9,27 @@ import {
   getSupabaseAdmin,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
-import { loadQuestionBySlug } from "@/lib/questions-data";
+import {
+  loadAllQuestions,
+  loadQuestionBySlug,
+} from "@/lib/questions-data";
+import { computeNext, parseFromParam } from "@/lib/next-question";
 import { difficultyLabel } from "@/content/question-types";
 
 export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: string }>;
 }
 
-export default async function QuestionDetailPage({ params }: PageProps) {
+export default async function QuestionDetailPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { slug } = await params;
+  const { from: fromRaw } = await searchParams;
+  const from = parseFromParam(fromRaw);
   const anonId = await getAnonId();
   const supabaseReady = isSupabaseConfigured();
 
@@ -55,6 +65,23 @@ export default async function QuestionDetailPage({ params }: PageProps) {
     }
   }
   const alreadySolved = priorAttempts.some((a) => a.isCorrect);
+
+  // Pre-compute the auto-advance target so the answer forms can render a
+  // "Next →" CTA the moment a submission is graded correct. We always pass
+  // the playlist context through on the next link, so a full sweep through
+  // a playlist threads its slug from question to question without needing
+  // the user to revisit the playlist page.
+  const { questions: allQuestions, attempts: allAttempts } =
+    await loadAllQuestions(anonId);
+  const solvedQuestionIds = new Set(
+    allAttempts.filter((a) => a.is_correct).map((a) => a.question_id)
+  );
+  const next = computeNext({
+    from,
+    currentQuestionId: question.id,
+    questions: allQuestions,
+    solvedQuestionIds,
+  });
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
@@ -106,6 +133,8 @@ export default async function QuestionDetailPage({ params }: PageProps) {
         solutionMd={question.solution_md}
         priorAttempts={priorAttempts}
         alreadySolved={alreadySolved}
+        nextHref={next?.href ?? null}
+        nextLabel={next?.label ?? null}
       />
     </main>
   );

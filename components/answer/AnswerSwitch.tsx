@@ -19,6 +19,8 @@ interface AnswerSwitchProps {
   solutionMd: string | null;
   priorAttempts: PriorAttempt[];
   alreadySolved: boolean;
+  nextHref?: string | null;
+  nextLabel?: string | null;
 }
 
 /**
@@ -37,6 +39,8 @@ export function AnswerSwitch({
   solutionMd,
   priorAttempts,
   alreadySolved,
+  nextHref = null,
+  nextLabel = null,
 }: AnswerSwitchProps) {
   if (
     answerKind === "numeric" ||
@@ -51,6 +55,8 @@ export function AnswerSwitch({
         priorAttempts={priorAttempts}
         alreadySolved={alreadySolved}
         placeholder={placeholderFor(answerKind)}
+        nextHref={nextHref}
+        nextLabel={nextLabel}
       />
     );
   }
@@ -67,6 +73,8 @@ export function AnswerSwitch({
         answerMeta={meta}
         solutionMd={solutionMd}
         alreadySolved={alreadySolved}
+        nextHref={nextHref}
+        nextLabel={nextLabel}
       />
     );
   }
@@ -83,6 +91,8 @@ export function AnswerSwitch({
         answerMeta={meta}
         solutionMd={solutionMd}
         alreadySolved={alreadySolved}
+        nextHref={nextHref}
+        nextLabel={nextLabel}
       />
     );
   }
@@ -99,6 +109,8 @@ export function AnswerSwitch({
         answerMeta={meta}
         solutionMd={solutionMd}
         alreadySolved={alreadySolved}
+        nextHref={nextHref}
+        nextLabel={nextLabel}
       />
     );
   }
