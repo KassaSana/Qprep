@@ -750,4 +750,161 @@ export const ALGORITHMS_SEED: SeedQuestion[] = [
       memory_limit_mb: 128,
     },
   },
+  {
+    slug: "realized-variance",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Realized Variance (One Pass, Exact)",
+    prompt_md:
+      "Given a sequence of integer returns r_t, compute the realized variance:\n\\[\\mathrm{RV} = \\sum_{t=1}^{n} r_t^2\\]\n\nInput:\n- Line 1: integer n\n- Line 2: space-separated integers r_t\n\nOutput:\n- Print RV as an integer.\n\nExample:\nInput:\n```\n4\n1 -2 0 3\n```\nOutput:\n```\n14\n```",
+    solution_md:
+      "Sum r_t^2 in integer arithmetic in one pass.",
+    answer_kind: "code",
+    difficulty: 1,
+    tags: ["streaming", "risk"],
+    companies: ["Optiver", "IMC"],
+    source: "Risk metric primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    n = int(data[0])\n    rs = list(map(int, data[1:1+n]))\n    rv = 0\n    for r in rs:\n        rv += r * r\n    sys.stdout.write(str(rv))\n\nsolve()\n",
+      test_cases: [
+        { input: "4\n1 -2 0 3\n", expected: "14" },
+        { input: "3\n0 0 0\n", expected: "0", hidden: true },
+      ],
+      time_limit_ms: 1500,
+      memory_limit_mb: 64,
+    },
+  },
+  {
+    slug: "ewma-rsi",
+    topic: "Algorithms",
+    track: "dev",
+    title: "RSI via EWMA (Exact Fractions)",
+    prompt_md:
+      "Compute the RSI (Relative Strength Index) using EWMA of gains/losses.\n\nGiven integer prices p_t and \\(\\alpha=p/q\\), define for t>=1:\n- gain_t = max(p_t - p_{t-1}, 0)\n- loss_t = max(p_{t-1} - p_t, 0)\n- G_t = alpha*gain_t + (1-alpha)*G_{t-1}, with G_1=gain_1\n- L_t = alpha*loss_t + (1-alpha)*L_{t-1}, with L_1=loss_1\n- RS_t = G_t / L_t\n- RSI_t = 100 - 100/(1+RS_t)\n\nOutput RSI_t for t=1..n-1 as reduced fraction A/B (exact rational).\nIf L_t = 0, define RSI_t = 100/1.\n\nInput:\n- Line 1: p q (alpha=p/q)\n- Line 2: n\n- Line 3: n space-separated integer prices\n\nExample:\nInput:\n```\n1 2\n4\n10 11 9 10\n```\nOutput:\n```\n100/1\n50/1\n75/1\n```",
+    solution_md:
+      "Maintain G and L as rationals num/den. Update with EWMA on integer gains/losses. RSI simplifies to: RSI = 100 * G / (G + L). If L=0 => 100.",
+    answer_kind: "code",
+    difficulty: 5,
+    tags: ["streaming", "fractions", "applications"],
+    companies: ["Optiver", "IMC"],
+    source: "Indicator primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport math\n\ndef reduce_frac(num, den):\n    if den == 0:\n        return (1, 0)\n    if num == 0:\n        return (0, 1)\n    g = math.gcd(abs(num), abs(den))\n    num //= g\n    den //= g\n    if den < 0:\n        num = -num\n        den = -den\n    return num, den\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    p = int(data[0]); q = int(data[1])\n    g = math.gcd(p, q)\n    p //= g; q //= g\n    n = int(data[2])\n    prices = list(map(int, data[3:3+n]))\n    if n < 2:\n        return\n\n    out = []\n\n    # G = Gnum/Gden, L = Lnum/Lden\n    d1 = prices[1] - prices[0]\n    gain = d1 if d1 > 0 else 0\n    loss = -d1 if d1 < 0 else 0\n    Gnum, Gden = gain, 1\n    Lnum, Lden = loss, 1\n\n    def emit_rsi(Gnum, Gden, Lnum, Lden):\n        if Lnum == 0:\n            out.append(\"100/1\")\n            return\n        # RSI = 100 * G / (G + L)\n        # Compute G and L as rationals\n        # G = Gnum/Gden, L = Lnum/Lden\n        num = 100 * Gnum * Lden\n        den = (Gnum * Lden + Lnum * Gden) * Gden\n        # Wait: above mixes; easier: G/(G+L) = (Gnum/Gden)/((Gnum/Gden)+(Lnum/Lden))\n        # = (Gnum*Lden) / (Gnum*Lden + Lnum*Gden)\n        num = 100 * (Gnum * Lden)\n        den = (Gnum * Lden + Lnum * Gden)\n        nn, dd = reduce_frac(num, den)\n        out.append(f\"{nn}/{dd}\")\n\n    emit_rsi(Gnum, Gden, Lnum, Lden)\n\n    for i in range(2, n):\n        d = prices[i] - prices[i - 1]\n        gain = d if d > 0 else 0\n        loss = -d if d < 0 else 0\n\n        # G = (p/q)*gain + (1-p/q)*G\n        new_Gnum = p * gain * Gden + (q - p) * Gnum\n        new_Gden = q * Gden\n        Gnum, Gden = reduce_frac(new_Gnum, new_Gden)\n\n        new_Lnum = p * loss * Lden + (q - p) * Lnum\n        new_Lden = q * Lden\n        Lnum, Lden = reduce_frac(new_Lnum, new_Lden)\n\n        emit_rsi(Gnum, Gden, Lnum, Lden)\n\n    sys.stdout.write(\"\\n\".join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "1 2\n4\n10 11 9 10\n", expected: "100/1\n50/1\n75/1" },
+        { input: "1 2\n3\n10 10 10\n", expected: "100/1\n100/1", hidden: true },
+      ],
+      time_limit_ms: 3500,
+      memory_limit_mb: 256,
+    },
+  },
+  {
+    slug: "online-sharpe-squared",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Online Sharpe (Squared, Exact)",
+    prompt_md:
+      "Given integer returns r_t, compute the squared Sharpe ratio using sample mean and sample variance.\n\nDefine for n>=2:\n- mean \\(\\mu\\)\n- unbiased sample variance \\(s^2\\)\n- Sharpe \\(S = \\mu / s\\)\n\nOutput \\(S^2\\) as a reduced fraction. If variance is 0, print `nan`.\n\nInput:\n- Line 1: n\n- Line 2: space-separated integers r_t\n\nOutput:\n- `A/B` for S^2 or `nan`.\n\nExample:\nInput:\n```\n3\n1 2 3\n```\nOutput:\n```\n4/1\n```\n(mean=2, sample var=1 => S^2=4)",
+    solution_md:
+      "Compute mean and unbiased variance exactly using sums:\n\nmu = S/n\nvar = (n*S2 - S^2) / (n*(n-1))\n\nThen S^2 = mu^2 / var = (S^2*(n-1)) / (n*S2 - S^2). Reduce by gcd; if denom=0 => nan.",
+    answer_kind: "code",
+    difficulty: 4,
+    tags: ["statistics", "fractions", "risk"],
+    companies: ["Two Sigma", "Citadel"],
+    source: "Risk metric primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport math\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    n = int(data[0])\n    rs = list(map(int, data[1:1+n]))\n    if n < 2:\n        sys.stdout.write(\"nan\")\n        return\n    S = 0\n    S2 = 0\n    for r in rs:\n        S += r\n        S2 += r * r\n\n    denom = n * S2 - S * S\n    if denom == 0:\n        sys.stdout.write(\"nan\")\n        return\n\n    num = (S * S) * (n - 1)\n    den = denom\n    g = math.gcd(abs(num), abs(den))\n    num //= g\n    den //= g\n    sys.stdout.write(f\"{num}/{den}\")\n\nsolve()\n",
+      test_cases: [
+        { input: "3\n1 2 3\n", expected: "4/1" },
+        { input: "3\n1 1 1\n", expected: "nan", hidden: true },
+        { input: "2\n1 -1\n", expected: "0/1", hidden: true },
+      ],
+      time_limit_ms: 2500,
+      memory_limit_mb: 128,
+    },
+  },
+  {
+    slug: "spread-weighted-mid",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Spread-Weighted Mid (Exact Fraction)",
+    prompt_md:
+      "Given quotes (bid, ask), define the mid m=(bid+ask)/2 and spread s=(ask-bid).\n\nCompute the spread-weighted average mid:\n\\[ \\frac{\\sum m_t s_t}{\\sum s_t} \\]\n\nInput:\n- Line 1: n\n- Next n lines: bid ask (integers)\n\nOutput:\n- Reduced fraction A/B.\n\nExample:\nInput:\n```\n2\n100 102\n100 101\n```\nOutput:\n```\n201/2\n```",
+    solution_md:
+      "Compute numerator as Σ((bid+ask)/2)*(ask-bid) = Σ((bid+ask)*(ask-bid))/2. Keep everything in integers by doubling: num2 = Σ((bid+ask)*(ask-bid)), den2 = 2*Σ(ask-bid). Reduce.",
+    answer_kind: "code",
+    difficulty: 3,
+    tags: ["fractions", "market-data", "streaming"],
+    companies: ["Optiver", "IMC"],
+    source: "Microstructure primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport math\n\ndef solve():\n    lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]\n    if not lines:\n        return\n    n = int(lines[0])\n    num2 = 0\n    den2 = 0\n    for ln in lines[1:1+n]:\n        b, a = map(int, ln.split())\n        s = a - b\n        num2 += (a + b) * s\n        den2 += 2 * s\n    g = math.gcd(abs(num2), abs(den2))\n    num2 //= g\n    den2 //= g\n    sys.stdout.write(f\"{num2}/{den2}\")\n\nsolve()\n",
+      test_cases: [
+        { input: "2\n100 102\n100 101\n", expected: "401/4" },
+        { input: "1\n10 12\n", expected: "11/1", hidden: true },
+      ],
+      time_limit_ms: 2000,
+      memory_limit_mb: 128,
+    },
+  },
+  {
+    slug: "rolling-mid-microvol-window-k",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Rolling Mid Micro-Vol (Window K)",
+    prompt_md:
+      "Given a stream of mid-prices m_t (integers), compute rolling micro-vol defined as the sum of absolute differences in the window:\n\\[ V = \\sum_{i=t-K+2}^{t} |m_i - m_{i-1}| \\]\n\nInput:\n- Line 1: K\n- Line 2: space-separated integer mid-prices\n\nOutput:\n- For each full window, print V as an integer.\n\nExample:\nInput:\n```\n3\n100 101 99 100\n```\nOutput:\n```\n3\n2\n```",
+    solution_md:
+      "Precompute diffs d_i = |m_i - m_{i-1}| for i>=1, then compute rolling sum of diffs over length (K-1) using a sliding window sum.",
+    answer_kind: "code",
+    difficulty: 2,
+    tags: ["rolling-window", "time-series"],
+    companies: ["Jump Trading", "Citadel Securities"],
+    source: "Market data primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    K = int(data[0])\n    ms = list(map(int, data[1:]))\n    if K <= 1:\n        # vol over window of size 1 is 0 per position\n        sys.stdout.write(\"\\n\".join([\"0\"] * len(ms)))\n        return\n    diffs = [abs(ms[i] - ms[i-1]) for i in range(1, len(ms))]\n    win = K - 1\n    out = []\n    s = 0\n    for i, d in enumerate(diffs):\n        s += d\n        if i >= win:\n            s -= diffs[i - win]\n        if i >= win - 1:\n            out.append(str(s))\n    sys.stdout.write(\"\\n\".join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "3\n100 101 99 100\n", expected: "3\n2" },
+        { input: "2\n5 5 5\n", expected: "0\n0", hidden: true },
+      ],
+      time_limit_ms: 2000,
+      memory_limit_mb: 128,
+    },
+  },
+  {
+    slug: "online-vwap-intervals",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Online VWAP by Interval",
+    prompt_md:
+      "Compute VWAP separately for each interval bucket.\n\nInput:\n- Line 1: integer B (bucket size in seconds)\n- Line 2: integer n\n- Next n lines: `t price size` (integers), timestamps non-decreasing\n\nDefine bucket id as floor(t / B).\n\nOutput:\n- For each bucket id that appears, in increasing bucket order, print:\n  `bucket_id A/B`\nwhere A/B is VWAP for trades in that bucket, reduced.\n\nExample:\nInput:\n```\n10\n4\n0 100 1\n5 110 1\n12 90 2\n19 100 2\n```\nOutput:\n```\n0 105/1\n1 95/1\n```",
+    solution_md:
+      "Aggregate per-bucket sums sumPV and sumV in a map keyed by bucket id, then output in sorted bucket order. Reduce each fraction by gcd.",
+    answer_kind: "code",
+    difficulty: 3,
+    tags: ["hashmap", "streaming", "fractions"],
+    companies: ["Optiver", "IMC"],
+    source: "Analytics primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport math\nfrom collections import defaultdict\n\ndef solve():\n    lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]\n    if not lines:\n        return\n    B = int(lines[0])\n    n = int(lines[1])\n    sumPV = defaultdict(int)\n    sumV = defaultdict(int)\n    for ln in lines[2:2+n]:\n        t, p, s = map(int, ln.split())\n        b = t // B\n        sumPV[b] += p * s\n        sumV[b] += s\n\n    out = []\n    for b in sorted(sumPV.keys()):\n        A = sumPV[b]\n        V = sumV[b]\n        g = math.gcd(A, V)\n        out.append(f\"{b} {A//g}/{V//g}\")\n    sys.stdout.write(\"\\n\".join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "10\n4\n0 100 1\n5 110 1\n12 90 2\n19 100 2\n", expected: "0 105/1\n1 95/1" },
+        { input: "5\n2\n0 1 1\n4 2 1\n", expected: "0 3/2", hidden: true },
+      ],
+      time_limit_ms: 2500,
+      memory_limit_mb: 128,
+    },
+  },
 ];
