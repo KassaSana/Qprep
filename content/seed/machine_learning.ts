@@ -425,6 +425,81 @@ export const MACHINE_LEARNING_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ml-early-stopping-why-works-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Early Stopping as Regularization",
+    prompt_md:
+      "Explain why early stopping can act as a form of regularization.\n\nAnswer in 4–8 sentences and reference the idea of stopping before fitting noise.",
+    solution_md:
+      "Training often reduces training loss monotonically, but after some point it starts fitting idiosyncrasies/noise that do not generalize, causing validation loss to rise. Early stopping selects a model along the training trajectory that best generalizes (min validation loss), effectively constraining model complexity. In iterative methods (e.g. boosting, gradient descent), the number of iterations acts like a complexity knob; stopping early is analogous to adding a penalty that prevents overfitting.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["regularization", "generalization", "early-stopping"],
+    source: "Practical ML staple",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Explains validation loss can rise after overfitting begins; stop at best validation: 55%",
+        "Connects training iterations to effective model complexity: 30%",
+        "Uses the 'fit noise' framing explicitly: 15%",
+      ],
+      reference_solution_md:
+        "Early stopping chooses a point before the model fits noise; iterations act as a complexity knob, so stopping early regularizes.\n",
+    },
+  },
+  {
+    slug: "ml-feature-importance-pitfalls-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Feature Importance — Common Pitfalls",
+    prompt_md:
+      "You train a model and compute feature importance. Give two reasons naive feature-importance interpretations can be misleading.\n\nAnswer in 4–8 sentences.",
+    solution_md:
+      "Correlated features can share importance; importance may be arbitrarily assigned among them and does not imply causal effect. Importance can also be sensitive to model class (linear vs tree), scaling, and data leakage. Permutation importance can be biased when features are correlated, and SHAP/attribution methods reflect model behavior, not causal structure.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["interpretability", "correlation", "causality"],
+    source: "ML practice",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "Gives two distinct pitfalls (correlated features, non-causality, leakage, method sensitivity): 70%",
+        "Explains each briefly (not just naming): 20%",
+        "Explicitly notes importance is not causality (or equivalent): 10%",
+      ],
+      reference_solution_md:
+        "Pitfalls: correlated features share importance; importance isn't causal. Importance can also be distorted by leakage or method/model dependence (permutation bias under correlation, scaling effects).\n",
+    },
+  },
+  {
+    slug: "ml-l1-vs-l2-when-use-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "When to Prefer L1 vs L2 Regularization",
+    prompt_md:
+      "In 5–10 sentences, compare L1 and L2 regularization for linear models.\n\nMention sparsity, correlated features, stability, and one practical consideration (optimization or feature scaling).",
+    solution_md:
+      "L1 (lasso) encourages sparsity (exact zeros), useful for feature selection, but can be unstable with correlated features (it may pick one arbitrarily). L2 (ridge) shrinks coefficients smoothly, tends to be more stable under multicollinearity, and often improves prediction when many small effects exist. Elastic net mixes both to handle correlated features while still inducing sparsity. Practically, both require feature scaling; L1 optimization often uses coordinate descent/prox methods and may be slower than ridge's closed form in simple settings.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["regularization", "lasso", "ridge"],
+    source: "ESLR / practical ML",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Explains L1 sparsity vs L2 shrinkage/stability: 50%",
+        "Mentions correlated-feature behavior (instability of L1 / ridge grouping / elastic net): 30%",
+        "Mentions at least one practical consideration (scaling, optimization): 20%",
+      ],
+      reference_solution_md:
+        "L1 → sparsity, feature selection but unstable with correlated features. L2 → smooth shrinkage, stable with multicollinearity. Elastic net blends. In practice: scale features; optimization differs.\n",
+    },
+  },
+  {
     slug: "ml-cross-validation-when-not-freeform",
     topic: "Statistics",
     track: "researcher",

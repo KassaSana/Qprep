@@ -140,6 +140,31 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ts-overdifferencing-what-happens-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Over-Differencing — What Happens?",
+    prompt_md:
+      "What can go wrong if you difference a series more times than necessary (over-differencing)?\n\nAnswer in 4–8 sentences. Mention at least one symptom in ACF/PACF or forecast behavior.",
+    solution_md:
+      "Over-differencing can introduce unnecessary moving-average structure and amplify noise, making the series harder to model and forecasts more volatile. It can create negative autocorrelation at lag 1 and distort ACF/PACF patterns, leading to overfitting with extra MA terms. It can also remove genuine low-frequency signal (trend) you might want to model explicitly.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["time-series", "differencing", "arma"],
+    source: "ARIMA modeling practice",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Explains over-differencing adds unnecessary MA-like structure / increases noise: 55%",
+        "Mentions a concrete symptom (negative lag-1 autocorrelation, distorted ACF/PACF, volatile forecasts): 30%",
+        "Mentions loss of low-frequency signal / removing meaningful trend: 15%",
+      ],
+      reference_solution_md:
+        "Over-differencing can add MA structure and amplify noise (often negative lag-1 autocorrelation), distort ACF/PACF, and produce volatile forecasts; it may remove meaningful low-frequency signal.\n",
+    },
+  },
+  {
     slug: "ts-ar1-stationarity-condition-mcq",
     topic: "Statistics",
     track: "researcher",
@@ -242,6 +267,56 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
         { id: "seasonal", label: "The series has deterministic seasonality.", correct: false },
         { id: "iid", label: "Residuals are iid Gaussian with constant variance.", correct: false },
       ],
+    },
+  },
+  {
+    slug: "ts-granger-causality-what-it-means-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Granger Causality — What Does It Mean?",
+    prompt_md:
+      "Explain what it means for a time series $X$ to Granger-cause another series $Y$.\n\nAnswer in 4–8 sentences, and explicitly state what it does *not* imply.",
+    solution_md:
+      "$X$ Granger-causes $Y$ if past values of $X$ provide additional predictive power for $Y$ beyond what past values of $Y$ already provide (typically in a VAR/regression framework). It is a statement about predictability with lags, not true causal mechanism; it does not imply interventions on $X$ will change $Y$ without additional assumptions.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "causality", "forecasting"],
+    source: "Econometrics interview staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Defines Granger causality in terms of incremental predictive power using lagged $X$: 60%",
+        "Mentions conditioning on past $Y$ / baseline autoregressive info: 25%",
+        "Explicitly states it is not true causal intervention causality: 15%",
+      ],
+      reference_solution_md:
+        "Granger-cause: lagged $X$ improves prediction of $Y$ beyond lagged $Y$ alone. It's predictability, not mechanistic causality.\n",
+    },
+  },
+  {
+    slug: "ts-var-what-is-it-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "VAR — What Is It?",
+    prompt_md:
+      "What is a vector autoregression (VAR) model?\n\nIn 4–8 sentences: describe the idea, what it models, and one common use (forecasting, impulse responses).",
+    solution_md:
+      "A VAR models multiple time series jointly, where each variable is regressed on lagged values of itself and lagged values of the other variables. It captures dynamic interdependence and can be used for multivariate forecasting and for analyzing dynamic responses via impulse response functions and forecast error variance decompositions (with identification assumptions).",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "var", "forecasting"],
+    source: "Econometrics basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Defines VAR as multivariate autoregression using lagged values of all variables: 60%",
+        "Mentions joint modeling / interdependence (not separate univariate ARs): 20%",
+        "Mentions one application (forecasting or impulse responses): 20%",
+      ],
+      reference_solution_md:
+        "VAR: vector time series where each component depends on lags of all components. Used for multivariate forecasting and impulse responses.\n",
     },
   },
   {

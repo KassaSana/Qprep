@@ -594,6 +594,185 @@ export const STATISTICS_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "hypothesis-test-vs-confidence-interval-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Tests vs Confidence Intervals",
+    prompt_md:
+      "Explain the relationship between a two-sided hypothesis test at significance level $\\alpha$ and a $(1-\\alpha)$ confidence interval.\n\nAnswer in 4–8 sentences.",
+    solution_md:
+      "For many standard problems, the two-sided test at level $\\alpha$ rejects $H_0: \\theta=\\theta_0$ iff $\\theta_0$ lies outside the $(1-\\alpha)$ confidence interval for $\\theta$. This equivalence comes from inverting the test: the confidence set is the set of parameter values not rejected by the corresponding level-$\\alpha$ tests.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["inference", "confidence-interval", "hypothesis-testing"],
+    source: "Core inference equivalence",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 70,
+      rubric: [
+        "States the reject/outside-CI equivalence for two-sided tests: 70%",
+        "Mentions test inversion / CI as non-rejected parameter values: 30%",
+      ],
+      reference_solution_md:
+        "Two-sided level-$\\alpha$ test rejects $\\theta_0$ iff $\\theta_0$ is outside the $(1-\\alpha)$ CI. CI can be seen as inverting the family of tests.\n",
+    },
+  },
+  {
+    slug: "likelihood-ratio-test-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Likelihood Ratio Test — Intuition",
+    prompt_md:
+      "In 4–8 sentences, explain the intuition of the likelihood ratio test (LRT).\n\nWhat are you comparing, and why does it make sense?",
+    solution_md:
+      "The LRT compares how well the data can be fit under the null-constrained model versus the unrestricted alternative model, via the ratio of their maximized likelihoods. If the null model cannot achieve a likelihood close to the best achievable likelihood, the data provides evidence against $H_0$. Asymptotically, under regularity conditions, $-2\\log\\Lambda$ has a chi-square distribution with degrees of freedom equal to the constraint difference (Wilks' theorem).",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["hypothesis-testing", "mle", "lrt"],
+    source: "Wilks/LRT staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "Explains comparing maximized likelihood under null vs alternative: 55%",
+        "Explains why small ratio implies evidence against null: 25%",
+        "Mentions asymptotic chi-square / Wilks theorem (optional but strong): 20%",
+      ],
+      reference_solution_md:
+        "LRT compares best likelihood under $H_0$ vs best likelihood under $H_1$ via $\\Lambda$. If null fits much worse, reject. Under conditions, $-2\\log\\Lambda\\sim \\chi^2$ asymptotically.\n",
+    },
+  },
+  {
+    slug: "log-likelihood-concavity-bernoulli-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Bernoulli Log-Likelihood Concavity",
+    prompt_md:
+      "For iid Bernoulli($p$) data, what is true about the log-likelihood as a function of $p\\in(0,1)$?",
+    solution_md:
+      "It is concave in $p$, so the MLE is a unique global maximizer in $(0,1)$ (unless all outcomes are 0 or 1, which push to boundary).",
+    answer_kind: "mcq",
+    answer_value: "concave",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["mle", "concavity", "optimization"],
+    source: "Likelihood properties",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "concave", label: "It is concave in $p$ on $(0,1)$.", correct: true },
+        { id: "convex", label: "It is convex in $p$ on $(0,1)$.", correct: false },
+        { id: "flat", label: "It is constant in $p$ for any fixed dataset.", correct: false },
+        { id: "periodic", label: "It is periodic in $p$.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "fisher-information-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Fisher Information — Intuition",
+    prompt_md:
+      "In 4–8 sentences, explain what Fisher information measures.\n\nMention how it relates to estimator variance (Cramér–Rao) and to curvature of the log-likelihood.",
+    solution_md:
+      "Fisher information measures how sensitive the likelihood is to changes in the parameter; more information means the data pins down the parameter more sharply. It can be expressed as the negative expected second derivative (curvature) of the log-likelihood. The Cramér–Rao lower bound says the variance of any unbiased estimator is at least the inverse of the Fisher information (for scalar parameters), so higher information implies lower achievable variance.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["mle", "asymptotic", "fisher-information"],
+    source: "Asymptotic statistics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "Describes information as sensitivity/identifiability of parameter from data: 40%",
+        "Mentions log-likelihood curvature (expected negative Hessian/second derivative): 35%",
+        "Mentions CRLB relation variance ≥ 1/I (scalar) or inverse info matrix: 25%",
+      ],
+      reference_solution_md:
+        "Fisher info measures curvature/sensitivity of log-likelihood. Higher info → parameter more identifiable. CRLB: Var(unbiased estimator) ≥ 1/I (scalar), so more info → lower variance bound.\n",
+    },
+  },
+  {
+    slug: "asymptotic-normality-mle-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Asymptotic Normality of the MLE (Informal)",
+    prompt_md:
+      "Under standard regularity conditions, what is the typical asymptotic distribution of the MLE $\\hat\\theta$ of a scalar parameter $\\theta$?",
+    solution_md:
+      "Typically $\\sqrt{n}(\\hat\\theta-\\theta)\\Rightarrow \\mathcal{N}(0, I(\\theta)^{-1})$, where $I(\\theta)$ is the Fisher information per observation (or use total info depending on convention).",
+    answer_kind: "mcq",
+    answer_value: "normal",
+    answer_tolerance: null,
+    difficulty: 4,
+    tags: ["mle", "asymptotic", "normal"],
+    source: "Asymptotic theory staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "normal",
+          label:
+            "$\\sqrt{n}(\\hat\\theta-\\theta)\\Rightarrow \\mathcal{N}(0, I(\\theta)^{-1})$ (up to convention).",
+          correct: true,
+        },
+        { id: "cauchy", label: "Cauchy, regardless of model.", correct: false },
+        { id: "uniform", label: "Uniform on an interval shrinking like $1/n$.", correct: false },
+        { id: "poisson", label: "Poisson with mean $\\theta$.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "endogeneity-what-is-it-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Endogeneity — What Is It?",
+    prompt_md:
+      "In linear regression, what does it mean for a regressor $X$ to be endogenous?\n\nIn 4–8 sentences: connect to $E[\\varepsilon\\mid X]$ and give one cause (omitted variables, measurement error, simultaneity).",
+    solution_md:
+      "Endogeneity means the regressor is correlated with the error term; equivalently, the exogeneity condition fails: $E[\\varepsilon\\mid X]\\ne 0$ (or $\\mathrm{Cov}(X,\\varepsilon)\\ne 0$). Causes include omitted variable bias, simultaneity/reverse causality, and measurement error. Endogeneity biases OLS coefficients and breaks causal interpretation and standard inference.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["ols", "endogeneity", "causality"],
+    source: "Econometrics staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "Defines endogeneity via $E[\\varepsilon\\mid X]\\ne 0$ or $\\mathrm{Cov}(X,\\varepsilon)\\ne 0$: 55%",
+        "Gives at least one correct cause (omitted variables, simultaneity, measurement error): 25%",
+        "States consequence: OLS bias / broken causal interpretation: 20%",
+      ],
+      reference_solution_md:
+        "Endogenous $X$ means correlated with error: $E[\\varepsilon|X]\\ne 0$. Causes: omitted vars, simultaneity, measurement error. Consequence: OLS bias / no causal interpretation.\n",
+    },
+  },
+  {
+    slug: "instrumental-variables-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Instrumental Variables — Intuition",
+    prompt_md:
+      "Explain the intuition behind instrumental variables (IV) in 5–10 sentences.\n\nName the two core IV assumptions (relevance and exclusion) in words.",
+    solution_md:
+      "IV uses a variable $Z$ (instrument) that shifts the endogenous regressor $X$ in a way that is unrelated to the outcome $Y$ except through $X$. Relevance: $Z$ must be correlated with $X$ (it moves $X$). Exclusion: $Z$ affects $Y$ only through $X$ and is uncorrelated with the structural error term. With these, variation in $X$ induced by $Z$ is quasi-random and can identify a causal effect (often a local average treatment effect).",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["iv", "causality", "endogeneity"],
+    source: "Econometrics interview staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Explains IV as using exogenous variation in X induced by Z to identify causal effect: 45%",
+        "States relevance (Z correlated with X) clearly: 25%",
+        "States exclusion / exogeneity (Z affects Y only through X; uncorrelated with error): 30%",
+      ],
+      reference_solution_md:
+        "IV: use instrument Z that moves X (relevance) and affects Y only via X / is exogenous (exclusion), so induced variation in X can identify causal effect.\n",
+    },
+  },
+  {
     slug: "bessel-correction-intuition-freeform",
     topic: "Statistics",
     track: "researcher",
