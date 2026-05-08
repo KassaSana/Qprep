@@ -28,14 +28,15 @@ export function ThemeToggle() {
     setTheme(saved);
     setMounted(true);
     applyTheme(saved);
+  }, []);
 
+  useEffect(() => {
     const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
     if (!mq) return;
-    const onChange = () => applyTheme(saved);
+    const onChange = () => applyTheme(theme);
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [theme]);
 
   const icon =
     (theme === "system" ? getSystemTheme() : theme) === "dark" ? Moon : Sun;
