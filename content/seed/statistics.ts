@@ -20,6 +20,7 @@ export const STATISTICS_SEED: SeedQuestion[] = [
     difficulty: 1,
     tags: ["variance", "binomial"],
     source: "Textbook",
+    target_roles: ["All"],
   },
   {
     slug: "ev-uniform-zero-one-square",
@@ -35,6 +36,7 @@ export const STATISTICS_SEED: SeedQuestion[] = [
     difficulty: 1,
     tags: ["uniform", "integration"],
     source: "Textbook",
+    target_roles: ["All"],
   },
   {
     slug: "ev-min-two-uniforms",
@@ -52,10 +54,12 @@ export const STATISTICS_SEED: SeedQuestion[] = [
     tags: ["order-statistics", "uniform"],
     companies: ["D. E. Shaw"],
     source: "Textbook",
+    target_roles: ["All"],
   },
   {
     slug: "clt-distribution-mcq",
     topic: "Statistics",
+    track: "researcher",
     title: "Central Limit Theorem — Limit Distribution",
     prompt_md:
       "Let $X_1, X_2, \\ldots$ be iid with finite mean $\\mu$ and finite positive variance $\\sigma^2$. Let $S_n = \\sum_{i=1}^n X_i$. Which of the following describes the limiting distribution of $\\dfrac{S_n - n\\mu}{\\sigma\\sqrt{n}}$ as $n \\to \\infty$?",
@@ -68,6 +72,7 @@ export const STATISTICS_SEED: SeedQuestion[] = [
     tags: ["clt", "asymptotic", "theorem-recall"],
     companies: ["Two Sigma"],
     source: "Textbook MCQ",
+    target_roles: ["All"],
     answer_meta: {
       options: [
         { id: "uniform", label: "Uniform on $(-1, 1)$", correct: false },
