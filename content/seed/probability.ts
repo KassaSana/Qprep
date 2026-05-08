@@ -634,4 +634,446 @@ export const PROBABILITY_SEED: SeedQuestion[] = [
         "$$E[X]=E[E[X\\mid Y]].$$\nUseful: break a hard expectation into conditional expectations on a simpler intermediate state.\n",
     },
   },
+  {
+    slug: "markov-inequality-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Markov's Inequality",
+    prompt_md:
+      "Which statement is Markov's inequality for a nonnegative random variable $X$?",
+    solution_md: "For $a>0$, $P(X\\ge a)\\le E[X]/a$ when $X\\ge 0$.",
+    answer_kind: "mcq",
+    answer_value: "markov",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["inequalities", "markov"],
+    source: "Core tool",
+    target_roles: ["All"],
+    answer_meta: {
+      options: [
+        { id: "markov", label: "$P(X\\ge a)\\le \\frac{E[X]}{a}$ for $X\\ge 0$", correct: true },
+        { id: "chebyshev", label: "$P(|X-\\mu|\\ge k)\\le \\frac{\\sigma^2}{k^2}$", correct: false },
+        { id: "jensen", label: "$\\varphi(E[X])\\le E[\\varphi(X)]$ for convex $\\varphi$", correct: false },
+        { id: "bayes", label: "$P(A\\mid B)=\\frac{P(B\\mid A)P(A)}{P(B)}$", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "chebyshev-inequality-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Chebyshev's Inequality",
+    prompt_md:
+      "Which statement is Chebyshev's inequality for a random variable with mean $\\mu$ and variance $\\sigma^2$?",
+    solution_md:
+      "For $k>0$, $P(|X-\\mu|\\ge k)\\le \\sigma^2/k^2$.",
+    answer_kind: "mcq",
+    answer_value: "chebyshev",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["inequalities", "chebyshev"],
+    source: "Core tool",
+    target_roles: ["All"],
+    answer_meta: {
+      options: [
+        { id: "chebyshev", label: "$P(|X-\\mu|\\ge k)\\le \\frac{\\sigma^2}{k^2}$", correct: true },
+        { id: "markov", label: "$P(X\\ge a)\\le E[X]/a$", correct: false },
+        { id: "union", label: "$P(\\cup_i A_i)\\le \\sum_i P(A_i)$", correct: false },
+        { id: "clt", label: "$\\sqrt{n}(\\bar X-\\mu)/\\sigma \\Rightarrow \\mathcal{N}(0,1)$", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "bayes-two-tests-sensitivity-specificity",
+    topic: "Probability",
+    track: "researcher",
+    title: "Bayes: Two Independent Tests",
+    prompt_md:
+      "A disease has prevalence $1\\%$. A test is $99\\%$ sensitive and $99\\%$ specific. You take the test twice, independently conditional on disease status, and both results are positive.\n\nWhat is $P(D\\mid ++)$? Round to 2 decimal places.",
+    solution_md:
+      "Prior odds: $P(D)=0.01$, $P(\\neg D)=0.99$. Likelihoods: $P(++\\mid D)=0.99^2=0.9801$, $P(++\\mid \\neg D)=0.01^2=0.0001$.\n\nPosterior:\n\n$$P(D\\mid++)=\\frac{0.9801\\cdot 0.01}{0.9801\\cdot 0.01+0.0001\\cdot 0.99}=\\frac{0.009801}{0.009801+0.000099}\\approx 0.99.$$\n",
+    answer_kind: "numeric",
+    answer_value: "0.99",
+    answer_tolerance: 0.01,
+    difficulty: 3,
+    tags: ["bayes", "conditioning", "independence"],
+    source: "Classic Bayes extension",
+    target_roles: ["All"],
+  },
+  {
+    slug: "negative-binomial-expected-trials",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Trials Until $r$ Successes",
+    prompt_md:
+      "You flip a coin with probability of heads $p$ until you have seen $r$ heads.\n\nWhat is the expected number of flips?",
+    solution_md:
+      "The waiting time for one success is geometric with mean $1/p$. Sum $r$ independent geometric waiting times (memoryless), so expected flips is $r/p$.",
+    answer_kind: "exact",
+    answer_value: "r/p",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["expectation", "geometric", "negative-binomial"],
+    source: "Stat 110 staple",
+    target_roles: ["All"],
+  },
+  {
+    slug: "law-of-total-probability-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Law of Total Probability",
+    prompt_md:
+      "Let $B_1,\\dots,B_k$ be a partition of the sample space with $P(B_i)>0$. Which identity is the law of total probability for event $A$?",
+    solution_md: "$P(A)=\\sum_i P(A\\mid B_i)P(B_i)$.",
+    answer_kind: "mcq",
+    answer_value: "total",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["conditioning", "total-probability"],
+    source: "Core tool",
+    target_roles: ["All"],
+    answer_meta: {
+      options: [
+        {
+          id: "total",
+          label: "$P(A)=\\sum_{i=1}^k P(A\\mid B_i)P(B_i)$",
+          correct: true,
+        },
+        {
+          id: "bayes",
+          label: "$P(B_i\\mid A)=\\frac{P(A\\mid B_i)P(B_i)}{P(A)}$",
+          correct: false,
+        },
+        {
+          id: "union",
+          label: "$P(\\cup_i A_i)\\le \\sum_i P(A_i)$",
+          correct: false,
+        },
+        {
+          id: "indep",
+          label: "$P(A\\cap B)=P(A)P(B)$",
+          correct: false,
+        },
+      ],
+    },
+  },
+  {
+    slug: "random-walk-hit-prob-unbiased",
+    topic: "Probability",
+    track: "researcher",
+    title: "Random Walk Hitting Probability (Unbiased)",
+    prompt_md:
+      "A simple symmetric random walk on $\\{0,1,\\dots,N\\}$ starts at $k$ and is absorbed at 0 and $N$.\n\nWhat is the probability it hits $N$ before 0?",
+    solution_md:
+      "For the unbiased walk, the hitting probability is linear in $k$: $P(\\text{hit }N\\text{ first})=k/N$.",
+    answer_kind: "exact",
+    answer_value: "k/N",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["random-walk", "martingale", "gambler's-ruin"],
+    source: "Classic",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "monty-hall-general-n-doors",
+    topic: "Probability",
+    track: "researcher",
+    title: "Monty Hall with $n$ Doors",
+    prompt_md:
+      "There are $n$ doors. One hides a car, $n-1$ hide goats. You pick one door uniformly. The host opens $n-2$ other doors, all goats, leaving your door and one other unopened.\n\nIf you always switch to the other unopened door, what is your probability of winning?",
+    solution_md:
+      "Your initial pick is correct with probability $1/n$. With probability $(n-1)/n$ you picked a goat; then the only other unopened door must be the car. So switching wins with probability $(n-1)/n$.",
+    answer_kind: "exact",
+    answer_value: "(n-1)/n",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["conditioning", "bayes", "classic"],
+    source: "Generalization",
+    target_roles: ["All"],
+  },
+  {
+    slug: "expected-coin-flips-until-three-heads",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Flips Until 3 Heads",
+    prompt_md:
+      "You flip a fair coin until you have seen 3 heads total (not necessarily consecutive). What is the expected number of flips?",
+    solution_md:
+      "Each head is a success with probability $1/2$. Expected flips to get one head is 2. Sum three independent geometric waiting times: $2+2+2=6$.",
+    answer_kind: "numeric",
+    answer_value: "6",
+    answer_tolerance: 1e-9,
+    difficulty: 1,
+    tags: ["expectation", "geometric", "linearity-of-expectation"],
+    source: "Warm-up",
+    target_roles: ["All"],
+  },
+  {
+    slug: "expected-matches-random-permutation",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Fixed Points in a Random Permutation",
+    prompt_md:
+      "A random permutation of $\\{1,2,\\dots,n\\}$ is chosen uniformly.\n\nWhat is the expected number of fixed points (positions $i$ where $\\pi(i)=i$)?",
+    solution_md:
+      "Let $I_i=\\mathbf{1}\\{\\pi(i)=i\\}$. Then $E[I_i]=P(\\pi(i)=i)=1/n$. By linearity,\n\n$$E[\\#\\text{fixed points}]=\\sum_{i=1}^n E[I_i]=n\\cdot (1/n)=1.$$",
+    answer_kind: "numeric",
+    answer_value: "1",
+    answer_tolerance: 1e-9,
+    difficulty: 2,
+    tags: ["linearity-of-expectation", "indicators", "permutations"],
+    source: "Classic",
+    target_roles: ["All"],
+  },
+  {
+    slug: "probability-at-least-one-fixed-point-approx",
+    topic: "Probability",
+    track: "researcher",
+    title: "Probability of At Least One Fixed Point (Asymptotic)",
+    prompt_md:
+      "A random permutation of $\\{1,2,\\dots,n\\}$ is chosen uniformly.\n\nAs $n\\to\\infty$, what is the limiting probability that the permutation has **at least one** fixed point?",
+    solution_md:
+      "The number of fixed points converges in distribution to $\\text{Poisson}(1)$, so\n\n$$P(\\ge 1)\\to 1-P(0)=1-e^{-1}.$$",
+    answer_kind: "exact",
+    answer_value: "1-1/e",
+    answer_tolerance: null,
+    difficulty: 4,
+    tags: ["poisson", "asymptotic", "permutations"],
+    source: "Poisson approximation / derangements",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "expected-draws-until-repeat-cards",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Draws Until Repeat (Deck with Replacement)",
+    prompt_md:
+      "You draw cards uniformly from a 52-card deck **with replacement**. What is the expected number of draws until you see a repeated card value (i.e., the same exact card appears twice)?\n\nGive the answer as a summation expression (exact), not a decimal.",
+    solution_md:
+      "Let $T$ be time of first repeat. Use tail-sum:\n\n$$E[T]=\\sum_{k\\ge 0} P(T>k).$$\n\nWe have $P(T>k)$ = probability first $k$ draws are all distinct = $\\frac{52}{52}\\cdot\\frac{51}{52}\\cdots\\frac{52-k+1}{52}$ for $k\\le 52$, and 0 after.\n\nSo\n\n$$E[T]=\\sum_{k=0}^{52} \\prod_{j=0}^{k-1}\\left(1-\\frac{j}{52}\\right).$$",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["birthday", "tail-integral", "expectation"],
+    source: "Birthday-type expectation",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 70,
+      rubric: [
+        "Uses tail-sum identity $E[T]=\\sum_{k\\ge 0}P(T>k)$: 40%",
+        "Correctly expresses $P(T>k)$ as 'first k draws all distinct' product: 45%",
+        "Correctly bounds the sum to $k\\le 52$ (or notes it becomes 0 after): 15%",
+      ],
+      reference_solution_md:
+        "$$E[T]=\\sum_{k=0}^{52} P(\\text{first k draws all distinct})=\\sum_{k=0}^{52}\\prod_{j=0}^{k-1}\\left(1-\\frac{j}{52}\\right).$$",
+    },
+  },
+  {
+    slug: "conditional-expectation-ev-by-conditioning-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Compute an Expectation by Conditioning",
+    prompt_md:
+      "Let $N\\sim\\text{Poisson}(\\lambda)$. Conditional on $N$, let $X\\mid N \\sim \\text{Binomial}(N,p)$.\n\nCompute $E[X]$ in terms of $\\lambda$ and $p$.",
+    solution_md:
+      "Use tower property: $E[X]=E[E[X\\mid N]]$. Given $N$, $E[X\\mid N]=Np$. So $E[X]=E[N]p=\\lambda p$.",
+    answer_kind: "exact",
+    answer_value: "lambda*p",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["expectation", "conditioning", "poisson"],
+    source: "Classic conditioning",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "poisson-thinning-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Poisson Thinning",
+    prompt_md:
+      "If $N\\sim\\text{Poisson}(\\lambda)$ and each of the $N$ items is kept independently with probability $p$, what is the distribution of the number kept?",
+    solution_md:
+      "By Poisson thinning, the kept count is $\\text{Poisson}(\\lambda p)$.",
+    answer_kind: "mcq",
+    answer_value: "poisson-lp",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["poisson", "thinning"],
+    source: "Core property",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "poisson-lp", label: "$\\text{Poisson}(\\lambda p)$", correct: true },
+        { id: "poisson-l", label: "$\\text{Poisson}(\\lambda)$", correct: false },
+        { id: "binomial", label: "$\\text{Binomial}(\\lambda, p)$", correct: false },
+        { id: "normal", label: "$\\mathcal{N}(\\lambda p, \\lambda p(1-p))$", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "ev-max-of-n-uniforms",
+    topic: "Probability",
+    track: "researcher",
+    title: "$E[\\max(U_1,\\dots,U_n)]$",
+    prompt_md:
+      "Let $U_1,\\dots,U_n$ be iid $\\text{Uniform}(0,1)$. Compute $E[\\max(U_1,\\dots,U_n)]$ as a function of $n$.",
+    solution_md:
+      "Let $M=\\max_i U_i$. Then $F_M(x)=x^n$ on $[0,1]$, so density is $f_M(x)=n x^{n-1}$. Thus\n\n$$E[M]=\\int_0^1 x\\,n x^{n-1}\\,dx = \\frac{n}{n+1}.$$",
+    answer_kind: "exact",
+    answer_value: "n/(n+1)",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["order-statistics", "uniform", "expectation"],
+    source: "Order statistics staple",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "continuous-conditioning-zero-probability-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Conditioning on Probability-Zero Events",
+    prompt_md:
+      "In continuous problems you often see expressions like $P(X\\in A\\mid Y=y)$ even though $P(Y=y)=0$.\n\nIn 4–8 sentences, explain how to interpret this conditioning rigorously (at the level of intuition: densities / regular conditional distributions).",
+    solution_md:
+      "It is interpreted via conditional densities or regular conditional distributions: $P(X\\in A\\mid Y=y)$ is defined (a.e.) as a function of $y$ such that $P(X\\in A, Y\\in B)=\\int_B P(X\\in A\\mid Y=y) f_Y(y)\\,dy$. When densities exist, $f_{X\\mid Y}(x\\mid y)=f_{X,Y}(x,y)/f_Y(y)$, and conditioning on $Y=y$ means using that conditional density.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["conditioning", "continuous", "densities"],
+    source: "Measure-theory intuition for interviews",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Explains conditioning via conditional densities or regular conditional distributions (not naive $P(\\cdot)/P(Y=y)$): 55%",
+        "Gives a correct relationship using joint/marginal densities or the integral identity over sets $B$: 30%",
+        "Mentions the 'defined almost everywhere' / not unique on measure-zero sets caveat (optional but strong): 15%",
+      ],
+      reference_solution_md:
+        "Interpret via conditional density $f_{X|Y}(x|y)=f_{X,Y}(x,y)/f_Y(y)$ when it exists, or via regular conditional distributions satisfying $P(X\\in A, Y\\in B)=\\int_B P(X\\in A|Y=y)f_Y(y)dy$.\n",
+    },
+  },
+  {
+    slug: "stationary-distribution-two-state-markov-chain",
+    topic: "Probability",
+    track: "researcher",
+    title: "Stationary Distribution of a 2-State Markov Chain",
+    prompt_md:
+      "A 2-state Markov chain has transition matrix\n\n$$P=\\begin{pmatrix}1-a & a\\\\ b & 1-b\\end{pmatrix}$$\n\nwith $a,b\\in(0,1)$. Compute the stationary distribution $\\pi$.",
+    solution_md:
+      "Solve $\\pi=\\pi P$ with $\\pi_1+\\pi_2=1$. Balance gives $\\pi_1 a=\\pi_2 b$. So $\\pi_1=\\frac{b}{a+b}$ and $\\pi_2=\\frac{a}{a+b}$.",
+    answer_kind: "exact",
+    answer_value: "(b/(a+b), a/(a+b))",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["markov-chain", "stationary", "linear-algebra"],
+    source: "Classic",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "memoryless-property-exponential-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Memoryless Property",
+    prompt_md:
+      "Which distribution on $[0,\\infty)$ is memoryless (continuous analogue of geometric)?",
+    solution_md:
+      "The exponential distribution is memoryless: $P(X>s+t\\mid X>s)=P(X>t)$.",
+    answer_kind: "mcq",
+    answer_value: "exponential",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["memoryless", "exponential"],
+    source: "Core fact",
+    target_roles: ["All"],
+    answer_meta: {
+      options: [
+        { id: "exponential", label: "Exponential", correct: true },
+        { id: "normal", label: "Normal", correct: false },
+        { id: "uniform", label: "Uniform", correct: false },
+        { id: "gamma", label: "Gamma (general)", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "gambler-ruin-biased-hit-prob",
+    topic: "Probability",
+    track: "researcher",
+    title: "Gambler's Ruin — Biased Walk Hitting Probability",
+    prompt_md:
+      "A random walk on $\\{0,1,\\dots,N\\}$ starts at $k$ and is absorbed at 0 and $N$. Each step goes up by 1 with probability $p$ and down by 1 with probability $q=1-p$.\n\nFor $p\\ne 1/2$, what is the probability it hits $N$ before 0?",
+    solution_md:
+      "For biased gambler's ruin, with $r=q/p$:\n\n$$P_k(\\text{hit }N)=\\frac{1-r^k}{1-r^N},\\quad r=\\frac{q}{p},\\ p\\ne q.$$",
+    answer_kind: "exact",
+    answer_value: "(1-(q/p)^k)/(1-(q/p)^N)",
+    answer_tolerance: null,
+    difficulty: 4,
+    tags: ["random-walk", "gambler's-ruin", "recurrence"],
+    source: "Classic",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "gambler-ruin-fair-expected-time-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Gambler's Ruin — Expected Absorption Time (Fair Walk)",
+    prompt_md:
+      "A simple symmetric random walk on $\\{0,1,\\dots,N\\}$ starts at $k$ and is absorbed at 0 and $N$.\n\nCompute the expected time to absorption $E_k[\\tau]$.",
+    solution_md:
+      "Let $e_k=E_k[\\tau]$. For $k\\in\\{1,\\dots,N-1\\}$, the walk moves to $k\\pm1$ with prob $1/2$, so\n\n$$e_k=1+\\tfrac12 e_{k-1}+\\tfrac12 e_{k+1},$$\n\nwith boundary conditions $e_0=e_N=0$. The solution to the discrete second-difference equation is quadratic:\n\n$$e_k=k(N-k).$$",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["random-walk", "recurrence", "hitting-time"],
+    source: "Classic",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 75,
+      rubric: [
+        "Sets up the correct recurrence $e_k=1+\\tfrac12 e_{k-1}+\\tfrac12 e_{k+1}$ with $e_0=e_N=0$: 55%",
+        "Solves (or identifies) the quadratic form solution: 25%",
+        "States the final result $e_k=k(N-k)$: 20%",
+      ],
+      reference_solution_md:
+        "Recurrence: $e_k=1+\\frac12 e_{k-1}+\\frac12 e_{k+1}$, $e_0=e_N=0$. Solution: $e_k=k(N-k)$.\n",
+    },
+  },
+  {
+    slug: "expected-nonempty-bins",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Non-Empty Bins",
+    prompt_md:
+      "You throw $m$ balls independently and uniformly into $n$ bins.\n\nWhat is the expected number of **non-empty** bins?",
+    solution_md:
+      "Expected non-empty = $n - E[\\#\\text{empty}] = n - n(1-1/n)^m = n\\left(1-(1-1/n)^m\\right)$.",
+    answer_kind: "exact",
+    answer_value: "n(1-(1-1/n)^m)",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["occupancy", "indicators", "linearity-of-expectation"],
+    source: "Stat 110 classic",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "conditional-expectation-law-total-variance-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Law of Total Variance",
+    prompt_md:
+      "State the law of total variance.\n\nThat is, express $\\mathrm{Var}(X)$ in terms of $E[\\mathrm{Var}(X\\mid Y)]$ and $\\mathrm{Var}(E[X\\mid Y])$.",
+    solution_md:
+      "$$\\mathrm{Var}(X)=E[\\mathrm{Var}(X\\mid Y)] + \\mathrm{Var}(E[X\\mid Y]).$$\n\nIt decomposes total variability into within-conditional variability plus variability of conditional means.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["variance", "conditioning", "tower-property"],
+    source: "Core identity",
+    target_roles: ["All"],
+    answer_meta: {
+      min_words: 35,
+      rubric: [
+        "States the identity $\\mathrm{Var}(X)=E[\\mathrm{Var}(X\\mid Y)] + \\mathrm{Var}(E[X\\mid Y])$: 85%",
+        "Provides brief interpretation (within + between): 15%",
+      ],
+      reference_solution_md:
+        "$$\\mathrm{Var}(X)=E[\\mathrm{Var}(X\\mid Y)] + \\mathrm{Var}(E[X\\mid Y]).$$",
+    },
+  },
 ];

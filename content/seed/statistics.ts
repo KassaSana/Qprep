@@ -386,6 +386,147 @@ export const STATISTICS_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "var-of-sample-mean-numeric",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Variance of the Sample Mean",
+    prompt_md:
+      "Let $X_1,\\dots,X_n$ be iid with $\\mathrm{Var}(X_i)=\\sigma^2$.\n\nWhat is $\\mathrm{Var}(\\bar X)$ where $\\bar X = \\frac{1}{n}\\sum_{i=1}^n X_i$?",
+    solution_md:
+      "By independence, $\\mathrm{Var}(\\bar X)=\\frac{1}{n^2}\\sum_i \\mathrm{Var}(X_i)=\\frac{n\\sigma^2}{n^2}=\\sigma^2/n$.",
+    answer_kind: "exact",
+    answer_value: "sigma^2/n",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["variance", "linearity", "iid"],
+    source: "Core fact",
+    target_roles: ["All"],
+  },
+  {
+    slug: "mle-vs-map-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "MLE vs MAP",
+    prompt_md:
+      "Explain the difference between maximum likelihood estimation (MLE) and maximum a posteriori estimation (MAP).\n\nIn 4–8 sentences: mention what each maximizes and what extra ingredient MAP uses.",
+    solution_md:
+      "MLE maximizes the likelihood $p(data\\mid \\theta)$ (equivalently log-likelihood) over parameters. MAP maximizes the posterior $p(\\theta\\mid data)\\propto p(data\\mid\\theta)p(\\theta)$, incorporating a prior $p(\\theta)$. MAP can be seen as MLE plus a regularization term from the log prior; with a flat prior, MAP reduces to MLE.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["mle", "bayes", "map"],
+    source: "Bayesian vs frequentist staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 65,
+      rubric: [
+        "Correctly states MLE maximizes likelihood $p(data\\mid\\theta)$: 40%",
+        "Correctly states MAP maximizes posterior $p(\\theta\\mid data)$: 40%",
+        "Mentions the prior and the proportionality $p(\\theta\\mid data)\\propto p(data\\mid\\theta)p(\\theta)$ (or equivalent): 20%",
+      ],
+      reference_solution_md:
+        "MLE: maximize $p(data\\mid\\theta)$. MAP: maximize $p(\\theta\\mid data)\\propto p(data\\mid\\theta)p(\\theta)$ (uses a prior). Flat prior → MAP = MLE.\n",
+    },
+  },
+  {
+    slug: "correlation-not-causation-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Correlation Is Not Causation — Give Two Reasons",
+    prompt_md:
+      "Give two distinct reasons why observing a correlation between variables $X$ and $Y$ does not imply $X$ causes $Y$.\n\nAnswer in 4–8 sentences.",
+    solution_md:
+      "Common reasons: confounding (a third variable causes both), reverse causality (Y causes X), selection bias, and coincidental correlation due to multiple testing. Without an identification strategy (randomization, instrumental variables, causal assumptions), correlation alone doesn't determine direction or mechanism.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["causality", "confounding", "inference"],
+    source: "Interview staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 55,
+      rubric: [
+        "Provides two genuinely distinct non-causal explanations (confounding, reverse causality, selection bias, etc.): 70%",
+        "Explains each briefly (not just naming): 20%",
+        "Mentions identification / need for experimental or causal assumptions: 10%",
+      ],
+      reference_solution_md:
+        "Two reasons: confounding and reverse causality (or selection bias). Correlation alone lacks an identification strategy, so you can't infer causation.\n",
+    },
+  },
+  {
+    slug: "type1-type2-errors-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Type I vs Type II Error",
+    prompt_md:
+      "Which statement correctly describes Type I and Type II errors in hypothesis testing?",
+    solution_md:
+      "Type I error is rejecting $H_0$ when $H_0$ is true (false positive). Type II error is failing to reject $H_0$ when $H_1$ is true (false negative).",
+    answer_kind: "mcq",
+    answer_value: "fp-fn",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["hypothesis-testing", "inference"],
+    source: "Core definition",
+    target_roles: ["All"],
+    answer_meta: {
+      options: [
+        { id: "fp-fn", label: "Type I = false positive; Type II = false negative.", correct: true },
+        { id: "swap", label: "Type I = false negative; Type II = false positive.", correct: false },
+        { id: "bayes", label: "Type I/II errors are Bayesian posterior probabilities.", correct: false },
+        { id: "only-ci", label: "Type I/II errors only apply to confidence intervals, not tests.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "power-definition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Power — Definition and Intuition",
+    prompt_md:
+      "Define the power of a hypothesis test.\n\nIn 3–6 sentences, mention what it is a probability of and what typically increases power.",
+    solution_md:
+      "Power is $P(\\text{reject }H_0\\mid H_1\\text{ true})=1-\\beta$ where $\\beta$ is Type II error. Power increases with larger sample size, larger effect size, lower noise, and higher significance level (though higher alpha increases false positives).",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["hypothesis-testing", "power"],
+    source: "Core concept",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 45,
+      rubric: [
+        "Defines power as $P(\\text{reject }H_0\\mid H_1)$ or $1-\\beta$: 65%",
+        "Gives at least two factors that increase power (n, effect size, noise, alpha): 35%",
+      ],
+      reference_solution_md:
+        "Power = $P(\\text{reject }H_0\\mid H_1)=1-\\beta$. Increases with larger $n$, larger effect, lower variance; larger $\\alpha$ also increases power.\n",
+    },
+  },
+  {
+    slug: "omitted-variable-bias-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Omitted Variable Bias — Intuition",
+    prompt_md:
+      "Explain omitted variable bias in linear regression in 5–10 sentences.\n\nWhen does omitting a variable $Z$ bias the estimated coefficient on $X$ in a regression of $Y$ on $X$?",
+    solution_md:
+      "Omitted variable bias occurs when the omitted variable affects the outcome and is correlated with an included regressor. If $Z$ both influences $Y$ and is correlated with $X$, then $X$ partially picks up $Z$'s effect, biasing the coefficient. If either $Z$ has no effect on $Y$ (conditional on X) or $Z$ is uncorrelated with $X$, omission does not bias the coefficient on $X$ (though it may increase variance).",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["ols", "bias", "causality"],
+    source: "Econometrics staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 90,
+      rubric: [
+        "States the two required conditions: omitted variable affects $Y$ and is correlated with included regressor $X$: 70%",
+        "Explains the mechanism (X picks up Z’s effect via correlation): 20%",
+        "Mentions one 'no bias' case (no effect or no correlation): 10%",
+      ],
+      reference_solution_md:
+        "Bias if omitted $Z$ affects $Y$ and $\\mathrm{Cov}(X,Z)\\ne 0$. Otherwise omission doesn't bias the coefficient on $X$.\n",
+    },
+  },
+  {
     slug: "clt-does-not-mean-normal-sample-mcq",
     topic: "Statistics",
     track: "researcher",

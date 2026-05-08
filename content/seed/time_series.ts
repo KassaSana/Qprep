@@ -245,6 +245,81 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ts-trend-stationary-vs-difference-stationary-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Trend-Stationary vs Difference-Stationary",
+    prompt_md:
+      "Explain the difference between a trend-stationary process and a difference-stationary (unit-root) process.\n\nIn 5–10 sentences: mention what transformation makes each stationary and what shocks do (temporary vs permanent).",
+    solution_md:
+      "Trend-stationary: $X_t$ can be written as deterministic trend + stationary noise; detrending makes it stationary. Shocks are temporary in the sense deviations revert around the trend.\n\nDifference-stationary: $X_t$ has a unit root; differencing makes it stationary. Shocks have persistent/permanent effects on the level because they accumulate (random-walk-like behavior).",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["time-series", "stationarity", "unit-root"],
+    source: "Econometrics fundamentals",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 90,
+      rubric: [
+        "Defines trend-stationary via deterministic trend + stationary residual; detrending yields stationarity: 40%",
+        "Defines difference-stationary via unit root; differencing yields stationarity: 40%",
+        "Contrasts shock behavior (temporary vs permanent/persistent): 20%",
+      ],
+      reference_solution_md:
+        "Trend-stationary: detrend to get stationary; shocks are mean-reverting around trend. Difference-stationary: unit root; difference to get stationary; shocks persist in levels.\n",
+    },
+  },
+  {
+    slug: "ts-arma-vs-arima-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "ARMA vs ARIMA",
+    prompt_md:
+      "What is the key difference between an ARMA model and an ARIMA model?",
+    solution_md:
+      "ARIMA includes an integration/differencing step (the I component) to handle non-stationarity; ARMA assumes stationarity in levels.",
+    answer_kind: "mcq",
+    answer_value: "differencing",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["time-series", "arima", "arma"],
+    source: "Forecasting basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "differencing", label: "ARIMA includes differencing (integration) to handle non-stationarity.", correct: true },
+        { id: "nonlinear", label: "ARIMA is nonlinear, while ARMA is linear.", correct: false },
+        { id: "bayes", label: "ARIMA is Bayesian, while ARMA is frequentist.", correct: false },
+        { id: "only-seasonal", label: "ARIMA is only for seasonal data, ARMA is only for non-seasonal data.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "ts-forecast-metrics-mape-smape-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Forecasting Metrics — MAPE Pitfall",
+    prompt_md:
+      "Why can MAPE (mean absolute percentage error) be a problematic metric for forecasting?",
+    solution_md:
+      "MAPE divides by the true value; it can explode or be undefined when actuals are near zero and it is asymmetric (penalizes over/under differently in practice). Alternatives include sMAPE, MAE, RMSE, or scaled errors.",
+    answer_kind: "mcq",
+    answer_value: "near-zero",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["time-series", "metrics", "evaluation"],
+    source: "Forecasting practice",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      options: [
+        { id: "near-zero", label: "It can blow up / be undefined when actuals are near zero (division by small numbers).", correct: true },
+        { id: "convex", label: "It is non-convex, so it cannot be minimized.", correct: false },
+        { id: "always-better", label: "It is always better than MAE/RMSE.", correct: false },
+        { id: "scale", label: "It is scale-dependent, unlike RMSE.", correct: false },
+      ],
+    },
+  },
+  {
     slug: "ts-white-noise-vs-martingale-diff-freeform",
     topic: "Statistics",
     track: "researcher",

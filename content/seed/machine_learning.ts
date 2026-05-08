@@ -350,6 +350,56 @@ export const MACHINE_LEARNING_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ml-regularization-as-prior-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Regularization as a Prior (MAP View)",
+    prompt_md:
+      "Explain how $\\ell_2$ regularization in linear/logistic regression relates to a Bayesian prior.\n\nWhat prior on $\\beta$ corresponds to an $\\ell_2$ penalty $\\lambda\\|\\beta\\|_2^2$?",
+    solution_md:
+      "MAP maximizes log-likelihood plus log-prior. An $\\ell_2$ penalty corresponds to a zero-mean Gaussian prior on coefficients: $\\beta\\sim\\mathcal{N}(0,\\tau^2 I)$, where $\\lambda$ is proportional to $1/\\tau^2$.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["regularization", "bayes", "map"],
+    source: "Common Bayesian interpretation",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 55,
+      rubric: [
+        "States MAP as maximizing log-likelihood + log-prior (or equivalent): 35%",
+        "Identifies $\\ell_2$ penalty with a zero-mean Gaussian prior on coefficients: 50%",
+        "Relates $\\lambda$ to prior variance (larger $\\lambda$ → smaller variance): 15%",
+      ],
+      reference_solution_md:
+        "$\\ell_2$ regularization corresponds to a Gaussian prior $\\beta\\sim\\mathcal{N}(0,\\tau^2 I)$; MAP adds $\\log p(\\beta)$ giving a quadratic penalty with $\\lambda\\propto 1/\\tau^2$.\n",
+    },
+  },
+  {
+    slug: "ml-calibration-vs-discrimination-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Calibration vs Discrimination",
+    prompt_md:
+      "Explain the difference between probability calibration and discrimination (ranking) for a binary classifier.\n\nGive one metric or diagnostic for each.",
+    solution_md:
+      "Calibration: predicted probabilities match empirical frequencies (e.g., among examples predicted 0.7, about 70% are positive). Diagnostics/metrics include reliability plots, Brier score, and calibration error.\n\nDiscrimination: ability to rank positives above negatives regardless of calibration; metrics include ROC-AUC and PR-AUC.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["evaluation", "calibration", "auc"],
+    source: "ML evaluation interviews",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "Defines calibration in terms of probabilities matching frequencies: 45%",
+        "Defines discrimination/ranking as ordering positives above negatives: 35%",
+        "Provides one metric/diagnostic for each (e.g., Brier/reliability for calibration; AUC for discrimination): 20%",
+      ],
+      reference_solution_md:
+        "Calibration: probabilities reflect frequencies (use reliability plot/Brier). Discrimination: ranking quality (use ROC-AUC/PR-AUC).\n",
+    },
+  },
+  {
     slug: "ml-cross-validation-when-not-freeform",
     topic: "Statistics",
     track: "researcher",
