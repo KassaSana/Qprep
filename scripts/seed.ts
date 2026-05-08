@@ -71,6 +71,15 @@ function toQuestionRow(q: SeedQuestion): QuestionRow {
   };
 }
 
+function isMissingColumnError(err: unknown, column: string): boolean {
+  const msg = String((err as { message?: unknown } | null)?.message ?? err ?? "");
+  return (
+    msg.includes(`Could not find the '${column}' column`) ||
+    msg.includes(`column "${column}" of relation`) ||
+    msg.includes(`unknown column "${column}"`)
+  );
+}
+
 async function main() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -90,14 +99,38 @@ async function main() {
     `Seeding ${rows.length} questions across ${new Set(rows.map((r) => r.topic)).size} topics...`
   );
 
-  const { data: questions, error } = await sb
-    .from("questions")
+  // Some environments may still be on migrations prior to `target_roles`.
+  // We try the full v2 shape first, then fall back to omitting that column.
+  const qTable = sb.from("questions");
+
+  let questions: { id: string; slug: string; title: string; topic: string; answer_kind: string }[] | null =
+    null;
+
+  const first = await qTable
     .upsert(rows, { onConflict: "slug" })
     .select("id, slug, title, topic, answer_kind");
 
-  if (error) {
-    console.error("Question upsert failed:", error.message);
-    process.exit(1);
+  if (first.error) {
+    if (isMissingColumnError(first.error, "target_roles")) {
+      console.warn(
+        "Supabase schema missing questions.target_roles — retrying seed without target_roles. " +
+          "Apply migration 0003_roles_and_remove_finance.sql to enable role-based filtering."
+      );
+      const rowsWithoutRoles = rows.map(({ target_roles: _omit, ...rest }) => rest);
+      const second = await qTable
+        .upsert(rowsWithoutRoles, { onConflict: "slug" })
+        .select("id, slug, title, topic, answer_kind");
+      if (second.error) {
+        console.error("Question upsert failed:", second.error.message);
+        process.exit(1);
+      }
+      questions = second.data as typeof questions;
+    } else {
+      console.error("Question upsert failed:", first.error.message);
+      process.exit(1);
+    }
+  } else {
+    questions = first.data as typeof questions;
   }
 
   for (const row of questions ?? []) {

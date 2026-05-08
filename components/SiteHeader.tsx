@@ -1,32 +1,11 @@
 import Link from "next/link";
 import { getAnonId } from "@/lib/anon";
-import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server";
+import { loadProfile } from "@/lib/home-data";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
-interface ProfileSummary {
-  streak_count: number;
-  total_points: number;
-}
-
-async function loadProfile(anonId: string): Promise<ProfileSummary | null> {
-  if (!isSupabaseConfigured()) return null;
-  try {
-    const sb = getSupabaseAdmin();
-    const { data, error } = await sb
-      .from("anon_users")
-      .select("streak_count, total_points")
-      .eq("id", anonId)
-      .maybeSingle();
-    if (error || !data) return null;
-    return data as ProfileSummary;
-  } catch {
-    return null;
-  }
-}
 
 export async function SiteHeader() {
   const anonId = await getAnonId();
-  const profile = anonId ? await loadProfile(anonId) : null;
+  const profile = await loadProfile(anonId);
 
   return (
     <header className="border-b border-border bg-bg/80 backdrop-blur supports-[backdrop-filter]:bg-bg/60">
@@ -47,24 +26,21 @@ export async function SiteHeader() {
         <nav className="hidden items-center gap-1 sm:flex">
           <HeaderLink href="/questions" label="Questions" />
           <HeaderLink href="/playlists" label="Playlists" />
+          <HeaderLink href="/mental-math" label="Mental math" />
         </nav>
 
         <div className="flex items-center gap-2 text-xs">
           <ThemeToggle />
-          {profile && profile.total_points > 0 && (
+          {profile && profile.points > 0 && (
             <span className="pill">
               <span className="mr-1 text-fg-subtle">pts</span>
-              <span className="font-medium text-fg">
-                {profile.total_points}
-              </span>
+              <span className="font-medium text-fg">{profile.points}</span>
             </span>
           )}
-          {profile && profile.streak_count > 0 && (
+          {profile && profile.streak > 0 && (
             <span className="pill">
               <span className="mr-1 text-fg-subtle">streak</span>
-              <span className="font-medium text-fg">
-                {profile.streak_count}
-              </span>
+              <span className="font-medium text-fg">{profile.streak}</span>
             </span>
           )}
         </div>

@@ -1407,4 +1407,177 @@ export const STATISTICS_SEED: SeedQuestion[] = [
         "Permutation test: under $H_0$ labels are exchangeable. Compute statistic (e.g., diff in means), shuffle labels many times to get null distribution, p-value = fraction of shuffled stats as/extreme as observed.\n",
     },
   },
+  {
+    slug: "law-total-expectation-statement-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Law of Total Expectation",
+    prompt_md:
+      "State the law of total expectation.\n\nIn 3–6 sentences: write the formula and give one sentence intuition.",
+    solution_md:
+      "For integrable $X$ and a sigma-field (or random variable) $Z$,\n\n$$E[X] = E[E[X\\mid Z]].$$\n\nIntuition: conditioning partitions uncertainty; averaging conditional means recovers the overall mean.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["expectation", "conditioning", "identity"],
+    source: "Core probability/statistics",
+    target_roles: ["All"],
+    answer_meta: {
+      min_words: 45,
+      rubric: [
+        "States the formula E[X] = E[E[X|Z]] correctly: 75%",
+        "Provides a short intuition about averaging conditional means / partitioning: 25%",
+      ],
+      reference_solution_md:
+        "Law of total expectation: $E[X]=E[E[X\\mid Z]]$. Intuition: average conditional means across Z to recover overall mean.\n",
+    },
+  },
+  {
+    slug: "law-total-variance-statement-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Law of Total Variance",
+    prompt_md:
+      "State the law of total variance.\n\nWrite it in terms of conditioning on a random variable $Z$, and interpret the two terms.",
+    solution_md:
+      "Law of total variance:\n\n$$\\mathrm{Var}(X)=E[\\mathrm{Var}(X\\mid Z)] + \\mathrm{Var}(E[X\\mid Z]).$$\n\nThe first term is average within-Z variability; the second is variability of conditional means across Z.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["variance", "conditioning", "identity"],
+    source: "Core probability/statistics",
+    target_roles: ["All"],
+    answer_meta: {
+      min_words: 55,
+      rubric: [
+        "States Var(X)=E[Var(X|Z)] + Var(E[X|Z]) correctly: 75%",
+        "Interprets both terms (within-group vs between-group variability): 25%",
+      ],
+      reference_solution_md:
+        "Total variance: $\\mathrm{Var}(X)=E[\\mathrm{Var}(X|Z)] + \\mathrm{Var}(E[X|Z])$ (within-Z + between-Z components).\n",
+    },
+  },
+  {
+    slug: "mle-invariance-property-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "MLE Invariance Property",
+    prompt_md:
+      "If $\\hat\\theta$ is the MLE of $\\theta$ and $\\phi=g(\\theta)$ for a one-to-one function $g$, what is the MLE of $\\phi$?",
+    solution_md:
+      "By invariance of MLE, the MLE of $\\phi=g(\\theta)$ is $\\hat\\phi=g(\\hat\\theta)$.",
+    answer_kind: "mcq",
+    answer_value: "plug-in",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["mle", "estimation", "invariance"],
+    source: "Classical estimation theory",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "plug-in", label: "$\\hat\\phi = g(\\hat\\theta)$ (plug-in via invariance).", correct: true },
+        { id: "inverse", label: "$\\hat\\phi = g^{-1}(\\hat\\theta)$.", correct: false },
+        { id: "zero", label: "$\\hat\\phi = 0$ always.", correct: false },
+        { id: "unbiased", label: "The MLE of $\\phi$ is the unbiased estimator of $\\phi$.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "adjusted-r2-why-matters-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Adjusted $R^2$ — Why Use It?",
+    prompt_md:
+      "Why can plain $R^2$ be misleading when comparing linear regression models with different numbers of predictors, and how does adjusted $R^2$ address this?\n\nAnswer in 5–10 sentences.",
+    solution_md:
+      "Adding predictors cannot decrease $R^2$ on the training data, even if the predictors are pure noise, so plain $R^2$ tends to favor larger models. Adjusted $R^2$ introduces a degrees-of-freedom penalty based on $n$ and the number of predictors, so it can decrease when added predictors do not improve fit enough. It is still an in-sample criterion; for predictive performance, cross-validation is often better.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["ols", "model-selection", "metrics"],
+    source: "Regression diagnostics",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "States that training R^2 is non-decreasing as predictors are added (overfitting risk): 45%",
+        "Explains adjusted R^2 penalizes model size via degrees of freedom: 40%",
+        "Mentions it is still in-sample and CV is preferred for prediction (optional but strong): 15%",
+      ],
+      reference_solution_md:
+        "Plain R^2 never decreases when adding regressors, so it can favor overly large models. Adjusted R^2 penalizes adding predictors via degrees-of-freedom; it can drop if extra predictors don't help enough. For prediction, prefer CV.\n",
+    },
+  },
+  {
+    slug: "f-test-nested-linear-models-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "F-test for Nested Linear Models",
+    prompt_md:
+      "In linear regression, what does the classic F-test for nested models test?\n\nIn 5–10 sentences: state the null in words, what quantities it compares, and one key assumption for exact finite-sample validity.",
+    solution_md:
+      "For a restricted (smaller) model nested inside a full model, the F-test tests whether the additional coefficients in the full model are all zero (i.e., the restrictions hold). It compares the increase in residual sum of squares (or equivalently explained variance) relative to the extra degrees of freedom, scaled by the full-model residual variance estimate. Exact finite-sample F distribution requires normal errors (and the usual OLS assumptions like exogeneity and homoskedasticity/independence depending on setup); otherwise it's often used as an approximation.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["ols", "hypothesis-testing", "anova"],
+    source: "Regression inference staple",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 105,
+      rubric: [
+        "States the null: added regressors' coefficients are jointly zero (restrictions hold): 45%",
+        "Describes comparing RSS (or explained variance) change with degrees of freedom scaling: 35%",
+        "Mentions a key assumption for exact F (normality) or notes approximate nature otherwise: 20%",
+      ],
+      reference_solution_md:
+        "Nested-model F-test: H0 that extra coefficients are jointly zero. Compare RSS_restricted vs RSS_full, scaled by df. Exact finite-sample F result relies on normal errors (plus standard OLS assumptions); otherwise approximate.\n",
+    },
+  },
+  {
+    slug: "huber-loss-robust-regression-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Huber Loss — Why It’s More Robust Than Squared Loss",
+    prompt_md:
+      "What is the Huber loss (qualitatively), and why can it make regression more robust to outliers than squared loss?\n\nAnswer in 4–8 sentences.",
+    solution_md:
+      "Huber loss behaves like squared loss near zero residual (smooth, efficient for small errors) but transitions to absolute loss for large residuals, reducing the influence of extreme outliers. Squared loss grows quadratically, so large residuals dominate the objective and can pull the fit strongly. The Huber tuning parameter sets where the transition occurs and trades robustness vs efficiency.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["robust-statistics", "regression", "loss-functions"],
+    source: "Robust regression staple",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "Describes piecewise behavior: quadratic near 0, linear for large residuals: 55%",
+        "Explains robustness via reduced influence of outliers vs squared loss: 35%",
+        "Mentions tuning parameter/threshold tradeoff (optional but strong): 10%",
+      ],
+      reference_solution_md:
+        "Huber loss is quadratic for small residuals and linear for large residuals, so outliers don't dominate like in squared loss. The threshold parameter controls robustness vs efficiency.\n",
+    },
+  },
+  {
+    slug: "bootstrap-bca-vs-percentile-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Bootstrap BCa vs Percentile CI (High Level)",
+    prompt_md:
+      "At a high level, how does the BCa (bias-corrected and accelerated) bootstrap confidence interval differ from the simple percentile interval?\n\nAnswer in 5–10 sentences; mention bias and skewness.",
+    solution_md:
+      "The percentile interval uses empirical quantiles of bootstrap replicates directly. BCa adjusts the quantile levels using two corrections: a bias-correction term (accounting for median bias of the bootstrap distribution relative to the observed estimate) and an acceleration term (accounting for skewness / non-constant standard error via jackknife influence). This can yield intervals with better coverage in some settings, at the cost of extra computation and assumptions.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["bootstrap", "confidence-interval", "inference"],
+    source: "Bootstrap intervals",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 100,
+      rubric: [
+        "Contrasts percentile as raw bootstrap quantiles vs BCa as adjusted quantile levels: 45%",
+        "Mentions both corrections: bias correction and acceleration (skewness/influence): 45%",
+        "Mentions practical tradeoff (better coverage sometimes, more compute/complexity): 10%",
+      ],
+      reference_solution_md:
+        "Percentile CI uses bootstrap quantiles directly. BCa modifies quantile levels using a bias correction and an acceleration term (skewness/influence), often improving coverage in some cases at extra complexity.\n",
+    },
+  },
 ];

@@ -12,7 +12,7 @@ export interface ButtonProps
 
 const variantClasses: Record<Variant, string> = {
   primary:
-    "bg-accent text-white hover:bg-accent-muted active:bg-accent-muted",
+    "bg-accent text-bg hover:bg-accent-muted active:bg-accent-muted",
   secondary:
     "bg-bg-raised border border-border text-fg hover:bg-bg-subtle",
   ghost:
