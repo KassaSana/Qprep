@@ -338,4 +338,431 @@ export const LLD_SEED: SeedQuestion[] = [
         "Shard metrics state per thread/stripe. Counters: atomic increments per shard; export sums shards. Gauges: atomic last-value. Histograms: fixed buckets or sketch with per-shard bucket arrays. export() aggregates shards to a snapshot. Avoid global locks by sharding and atomics; optionally intern names to ids.\n",
     },
   },
+  {
+    slug: "lld-dedup-cache-ttl",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a De-dup Cache with TTL",
+    prompt_md:
+      "Design an in-process de-duplication cache to drop duplicate events.\n\nRequirements:\n- `seen(event_id, now)` returns true if event_id was seen within last TTL seconds, else records it and returns false\n- bounded memory\n- thread-safe\n- TTL-based eviction (no full scans)\n\nProvide classes/data structures and key invariants.",
+    solution_md:
+      "Use a hash map event_id→(expires_at, node) plus a min-heap (or timing wheel) keyed by expires_at. On seen(): evict expired entries by popping heap while expires_at<=now, validating against map (versioning to skip stale heap entries). Then check map for event_id; if present and not expired => seen; else insert with expires_at=now+TTL and push to heap.\n\nBound memory by max size: if exceeded, evict earliest-expiring entries or use LRU as fallback. Thread safety via a mutex or striped locks; hot-path can be optimized with sharding.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "caching", "heaps"],
+    source: "Streaming correctness primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines API semantics (seen-within-TTL) and correct behavior on insert/check: 35%",
+        "Explains TTL eviction without full scans (heap/timing wheel) and stale-entry handling: 40%",
+        "Addresses bounded memory (max size policy) and thread safety approach: 25%",
+      ],
+      reference_solution_md:
+        "Map event_id→expires_at plus min-heap of (expires_at,event_id,version). seen(): evict expired by popping heap and validating, then check/insert. Bound memory via max size eviction. Thread-safe via mutex/striped locks.\n",
+    },
+  },
+  {
+    slug: "lld-timer-wheel",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Timer Wheel Scheduler",
+    prompt_md:
+      "Design a timer scheduler using a timing wheel.\n\nRequirements:\n- `schedule(delay_ms, callback)` returns a handle\n- `cancel(handle)`\n- `tick(now_ms)` runs due callbacks\n- many timers; avoid O(n) scans\n- do not run user callbacks while holding locks\n\nDescribe your wheel structure and how you handle long delays.",
+    solution_md:
+      "Use a circular array of buckets, each bucket a list of timer nodes. Wheel resolution is `tick_ms`. A timer maps to slot = (current_slot + delay/tick_ms) mod wheel_size, with a `rounds` count for delays beyond one revolution. On tick(), advance slot, decrement rounds for timers in bucket; execute those with rounds==0.\n\nCancel marks node cancelled and removes from bucket if you have pointers; otherwise lazy-cancel with a flag. Snapshot due callbacks under lock, then execute after releasing lock.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["lld", "timers", "performance"],
+    source: "Networking/runtime primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 190,
+      rubric: [
+        "Describes timing wheel buckets/slots and mapping delay to slot: 40%",
+        "Handles long delays via rounds/hierarchical wheels and explains tick processing: 35%",
+        "Addresses cancel semantics and not running callbacks under lock (snapshot): 25%",
+      ],
+      reference_solution_md:
+        "Circular wheel of buckets at tick resolution. schedule maps delay to slot and rounds count. tick advances slot; timers with rounds==0 fire, others decrement rounds. Cancel via removal pointer or lazy flag. Collect due callbacks under lock then run after releasing.\n",
+    },
+  },
+  {
+    slug: "lld-fixed-capacity-hashmap",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Fixed-Capacity Hash Map (No Rehash)",
+    prompt_md:
+      "Design an in-process hash map with fixed capacity for low-latency use.\n\nRequirements:\n- no rehashing on hot path (capacity fixed)\n- `get/put/erase`\n- handle collisions\n- define behavior when full\n- thread-safety is optional (say what you'd do)\n\nProvide a bounded design (few structs) and key tradeoffs.",
+    solution_md:
+      "Pick open addressing (linear/robin-hood) with an array of slots: {state, key, value, fingerprint}. put probes until empty/deleted slot; get probes until empty slot or key found; erase marks tombstone. Behavior when full: reject puts or overwrite with a policy.\n\nTradeoffs: tombstones degrade performance; consider periodic maintenance off hot path. Thread safety: simplest is single-thread use; otherwise shard by hash and lock per shard.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "hashmap", "performance"],
+    source: "Low-latency DS primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines fixed-capacity slot array + collision strategy (open addressing/chaining) and core ops: 45%",
+        "Defines full-table behavior and deletion semantics (tombstones or free list): 30%",
+        "Mentions tradeoffs (tombstone accumulation, probe lengths) and concurrency option (sharding/locks): 25%",
+      ],
+      reference_solution_md:
+        "Fixed slot array with open addressing (linear/robin-hood). put/get probe; erase uses tombstones. When full, reject or apply overwrite policy. Tombstones can degrade; do maintenance off hot path. Concurrency via sharding + per-shard lock or single-thread ownership.\n",
+    },
+  },
+  {
+    slug: "lld-order-state-machine",
+    topic: "LLD",
+    track: "dev",
+    title: "Design an Order State Machine",
+    prompt_md:
+      "Design the in-process state machine for handling order lifecycle.\n\nEvents include:\n- New(order)\n- Ack\n- Reject\n- Fill(qty)\n- CancelRequest\n- CancelAck\n- CancelReject\n\nRequirements:\n- maintain remaining quantity\n- reject invalid transitions\n- expose callbacks for downstream (positions/pnl)\n\nProvide main classes and how you'd encode transitions.",
+    solution_md:
+      "Represent state as an enum (NEW_SENT, LIVE, PARTIALLY_FILLED, FILLED, CANCEL_PENDING, CANCELED, REJECTED). Maintain fields: order_id, orig_qty, filled_qty, remaining, last_event_seq. Implement `apply(event)` that validates transition table and updates quantities.\n\nEmit side effects via observer callbacks (on_ack/on_fill/on_cancel). Use a transition table (map[state][event_type] → handler) or switch with explicit guards, keeping invariants centralized.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["lld", "state-machine", "correctness"],
+    source: "Quant-dev gateway primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 190,
+      rubric: [
+        "Defines a reasonable set of states and valid transitions for ack/fill/cancel paths: 45%",
+        "Maintains quantity invariants (filled+remaining=orig; no negative; terminal states): 30%",
+        "Explains how transitions are encoded (table/handlers) and how invalid transitions are rejected: 15%",
+        "Mentions side-effect/callback design (observer) cleanly: 10%",
+      ],
+      reference_solution_md:
+        "Enum states (sent/live/partial/filled/cancel_pending/canceled/rejected). apply(event) validates transitions and updates filled/remaining invariants; terminal states reject further events. Encode transitions via table or handlers. Emit side effects via callbacks for positions/pnl.\n",
+    },
+  },
+  {
+    slug: "lld-retry-scheduler-backoff",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Retry Scheduler with Backoff",
+    prompt_md:
+      "Design a retry scheduler for retrying failed requests.\n\nRequirements:\n- retries have exponential backoff with jitter\n- max attempts\n- `schedule(task)` and `tick(now)` or `run()` loop\n- allow cancellation\n- efficient for many pending retries\n\nProvide main data structures and method signatures.",
+    solution_md:
+      "Represent a retry task with {id, attempt, next_run_ts, callable}. Use a min-heap keyed by next_run_ts. schedule inserts with next_run_ts=now. tick(now) pops due tasks, executes them (outside locks), and on failure increments attempt and re-inserts with next_run_ts computed by backoff policy; stop after max attempts.\n\nCancellation via a cancelled flag and id→task map; skip cancelled tasks when popped. Jitter via randomization on delay.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "scheduling", "heaps"],
+    source: "Systems primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Defines exponential backoff with jitter and max-attempt behavior: 35%",
+        "Uses an efficient scheduler structure (min-heap by next_run_ts) and tick loop: 40%",
+        "Handles cancellation without O(n) scans (id map / lazy cancel) and runs tasks off-lock: 25%",
+      ],
+      reference_solution_md:
+        "RetryTask{id,attempt,next_ts}. Min-heap by next_ts; tick pops due and executes; on failure reinsert with exp backoff+jitter until max attempts. Cancel via id map + cancelled flag; lazy skip when popped; never execute user task under lock.\n",
+    },
+  },
+  {
+    slug: "lld-ring-buffer-logger",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Ring-Buffer Logger (Async)",
+    prompt_md:
+      "Design an async logger for a low-latency component.\n\nRequirements:\n- hot path: `log(level, msg)` must not allocate\n- logger thread flushes to sink (file/stdout)\n- bounded memory (drop policy if full)\n- include timestamping\n\nDescribe the classes and the buffer structure.",
+    solution_md:
+      "Use a fixed-size ring buffer of preallocated log records (fixed-size message or pointer into an arena). Hot path writes into ring via SPSC or MPSC depending on producers; if full, drop with a counter. Timestamp using a fast clock (monotonic) and optionally wall time.\n\nLogger thread drains ring, formats and writes to sink in batches. Keep formatting off hot path; use ids/enums rather than strings where possible.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "logging", "performance"],
+    source: "Low-latency engineering staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines fixed-size preallocated ring buffer and async drain thread: 45%",
+        "Mentions no allocation/formatting on hot path and batching on drain: 30%",
+        "Defines bounded memory + drop policy and metrics for drops: 15%",
+        "Mentions timestamping approach appropriately: 10%",
+      ],
+      reference_solution_md:
+        "Preallocate fixed ring of log records. Hot path writes (no alloc) into SPSC/MPSC ring; if full, drop and increment counter. Logger thread drains, formats, and flushes in batches. Timestamp on hot path with fast clock; keep heavy formatting off hot path.\n",
+    },
+  },
+  {
+    slug: "lld-risk-limit-store",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Risk Limit Store (Hot Path Reads)",
+    prompt_md:
+      "Design an in-process risk limit store used by a hot-path risk check.\n\nRequirements:\n- limits keyed by (strategy_id, symbol)\n- hot path reads: `get_limit(key)` must be very fast\n- control plane updates limits occasionally\n- updates must be atomic from reader POV\n\nDescribe your classes and update strategy.",
+    solution_md:
+      "Use immutable snapshots published via an atomic pointer (RCU style). Store limits in a fixed-capacity array or flat hash map keyed by small integer ids (intern strategy/symbol to ids). Readers do an atomic load of the snapshot pointer and then a lock-free lookup.\n\nUpdater builds a new snapshot off-thread, validates it, then swaps it atomically. Keep versions/metrics for updates.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "rcu", "performance"],
+    source: "Trading controls primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Designs fast hot-path lookup keyed by (strategy,symbol) using cache-friendly structure: 35%",
+        "Uses atomic snapshot publishing so updates are atomic for readers (RCU): 45%",
+        "Mentions update build/validate off-thread and basic observability/versioning: 20%",
+      ],
+      reference_solution_md:
+        "Publish immutable limit snapshots via atomic pointer/shared_ptr. Readers atomically load snapshot and do a lock-free lookup in array/flat hash map keyed by interned ids. Writers build+validate new snapshot off-thread then swap; track versions/metrics.\n",
+    },
+  },
+  {
+    slug: "lld-order-throttler",
+    topic: "LLD",
+    track: "dev",
+    title: "Design an Order Throttler (Per-Symbol + Global)",
+    prompt_md:
+      "Design an in-process throttler that limits outgoing orders.\n\nRequirements:\n- global limit: at most Ng orders/sec\n- per-symbol limit: at most Ns orders/sec per symbol\n- bursts allowed up to B\n- `allow(symbol, now)` fast hot path\n- thread-safe (assume multiple strategies)\n\nProvide main classes/state variables and how `allow` updates them.",
+    solution_md:
+      "Use token buckets: one global bucket and one bucket per symbol. `allow(symbol, now)` refills buckets using elapsed time, then checks both buckets have >=1 token; if so, decrement both and allow.\n\nTo keep it fast, store per-symbol buckets in a fixed-capacity map keyed by interned symbol id; shard by hash for locking or funnel requests through a single gateway thread. Bursts are handled by capacity B. Track metrics for rejects.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "rate-limiting", "performance"],
+    source: "Trading controls primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines global + per-symbol limits with a concrete algorithm (token buckets) and burst semantics: 45%",
+        "Explains allow() logic (refill, check, decrement both) correctly: 30%",
+        "Addresses hot-path performance + concurrency strategy (gateway thread/sharding/locks) and metrics: 25%",
+      ],
+      reference_solution_md:
+        "Use token buckets: one global + per-symbol. allow() refills, checks both >=1, then decrements both. Store per-symbol state in fixed-capacity map keyed by symbol id; for concurrency use sharding or a single gateway thread. Burst via capacity B; track reject metrics.\n",
+    },
+  },
+  {
+    slug: "lld-seq-gap-buffer",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Sequence Gap Buffer (Reorder + Drain)",
+    prompt_md:
+      "Design an in-process component that accepts messages (seq, payload) and outputs them in-order.\n\nRequirements:\n- `on_message(seq, payload)`\n- when seq==next_expected, emit immediately and drain buffered contiguous messages\n- buffer out-of-order messages up to a bound\n- expose gap detection (missing seq ranges)\n\nProvide data structures and APIs (bounded design).",
+    solution_md:
+      "Maintain `next_expected` and a map seq→payload (e.g., ordered map or flat map + min tracking). On message:\n- if seq < next_expected: drop\n- if seq == next_expected: emit, next_expected++, then while map contains next_expected, emit and advance\n- else: insert into map if within bound\n\nGap detection is (next_expected .. min_buffered_seq-1). Bound memory by max buffered entries/seq distance; overflow triggers reset or snapshot request.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "sequencing", "data-structures"],
+    source: "Feed handler primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines next_expected logic with correct handling of seq <, ==, > expected: 45%",
+        "Explains buffering and draining contiguous messages correctly: 30%",
+        "Defines bounded buffering policy and gap reporting interface: 25%",
+      ],
+      reference_solution_md:
+        "Keep next_expected and a map seq→payload. Drop seq<expected. If seq==expected, emit and drain buffered while present. Else buffer if within bound. Gap is [next_expected, min_buffered_seq). Bound by max entries/distance; overflow triggers reset/snapshot.\n",
+    },
+  },
+  {
+    slug: "lld-symbol-state-store",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Symbol State Store (Hot Reads, Occasional Writes)",
+    prompt_md:
+      "Design an in-process store of per-symbol state used on a hot path.\n\nRequirements:\n- symbol ids are integers 0..M-1\n- state includes a few fields (e.g., last_mid, last_update_ts, flags)\n- readers are very frequent\n- writers update occasionally\n- updates should be atomic per symbol\n\nProvide your classes/structs and concurrency approach.",
+    solution_md:
+      "Use a flat array `state[M]` where each entry is a small struct aligned to avoid false sharing. For atomic per-symbol updates, either protect each symbol with a small spin/mutex (striped locks) or store fields in atomics (or use a versioned seqlock pattern: version counter + fields + version).\n\nIf single-writer (e.g., normalized feed thread), then lock-free reads are easy: readers read the struct as-is with versioning to avoid torn reads if needed.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "performance", "concurrency"],
+    source: "Low-latency state primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Uses a cache-friendly per-symbol layout (array by symbol id) and explains why: 40%",
+        "Provides an atomic per-symbol update strategy (atomics, striped locks, or versioned seqlock): 40%",
+        "Mentions false-sharing alignment and/or single-writer simplification appropriately: 20%",
+      ],
+      reference_solution_md:
+        "Store state in an array indexed by symbol id for locality. For atomic updates use per-symbol/striped locks, per-field atomics, or a versioned seqlock per entry. Align entries to avoid false sharing; if single-writer, versioning makes reads safe and cheap.\n",
+    },
+  },
+  {
+    slug: "lld-order-router",
+    topic: "LLD",
+    track: "dev",
+    title: "Design an In-Process Order Router",
+    prompt_md:
+      "Design an order router that chooses a venue/session for an outgoing order.\n\nRequirements:\n- input: (symbol, side, qty, optional venue preference)\n- configurable routing rules (per symbol or strategy)\n- fallback if preferred venue is down\n- expose `route(order)` → (session_id, routed_order)\n\nProvide main classes and how rules are represented and updated.",
+    solution_md:
+      "Have a `RoutingTable` mapping (symbol,strategy) to a ranked list of venues/sessions and constraints. A `SessionHealth` component tracks whether a venue session is UP/DOWN/DEGRADED. `OrderRouter.route(order)` consults routing table, filters by health and constraints, and returns the first viable session.\n\nRules updates published via immutable snapshot (RCU) so router reads are lock-free. Fallback is selecting next viable route; if none, reject with reason.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "routing", "state-machine"],
+    source: "Gateway primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Defines routing rules representation (ranked venues per key) and route() behavior: 40%",
+        "Handles session health + fallback logic cleanly: 30%",
+        "Explains how rules are updated atomically without hot-path locks (RCU snapshot): 30%",
+      ],
+      reference_solution_md:
+        "RoutingTable maps (symbol,strategy)→ranked venues/sessions. SessionHealth tracks UP/DOWN. route() picks first viable by rules+health, else falls back or rejects. Publish routing rules via immutable snapshots (RCU) so reads are lock-free.\n",
+    },
+  },
+  {
+    slug: "lld-binary-protocol-codec",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Binary Protocol Codec (Zero-Alloc)",
+    prompt_md:
+      "Design an in-process encoder/decoder for a binary protocol.\n\nRequirements:\n- decoder consumes bytes and emits messages (possibly partial frames)\n- encoder writes messages into a caller-provided buffer\n- avoid allocations on hot path\n- include checksum/length validation\n\nProvide key interfaces and state variables (bounded design).",
+    solution_md:
+      "Decoder: keep a small state machine with an input ring buffer, parse header (len/type), wait until full frame available, validate checksum, then emit a view (span) or copy into a preallocated message struct. Encoder: `encode(msg, out_buf)` returns bytes written or error if out_buf too small.\n\nAvoid allocations by using caller-provided buffers and fixed-size scratch. Use explicit error codes for invalid frames.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["lld", "networking", "performance"],
+    source: "Low-latency networking staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Defines decoder state machine for partial frames (header → wait → validate → emit): 45%",
+        "Defines encoder API writing into caller-provided buffer and handling insufficient space: 25%",
+        "Mentions zero-alloc approach (spans/views, preallocated scratch) and validation (len/checksum): 30%",
+      ],
+      reference_solution_md:
+        "Decoder keeps state across calls: buffer bytes, parse header len/type, wait for full frame, validate checksum, then emit message view/struct. Encoder writes into caller-provided buffer and returns bytes written or error. Zero-alloc via spans and preallocated scratch; validate length/checksum.\n",
+    },
+  },
+  {
+    slug: "lld-mpsc-bounded-queue",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Bounded MPSC Queue",
+    prompt_md:
+      "Design an in-process bounded MPSC (multi-producer, single-consumer) queue.\n\nRequirements:\n- producers call `try_push(x)` (non-blocking)\n- consumer calls `pop()`\n- bounded capacity\n- avoid allocations\n- define memory-ordering / correctness at a high level\n\nProvide the data structure and key invariants.",
+    solution_md:
+      "Use a fixed-size ring buffer of slots plus atomic indices. A common approach uses an atomic tail for producers (fetch_add) and a non-atomic head owned by consumer, plus per-slot sequence numbers to distinguish full/empty (Vyukov MPSC bounded queue pattern). Producers reserve a slot by incrementing tail and then publish into slot when sequence matches; consumer reads slot when available and advances head.\n\nNo allocations; correctness relies on release when publishing and acquire when consuming.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["lld", "concurrency", "queues"],
+    source: "Low-latency queue primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 190,
+      rubric: [
+        "Defines fixed-capacity ring + producer reservation (atomic tail) and consumer-owned head: 35%",
+        "Mentions per-slot sequence/versioning to distinguish full/empty under wraparound: 35%",
+        "Mentions no-alloc and high-level memory-ordering (release publish, acquire consume): 30%",
+      ],
+      reference_solution_md:
+        "Bounded MPSC via fixed ring: producers reserve slots with atomic tail, consumer owns head. Use per-slot sequence numbers to detect full/empty under wrap. Publish with release, consume with acquire. No allocations.\n",
+    },
+  },
+  {
+    slug: "lld-event-journal-compact",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Compact Event Journal (Replayable)",
+    prompt_md:
+      "Design an in-process event journal for replay.\n\nRequirements:\n- append-only\n- bounded memory in RAM (spill optional)\n- each entry has (type, timestamp, payload)\n- ability to replay from an offset\n- avoid allocations on hot path\n\nProvide classes and data structures.",
+    solution_md:
+      "Use a fixed-size chunked log in memory: a ring of preallocated chunks, each chunk holds many variable-length records encoded as [len|type|ts|payload]. Hot path appends bytes to the current chunk; if chunk full, rotate to next and either overwrite old (bounded) or spill to disk asynchronously.\n\nExpose `append(record)` returning an offset and `replay(from_offset, callback)` that iterates and decodes records. Keep encoding simple and include checksums for corruption detection.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "logging", "replay"],
+    source: "Event sourcing primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Defines append-only representation and replay-by-offset API: 35%",
+        "Uses bounded, preallocated storage (ring of chunks) and explains rotation/spill policy: 40%",
+        "Mentions hot-path no-alloc approach (binary encoding into buffers) and integrity checks: 25%",
+      ],
+      reference_solution_md:
+        "Append-only journal as a ring of preallocated chunks storing binary records [len|type|ts|payload]. append returns an offset; replay decodes from offset. Bounded by chunk ring; rotate/overwrite or spill asynchronously. No alloc on hot path; include checksums/validation.\n",
+    },
+  },
+  {
+    slug: "lld-cancel-replace-order-flow",
+    topic: "LLD",
+    track: "dev",
+    title: "Design Cancel/Replace (Amend) Order Flow",
+    prompt_md:
+      "Design the in-process flow for cancel/replace (amend) of an order.\n\nRequirements:\n- `replace(order_id, new_qty, new_price?)` produces messages to exchange\n- must handle out-of-order acks/fills\n- maintain a consistent order state\n- expose callbacks to strategy\n\nKeep it bounded: focus on key classes and state transitions, not full protocol details.",
+    solution_md:
+      "Model a per-order state machine with a monotonic event_seq and sub-states for pending replace/cancel. Replace usually maps to a specific protocol message (CancelReplaceRequest) or a cancel+new depending on venue. Maintain invariants: outstanding leaves_qty, last_acknowledged version, and pending modification.\n\nProcess inbound events (acks/fills/rejects) through `apply(event)` with guards: if fill arrives during replace pending, update remaining and keep pending request; if replace rejected, revert pending and notify. Use correlation IDs for replace requests and keep an index mapping request_id→order_id. Callbacks notify strategy on accepted/rejected replace and on fills.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["lld", "state-machine", "order-entry"],
+    source: "Gateway correctness staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 190,
+      rubric: [
+        "Defines key states/fields for replace pending vs live and uses correlation/request ids: 40%",
+        "Handles out-of-order acks/fills with correct invariants (leaves qty, versioning): 35%",
+        "Defines clear APIs/callbacks and rejection/rollback behavior: 25%",
+      ],
+      reference_solution_md:
+        "Per-order state machine with pending_replace and monotonic event/versioning. replace() emits amend message and records request_id→order_id. apply(event) updates leaves_qty on fills even during pending replace; resolves replace ack/reject to commit/rollback pending state and notifies strategy via callbacks.\n",
+    },
+  },
+  {
+    slug: "lld-coalescing-latest-per-symbol-queue",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Coalescing Queue (Latest-Per-Symbol)",
+    prompt_md:
+      "Design a queue for market data updates where you only care about the latest update per symbol.\n\nRequirements:\n- producer pushes updates (symbol_id, payload)\n- consumer pops updates\n- if producer pushes multiple updates for same symbol before consumer pops, keep only the latest (coalesce)\n- bounded memory\n- avoid allocations\n\nDescribe data structures and concurrency approach (SPSC is fine).",
+    solution_md:
+      "Use a fixed array `latest[symbol]` holding the most recent payload and a fixed bitset/flag `dirty[symbol]`. Producer writes `latest[symbol]=payload` and if dirty was false, sets it true and enqueues symbol_id into a ring of symbol_ids. Consumer pops symbol_id, reads latest[symbol], clears dirty[symbol], and processes.\n\nThis bounds memory (O(num_symbols)) and avoids allocating per update; it also naturally coalesces bursts.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "queues", "performance"],
+    source: "Market data systems pattern",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines latest-per-symbol storage + dirty flag/bitset to coalesce updates: 45%",
+        "Defines a bounded queue of symbol_ids (ring) and how producer enqueues only on first dirty transition: 35%",
+        "Mentions concurrency model (SPSC) and no-allocation/bounded memory rationale: 20%",
+      ],
+      reference_solution_md:
+        "Store latest[symbol] and dirty[symbol]. Producer overwrites latest and if dirty was false, sets it true and enqueues symbol_id into a ring. Consumer pops symbol_id, reads latest, clears dirty. Coalesces multiple updates per symbol and uses bounded memory with no per-update allocations.\n",
+    },
+  },
+  {
+    slug: "lld-fixed-capacity-topn-scoreboard",
+    topic: "LLD",
+    track: "dev",
+    title: "Design a Fixed-Capacity Top-N Scoreboard",
+    prompt_md:
+      "Design a component that maintains the top N items by score.\n\nRequirements:\n- `update(id, delta_score)` updates an item's score\n- `top()` returns the current top N ids in descending score (tie: smaller id)\n- fixed maximum number of ids M (ids are 0..M-1)\n- avoid allocations\n\nProvide the data structures and complexity tradeoffs.",
+    solution_md:
+      "Because ids are bounded, store scores in an array `score[M]`. For top-N queries, maintain a min-heap of current top-N ids keyed by (score, -id) with an index map id→heap_pos for O(log N) updates. On update: adjust score, then fix heap: if id in heap, sift; else if heap not full or score better than heap min, insert/replace.\n\nAlternative: for small N, keep a sorted fixed array of size N (O(N) update) with excellent locality.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["lld", "heaps", "performance"],
+    source: "Analytics primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Uses bounded score storage (array) and maintains top-N via heap or fixed sorted array: 45%",
+        "Explains update mechanics (in-heap vs not, replace min) and tie-breaking: 35%",
+        "Mentions complexity/locality tradeoffs and why fixed bounds avoid allocations: 20%",
+      ],
+      reference_solution_md:
+        "With bounded ids, keep score[M]. Maintain top N using a min-heap (size N) plus id→pos index for O(log N) updates; insert/replace when candidate beats heap min. For small N, a fixed sorted array gives O(N) updates with great locality. No allocations due to fixed bounds.\n",
+    },
+  },
 ];

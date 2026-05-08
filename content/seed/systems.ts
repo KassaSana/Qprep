@@ -1507,5 +1507,180 @@ export const SYSTEMS_SEED: SeedQuestion[] = [
         "Hardware atomic loads/stores don't make non-atomic sharing safe: C/C++ data races are UB and compiler may reorder/cache. Use std::atomic/locks to establish happens-before and ordering/visibility.\n",
     },
   },
+  {
+    slug: "sys-so-busy-poll-what-why-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "`SO_BUSY_POLL` / Busy Polling Sockets",
+    prompt_md:
+      "What is Linux socket busy polling (e.g., `SO_BUSY_POLL`), and why might it reduce latency for some workloads?\n\nAnswer in 6–10 sentences and mention CPU tradeoffs.",
+    solution_md:
+      "Socket busy polling allows a thread waiting for network IO to spin and poll the NIC/driver for a short period rather than sleeping and waiting for an interrupt/wakeup. This can reduce wakeup latency and jitter, improving tail latency in latency-sensitive request/response patterns.\n\nThe tradeoff is CPU burn and potential interference with other work; it’s typically used only on isolated cores and carefully tuned (poll budget). It also depends on NIC/driver support and kernel behavior.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["linux", "networking", "latency"],
+    source: "Low-latency networking tuning",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 140,
+      rubric: [
+        "Explains busy polling as spinning/polling instead of sleeping for IO readiness: 50%",
+        "Connects to reduced wakeup jitter and tail latency: 25%",
+        "Mentions CPU/interference tradeoff and tuning/isolated cores caveat: 25%",
+      ],
+      reference_solution_md:
+        "Busy polling (SO_BUSY_POLL) spins/polls for packets instead of sleeping, reducing wakeup jitter and tail latency. Tradeoff is CPU burn/interference; usually used on isolated cores with tuned poll budgets.\n",
+    },
+  },
+  {
+    slug: "sys-time-wait-why-so-many-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "TCP TIME_WAIT — Why So Many?",
+    prompt_md:
+      "Why do you sometimes see many sockets in `TIME_WAIT` on a busy server, and why does the state exist?\n\nAnswer in 6–10 sentences and mention late packets / 2MSL at a high level.",
+    solution_md:
+      "TIME_WAIT exists to ensure delayed/late packets from an old connection don’t get misinterpreted as part of a new connection with the same 4‑tuple, and to allow the active closer to retransmit the final ACK if needed. High connection churn (many short-lived connections) can produce many TIME_WAIT sockets.\n\nThis can exhaust ephemeral ports or consume kernel resources in extreme cases. Mitigations include connection reuse/keepalive, load balancing across source ports/addresses, and tuning only with care.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["tcp", "networking", "linux"],
+    source: "Networking fundamentals",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 145,
+      rubric: [
+        "Explains why TIME_WAIT exists (late packets / avoid 4-tuple reuse issues; final ACK retransmit): 55%",
+        "Explains why many TIME_WAIT occur (high short-lived connection churn): 25%",
+        "Mentions at least one real operational impact/mitigation (port exhaustion, keepalive/reuse) without bad advice: 20%",
+      ],
+      reference_solution_md:
+        "TIME_WAIT prevents late packets from old connections being confused with new ones on same 4‑tuple and allows final ACK retransmit. High churn yields many TIME_WAIT. Impacts include port/resource pressure; mitigate via connection reuse/keepalive and careful architecture rather than risky tuning.\n",
+    },
+  },
+  {
+    slug: "sys-tcp-retransmits-what-causes-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "TCP Retransmits — Common Causes",
+    prompt_md:
+      "In a low-latency TCP service, what are common causes of retransmissions and how do retransmits show up in latency?\n\nAnswer in 6–10 sentences and mention loss and congestion.",
+    solution_md:
+      "Retransmissions happen when packets are lost (physical loss, drops due to buffer overflow), reordered beyond thresholds, or when congestion causes drops in queues. Retransmits add latency because the sender waits for an ACK timeout or fast-retransmit signal; this often creates large tail spikes (multiples of RTT).\n\nYou diagnose with metrics like retransmit counters, RTT estimates, and queue drops, and mitigate via better network conditions, correct buffer sizing/AQM, and reducing bursts.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["tcp", "latency", "networking"],
+    source: "Networking performance staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 145,
+      rubric: [
+        "Names realistic causes (loss, drops/overflow, congestion) and doesn’t confuse with application retries: 55%",
+        "Connects retransmits to tail spikes via RTT/timeout/fast retransmit behavior: 30%",
+        "Mentions at least one diagnosis/mitigation idea (retrans counters, RTT, bufferbloat/AQM): 15%",
+      ],
+      reference_solution_md:
+        "Retransmits occur due to packet loss/drops/congestion. They create tail spikes because recovery waits on RTT/timeout or fast retransmit. Diagnose with retrans counters/RTT; mitigate via network quality, proper buffer sizing/AQM, and burst control.\n",
+    },
+  },
+  {
+    slug: "sys-madvise-when-use-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "`madvise()` — When Would You Use It?",
+    prompt_md:
+      "What is `madvise()` used for on Linux, and give two examples of advice you might provide.\n\nAnswer in 6–10 sentences and mention page reclaim/prefetch at a high level.",
+    solution_md:
+      "`madvise()` lets an application give the kernel hints about expected memory access patterns for a mapped region. Examples: `MADV_SEQUENTIAL`/`MADV_RANDOM` to adjust readahead, `MADV_WILLNEED` to prefetch pages, and `MADV_DONTNEED` to allow reclaiming pages.\n\nIt can improve performance by aligning kernel paging behavior with the workload, but it’s only advice (not a guarantee).",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["linux", "virtual-memory", "performance"],
+    source: "Linux VM tuning staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "Defines madvise as giving kernel hints about access pattern/paging for a region: 45%",
+        "Gives two correct examples of advice and what they influence (readahead/prefetch/reclaim): 45%",
+        "Mentions it’s advisory and workload-dependent: 10%",
+      ],
+      reference_solution_md:
+        "madvise provides access-pattern/paging hints for a mapping. Examples: SEQUENTIAL/RANDOM affects readahead; WILLNEED prefetches; DONTNEED allows reclaim. It’s advisory and benefits depend on workload.\n",
+    },
+  },
+  {
+    slug: "sys-mlockall-why-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "`mlockall()` and Prefaulting",
+    prompt_md:
+      "What does `mlockall()` do, and why do low-latency systems often pair it with prefaulting/pre-touching memory?\n\nAnswer in 6–10 sentences.",
+    solution_md:
+      "`mlockall()` can lock a process’s current and/or future mappings into RAM, preventing them from being swapped out. But even locked pages may not be resident until they’re faulted in; therefore systems often pre-touch memory to force page faults during startup rather than during the critical path.\n\nThis reduces tail latency by avoiding major faults and making memory residency predictable. Tradeoffs include memory pressure and the need for privileges/limits.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["linux", "virtual-memory", "latency"],
+    source: "Low-latency ops staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 145,
+      rubric: [
+        "Explains mlockall locks mappings to prevent swapping: 45%",
+        "Explains why prefault/pre-touch is still needed (fault-in residency) and tail-latency goal: 40%",
+        "Mentions tradeoffs (memory pressure, rlimits/privileges): 15%",
+      ],
+      reference_solution_md:
+        "mlockall prevents swapping of process mappings, but pages still need to be faulted in. Prefaulting/pre-touch forces faults at startup to avoid tail spikes later. Tradeoff: memory pressure and privileges.\n",
+    },
+  },
+  {
+    slug: "sys-sendfile-vs-splice-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "`sendfile()` vs `splice()` (Zero-Copy Intuition)",
+    prompt_md:
+      "What is the high-level idea behind `sendfile()` / `splice()` and why can they reduce CPU overhead?\n\nAnswer in 6–10 sentences and mention copies between kernel/user.",
+    solution_md:
+      "`sendfile` and `splice` enable moving data between file descriptors within the kernel without copying data into user space buffers. This can reduce CPU overhead and memory bandwidth by avoiding extra copies and reducing syscalls.\n\nThey’re useful for proxying or serving static data (file→socket). Limitations depend on kernel support and the exact fd types; they don’t eliminate all copies in every path.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["linux", "io", "performance"],
+    source: "Linux IO staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "Explains zero-copy intuition (avoid user-space copy; kernel moves data between fds): 55%",
+        "Mentions reduced CPU/memory bandwidth and/or fewer syscalls: 25%",
+        "Mentions at least one limitation/caveat (fd types/kernel path/workload dependence): 20%",
+      ],
+      reference_solution_md:
+        "sendfile/splice move data between fds in-kernel, avoiding copies into user-space buffers and reducing CPU/bandwidth and syscalls. Best for file→socket style paths; limitations depend on fd types and kernel support.\n",
+    },
+  },
+  {
+    slug: "sys-epoll-edge-triggered-pitfall-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "Epoll Edge-Triggered Pitfall",
+    prompt_md:
+      "What is a common pitfall when using edge-triggered `epoll` (EPOLLET), and how do you avoid it?\n\nAnswer in 5–10 sentences and mention draining reads to EAGAIN.",
+    solution_md:
+      "With edge-triggered epoll, you may get notified only when the readiness state transitions. If you don’t fully drain the socket (read until EAGAIN) when you receive the event, you might not get another notification and you can stall with unread data.\n\nThe standard pattern is to use nonblocking fds and loop reading/writing until EAGAIN on each event, handling partial reads/writes. This differs from level-triggered behavior which will keep notifying while data remains.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["linux", "epoll", "io"],
+    source: "Event-driven IO staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "States the pitfall: edge-trigger can notify once; failing to drain can stall: 55%",
+        "Mentions correct fix: nonblocking + loop until EAGAIN (drain) and handle partial IO: 35%",
+        "Mentions contrast vs level-trigger at high level without confusion: 10%",
+      ],
+      reference_solution_md:
+        "EPOLLET notifies on transitions; if you don't drain read/write until EAGAIN, you might not be notified again and can stall. Fix: nonblocking fds and drain in a loop on each event; handle partial IO.\n",
+    },
+  },
 ];
 

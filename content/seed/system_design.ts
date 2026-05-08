@@ -391,4 +391,382 @@ export const SYSTEM_DESIGN_SEED: SeedQuestion[] = [
         "Replicate immutable event logs and critical configs/limits. Use seq numbers/checksums and audits for completeness; replay relies on stable event ids and gap detection. Safe failover requires single active order-sending authority and idempotent client order ids; run shadow DR and reconcile before cutover.\n",
     },
   },
+  {
+    slug: "sysdesign-exchange-session-seq-recovery",
+    topic: "System Design",
+    track: "dev",
+    title: "Exchange Session Sequencing + Recovery",
+    prompt_md:
+      "Design how an order gateway maintains sequencing for an exchange session and recovers after disconnect.\n\nCover:\n- outbound sequence numbers and resend\n- inbound sequence tracking\n- how you persist minimal state\n- how you avoid sending duplicate orders on reconnect\n\nAssume a FIX-like protocol with sequence numbers.",
+    solution_md:
+      "Maintain next_out_seq and expected_in_seq per session. Persist an outbound message journal (or enough to reconstruct) keyed by out_seq. On reconnect, perform logon with sequence reset policy as per venue; if not resetting, resend from last acknowledged out_seq.\n\nAvoid duplicate orders by using stable client order ids and idempotent order semantics, and by tracking what was acknowledged vs merely sent. Inbound: detect gaps in seq and request resend; reject or resync on major inconsistency. Keep persistence off hot path via async journal and fsync policy.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "networking", "correctness"],
+    source: "Gateway/session management staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 190,
+      rubric: [
+        "Explains outbound seq + resend/journal strategy and what must be persisted: 45%",
+        "Explains inbound seq tracking + gap handling/resend requests: 25%",
+        "Explains duplicate prevention on reconnect (stable client ids; ack tracking): 20%",
+        "Mentions keeping persistence/journaling off hot path (async/batching) and tradeoffs: 10%",
+      ],
+      reference_solution_md:
+        "Track next_out_seq/expected_in_seq. Persist outbound journal by seq; on reconnect resend from last acked. Inbound: detect gaps and request resend. Prevent duplicates with stable client order ids and tracking acked vs merely sent. Journal asynchronously to keep hot path fast.\n",
+    },
+  },
+  {
+    slug: "sysdesign-snapshot-vs-delta-market-data",
+    topic: "System Design",
+    track: "dev",
+    title: "Market Data: Snapshots vs Deltas",
+    prompt_md:
+      "Design how your market data system uses snapshots and deltas.\n\nCover:\n- when you request a snapshot\n- how you apply deltas around the snapshot\n- how you handle out-of-order and gaps\n- what per-symbol state you keep\n\nKeep it in-process and correctness-focused.",
+    solution_md:
+      "Per symbol keep next_expected_seq and an order book state. On gap detection, request a snapshot while buffering deltas > expected. When snapshot arrives, reset book to snapshot (with its last_seq), set expected to last_seq+1, then apply buffered deltas in order (dropping stale).\n\nBound the buffer; if snapshot is delayed or buffer overflows, reset and retry. Prefer a consistent snapshot+deltas guarantee from the feed; otherwise use sequence validation to ensure correctness.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "market-data", "correctness"],
+    source: "Feed handler staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Explains gap detection and snapshot request trigger and what is buffered: 35%",
+        "Explains correct ordering of snapshot + buffered deltas using sequence numbers: 45%",
+        "Mentions bounded buffering + retry/overflow behavior: 20%",
+      ],
+      reference_solution_md:
+        "On gap: request snapshot, buffer deltas beyond expected. Apply snapshot, set expected=last_seq+1, then drain buffered deltas in order. Drop stale, bound buffer; retry/reset if delayed/overflow.\n",
+    },
+  },
+  {
+    slug: "sysdesign-positions-source-of-truth",
+    topic: "System Design",
+    track: "dev",
+    title: "Positions: Source of Truth + Consistency",
+    prompt_md:
+      "Design how you maintain positions consistently across:\n- order gateway\n- risk checks\n- analytics/PNL\n\nCover:\n- what is the source of truth\n- how fills update state\n- how you reconcile with broker/exchange reports\n- how you avoid race conditions across services\n\nKeep it bounded.",
+    solution_md:
+      "Make fills/clearing reports the source of truth and treat all derived positions as projections of an event stream. Publish fills as an ordered, idempotent stream (order_id,event_seq). Risk uses a fast in-memory projection with checkpoints; analytics uses its own projection with replay.\n\nReconcile periodically against broker/exchange statements; discrepancies trigger alerts and resync. Avoid races by partitioning by account and enforcing ordering per partition; all components consume the same canonical events.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "correctness", "risk"],
+    source: "Trading systems staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Defines a clear source of truth (fills/clearing reports) and projection model: 45%",
+        "Explains event ordering/idempotency and partitioning to avoid races: 30%",
+        "Mentions reconciliation strategy and resync/alerts for discrepancies: 25%",
+      ],
+      reference_solution_md:
+        "Use fills/clearing as source of truth; positions are projections of a canonical ordered idempotent fill stream. Risk/analytics maintain their own projections with checkpoints/replay. Reconcile against broker statements and resync on mismatches; partition by account to preserve ordering and avoid races.\n",
+    },
+  },
+  {
+    slug: "sysdesign-audit-log-orders",
+    topic: "System Design",
+    track: "dev",
+    title: "Audit Log for Orders (Hot vs Cold Path)",
+    prompt_md:
+      "Design an audit logging system for orders/acks/fills.\n\nRequirements:\n- must not add tail latency to hot path\n- durable storage for compliance\n- ability to replay\n- tamper-evidence is a plus\n\nDescribe hot path vs cold path, durability choices, and integrity checks.",
+    solution_md:
+      "Hot path writes audit events into a preallocated ring buffer/WAL queue with minimal formatting. A dedicated logger thread batches and writes to durable storage (append-only log). Use checksums per record and periodic hash chaining (e.g., hash(prev_hash||record)) for tamper evidence.\n\nDurability policy may fsync periodically or on critical boundaries; separate “must-durable” events if needed. Replay reads the append-only log and replays in order; include sequence numbers and schema version.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "logging", "compliance"],
+    source: "Production trading ops staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Separates hot path (enqueue) from cold path (batch persist) to avoid tail latency: 40%",
+        "Explains durability strategy and replay ability (append-only log + ordering): 30%",
+        "Mentions integrity checks (checksums, hash chain) and schema/versioning: 30%",
+      ],
+      reference_solution_md:
+        "Hot path enqueues audit events to a ring/WAL queue; logger thread batches and appends to durable log. Use checksums and optional hash chaining for tamper evidence. Replay reads append-only log in seq order; include schema version. Durability via periodic fsync or tiered durability policy.\n",
+    },
+  },
+  {
+    slug: "sysdesign-latency-slo-budgeting",
+    topic: "System Design",
+    track: "dev",
+    title: "Latency SLO Budgeting (p99/p99.9)",
+    prompt_md:
+      "You need a p99 and p99.9 latency SLO for an order path.\n\nDesign how you:\n- define the measurement points\n- attribute budget to components\n- detect regressions quickly\n- prevent 'averages look fine' failures\n\nAnswer in terms of practical system design and ops.",
+    solution_md:
+      "Define timestamps at consistent boundaries (strategy→gateway enqueue, risk, encode/send, ack decode). Use monotonic clocks for duration. Budget by component by measuring per-stage histograms and queueing delay separately.\n\nDetect regressions via percentiles and tail-focused alerts, plus change-point detection on histograms. Prevent averages hiding issues by storing histograms (HDR), tracking worst offenders (slowest N), and correlating tails with queue depth, GC/allocs, page faults, and CPU frequency changes.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "observability", "latency"],
+    source: "Performance ops staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines measurement points and uses monotonic clocks + histograms for tails: 40%",
+        "Explains budgeting/attribution by per-stage histograms + queueing vs service time: 35%",
+        "Explains regression detection/alerting focused on p99/p99.9 and tail correlates: 25%",
+      ],
+      reference_solution_md:
+        "Instrument consistent boundaries and record per-stage latency histograms with monotonic clocks. Budget by stage and separate queueing delay from service time. Detect regressions via p99/p99.9 alerts and histogram change detection; correlate tails with queue depth, alloc/GC, page faults, CPU freq, etc.\n",
+    },
+  },
+  {
+    slug: "sysdesign-cache-warming-and-preload",
+    topic: "System Design",
+    track: "dev",
+    title: "Cache Warming / Preload for Cold Start",
+    prompt_md:
+      "Design how you handle cold starts in a low-latency trading service.\n\nCover:\n- memory/page cache warming\n- data structure preallocation\n- JIT/branch predictor warmup considerations\n- rollout strategy to avoid hitting production with cold caches\n\nKeep it bounded and practical.",
+    solution_md:
+      "Preallocate and pre-touch memory (touch pages to avoid major faults), warm critical maps and symbol tables, and load configs/limits before serving. If applicable, run a warmup phase that replays representative traffic to populate caches and train branches.\n\nRollout: bring up instance in shadow mode, verify metrics, then cut over gradually. Monitor page faults, cache-miss proxies, and latency histograms during warmup and after cutover.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "performance", "latency"],
+    source: "Low-latency operations staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Mentions preallocation and pre-touch/page fault avoidance and why it matters: 40%",
+        "Mentions warmup strategy (shadow, replay traffic) and gradual cutover: 35%",
+        "Mentions what to monitor (faults, histograms, cache proxies) and rollback: 25%",
+      ],
+      reference_solution_md:
+        "Preallocate and pre-touch memory to avoid major faults; load configs/limits and warm symbol tables. Run warmup/shadow replay to populate caches and stabilize behavior. Roll out gradually; monitor faults and latency histograms and roll back if tails spike.\n",
+    },
+  },
+  {
+    slug: "sysdesign-research-to-prod-model-rollout",
+    topic: "System Design",
+    track: "dev",
+    title: "Research → Production Model Rollout",
+    prompt_md:
+      "Design a safe rollout process for a model/strategy change from research to production.\n\nCover:\n- versioning and reproducibility\n- shadow testing and backtesting pitfalls\n- gating/feature flags\n- rollback and post-deploy monitoring\n\nKeep it bounded.",
+    solution_md:
+      "Version everything: code, config, features, and data dependencies. Produce an immutable artifact and record inputs used for training/backtest. Shadow run the new model in production (no trading) to compare signals and latency; watch for data leakage mismatches.\n\nGate activation via feature flags and staged rollouts. Rollback by switching flags/artifacts. Monitor PnL, risk metrics, hit rates, and latency distributions, plus correctness checks (data freshness/seq).",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "ml", "operations"],
+    source: "Quant dev/research ops staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Mentions versioned immutable artifacts and reproducibility (code+config+data deps): 35%",
+        "Mentions shadow testing and leakage/mismatch pitfalls: 25%",
+        "Mentions gated/staged rollout with feature flags and rollback plan: 25%",
+        "Mentions post-deploy monitoring (risk, PnL, latency, correctness) clearly: 15%",
+      ],
+      reference_solution_md:
+        "Version code/config/data deps and ship an immutable artifact; record training/backtest inputs. Shadow run in prod and watch leakage/mismatch. Gate activation with flags and staged rollout; rollback via flags/artifact switch. Monitor PnL/risk/latency and data freshness/seq correctness.\n",
+    },
+  },
+  {
+    slug: "sysdesign-symbology-normalization",
+    topic: "System Design",
+    track: "dev",
+    title: "Symbology + Normalization Layer",
+    prompt_md:
+      "Design a symbology/normalization layer for market data and orders.\n\nCover:\n- mapping venue-specific symbols/instruments to internal ids\n- handling corporate actions / symbol changes\n- normalizing different message schemas into a canonical model\n- rollout and consistency (research vs production)\n\nKeep it bounded to components and invariants.",
+    solution_md:
+      "Use an internal instrument master with stable ids. Maintain mapping tables per venue (venue_symbol → internal_id) versioned by effective date/time. Corporate actions/symbol changes create new versions or alias mappings; never reuse ids.\n\nNormalization converts venue messages into a canonical internal schema with explicit schema versioning. Rollout: publish instrument master snapshots via immutable artifacts; deploy readers first; validate by dual mapping checks and monitoring unknown-symbol rates.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "data", "correctness"],
+    source: "Trading systems staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Defines stable internal instrument ids and venue→internal mapping strategy with versioning: 40%",
+        "Addresses corporate actions/symbol changes without breaking identity (aliases/effective dating): 30%",
+        "Defines canonical schema normalization and mentions schema/version handling: 20%",
+        "Mentions rollout/consistency and validation monitoring: 10%",
+      ],
+      reference_solution_md:
+        "Maintain stable internal instrument ids and versioned venue symbol mappings (effective-dated). Handle symbol changes via aliases/new versions; don't reuse ids. Normalize venue schemas to canonical model with explicit versions. Roll out via snapshot artifacts/readers-first and validate with monitoring/dual checks.\n",
+    },
+  },
+  {
+    slug: "sysdesign-shared-memory-bus",
+    topic: "System Design",
+    track: "dev",
+    title: "Shared Memory Bus Between Processes",
+    prompt_md:
+      "Design a shared-memory message bus between two processes on the same machine (producer and multiple consumers).\n\nCover:\n- memory layout (ring/log)\n- how consumers track their position\n- what happens if a consumer falls behind\n- synchronization primitives (atomics)\n\nKeep it in-process/OS-level (no network).",
+    solution_md:
+      "Use a single-writer append-only log in shared memory with a global write cursor (sequence number). Each consumer has its own read cursor (in shared memory) so lag is measurable. Producer writes messages into the ring/log and then publishes by advancing the cursor with release semantics; consumers read with acquire.\n\nIf consumer falls behind and data is overwritten (bounded ring), enforce a policy: disconnect/resync from snapshot. Keep cursors on separate cache lines to avoid false sharing.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "ipc", "performance"],
+    source: "Low-latency IPC staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 190,
+      rubric: [
+        "Defines shared-memory ring/log layout with publish semantics and sequence/cursor: 40%",
+        "Explains per-consumer cursors and lag measurement and fall-behind policy: 35%",
+        "Mentions synchronization (release publish, acquire consume) and false-sharing avoidance: 25%",
+      ],
+      reference_solution_md:
+        "Shared memory append-only ring/log with global write cursor and per-consumer read cursors. Producer writes then release-publishes cursor; consumers acquire-load cursor then read. If consumer lags past overwritten data, force resync/snapshot. Separate cursor cache lines.\n",
+    },
+  },
+  {
+    slug: "sysdesign-tick-to-trade-measurement",
+    topic: "System Design",
+    track: "dev",
+    title: "Tick-to-Trade Latency Measurement",
+    prompt_md:
+      "Design how you measure tick-to-trade latency (market data arrival → order sent/acked).\n\nCover:\n- where you timestamp\n- how you correlate updates to orders\n- clock choices (monotonic vs wall)\n- how to avoid measurement perturbing latency\n\nKeep it bounded and practical.",
+    solution_md:
+      "Timestamp market data at NIC receive (or as early as possible) and at key pipeline edges (decode, strategy decision, gateway enqueue, send). Use monotonic clocks for durations; optionally add PTP wall time for cross-host correlation.\n\nCorrelation uses symbol + seq + decision context: strategy can attach a causality id to orders indicating which tick triggered it. Logging should be async and sampled; aggregate latency histograms in-memory and export off hot path.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "latency", "observability"],
+    source: "HFT measurement staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines timestamp points and uses monotonic durations (optionally wall/PTP for correlation): 40%",
+        "Explains correlation mechanism between ticks and orders (causality id/seq/symbol): 35%",
+        "Mentions low-perturbation logging/aggregation (async, sampling, histograms): 25%",
+      ],
+      reference_solution_md:
+        "Timestamp earliest receive and key stages; use monotonic for durations, optionally PTP wall for cross-host. Correlate orders to triggering tick via causality id (symbol/seq). Avoid perturbation via async sampled logging and in-memory histograms exported off hot path.\n",
+    },
+  },
+  {
+    slug: "sysdesign-deterministic-replay",
+    topic: "System Design",
+    track: "dev",
+    title: "Deterministic Replay for Debugging",
+    prompt_md:
+      "Design a deterministic replay system to debug rare trading incidents.\n\nCover:\n- what you need to log (inputs, config, randomness)\n- how you handle non-determinism (threads, time)\n- how replay is executed (single-threaded simulation vs recorded schedule)\n\nKeep it bounded and realistic.",
+    solution_md:
+      "Record all external inputs (market data, order acks/fills), configuration snapshots, and random seeds. Replace time calls with recorded timestamps during replay. To reduce nondeterminism, run the replay in a single-threaded simulation mode with deterministic event ordering (by recorded sequence/time) rather than trying to reproduce thread interleavings.\n\nIf concurrency is required, log scheduling decisions or use deterministic executors, but that’s heavier. The key is to make strategy logic a pure function of recorded inputs + config.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "debugging", "replay"],
+    source: "Production debugging staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 190,
+      rubric: [
+        "Mentions logging all external inputs + config snapshot + randomness seeds: 40%",
+        "Explains handling time/non-determinism (recorded timestamps; avoid thread nondeterminism via single-thread sim): 40%",
+        "Mentions replay execution model and boundaries (pure function assumption) realistically: 20%",
+      ],
+      reference_solution_md:
+        "Log external inputs (MD, acks/fills), config snapshots, and RNG seeds. In replay, replace time with recorded timestamps. Prefer single-thread deterministic simulation ordering by recorded seq/time rather than reproducing thread schedules. Aim for strategy logic as pure function of inputs+config.\n",
+    },
+  },
+  {
+    slug: "sysdesign-multi-venue-routing-policy",
+    topic: "System Design",
+    track: "dev",
+    title: "Multi-Venue Routing Policy (High Level)",
+    prompt_md:
+      "Design a multi-venue order routing policy engine.\n\nCover:\n- inputs (prices, fees, latency, fill probabilities)\n- constraints (risk, order type, venue availability)\n- how you test/roll out policy changes safely\n\nKeep it bounded; focus on components and data flow.",
+    solution_md:
+      "Split into components: data inputs (NBBO/quotes, fees, latency stats), a policy evaluator producing a ranked venue list with reasons, and a session health filter. Constraints and risk are applied before routing.\n\nFor rollout: version policies, shadow-run and compare decisions, gate by feature flags, and log decisions asynchronously for audit/replay. Keep the hot path simple: precompute routing tables periodically and do O(1) lookup by (symbol, strategy, order type).",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "routing", "operations"],
+    source: "Execution routing staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Defines key inputs and constraints and where they apply (health/risk before routing): 40%",
+        "Describes components/data flow (policy evaluator + precomputed tables) and hot-path behavior: 35%",
+        "Mentions safe rollout/testing (versioning, shadow, flags, audit logs): 25%",
+      ],
+      reference_solution_md:
+        "Use inputs (quotes/fees/latency stats) and constraints (risk/order type/session health). Policy engine outputs ranked venues; precompute routing tables periodically for hot-path O(1) lookup. Roll out via versioned policies, shadow comparisons, feature flags, and async audit logging.\n",
+    },
+  },
+  {
+    slug: "sysdesign-capacity-planning-hft",
+    topic: "System Design",
+    track: "dev",
+    title: "Capacity Planning for Event Rates",
+    prompt_md:
+      "Design how you capacity-plan a low-latency event pipeline.\n\nCover:\n- estimating peak event rates (msgs/sec) and bursts\n- sizing queues/ring buffers\n- CPU core budgeting and pinning\n- failure mode under overload\n\nKeep it practical and quantitative (at a high level).",
+    solution_md:
+      "Estimate peak + burst rates from historical and worst-case venue specs. Size buffers for burst absorption given service rate margin (Little’s law intuition): buffer ≈ burst_rate * burst_duration. Budget cores by stage and isolate critical threads; measure per-stage service time and ensure utilization stays safely below 100%.\n\nDefine overload policy (drop/coalesce/shed strategy) and alerting on queue depth/lag. Validate with load tests and replay of recorded peak days.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "performance", "capacity"],
+    source: "Production performance staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Explains peak/burst estimation and sizing buffers/queues accordingly: 40%",
+        "Explains CPU/core budgeting and pinning/isolation for critical stages: 30%",
+        "Defines overload behavior and alerting/validation (replay/load test): 30%",
+      ],
+      reference_solution_md:
+        "Estimate peak+burst from specs/history. Size buffers to absorb bursts (burst_rate*duration). Budget cores per stage and keep utilization below saturation; pin/isolate critical threads. Define overload policy (drop/coalesce/shed) and alert on lag/queue depth; validate via load/replay tests.\n",
+    },
+  },
+  {
+    slug: "sysdesign-failure-drills-game-days",
+    topic: "System Design",
+    track: "dev",
+    title: "Failure Drills (Game Days) for Trading Systems",
+    prompt_md:
+      "Design a \"game day\" / failure drill program for a trading system.\n\nCover:\n- which failures you simulate (packet loss, clock drift, disk full, exchange disconnect)\n- how you make drills safe (kill switch, sandbox accounts)\n- what you measure and what success looks like\n\nKeep it bounded but concrete.",
+    solution_md:
+      "Simulate targeted failures in controlled environments first, then in production with guardrails. Use kill switches, sandbox accounts, and staged scope (one strategy/venue). Failures to simulate: packet loss/gaps, clock drift/step, NIC/CPU saturation, disk full for audit logs, exchange disconnect/resend, config reload failure.\n\nSuccess metrics: time to detect (alerts), time to recover, correctness invariants (no duplicate orders, seq gap handled), and tail-latency impact. Document runbooks and incorporate learnings into automation.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "reliability", "operations"],
+    source: "SRE/ops staple adapted",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Names realistic failure scenarios relevant to trading systems: 35%",
+        "Explains safety guardrails (kill switch, sandbox, limited scope) and rollout: 30%",
+        "Defines measurements/success criteria (detect/recover times, correctness invariants, tails): 35%",
+      ],
+      reference_solution_md:
+        "Run controlled failure drills with guardrails (kill switch, sandbox accounts, staged scope). Simulate packet loss/gaps, clock drift, disk full, exchange disconnect/resend, CPU/NIC saturation, config reload failure. Measure detect/recover time, invariants (no dup orders; gaps handled), and tail-latency impact; update runbooks/automation.\n",
+    },
+  },
+  {
+    slug: "sysdesign-drop-copy-trade-capture",
+    topic: "System Design",
+    track: "dev",
+    title: "Drop Copy / Trade Capture + Reconciliation",
+    prompt_md:
+      "Design a trade capture system using a drop-copy feed (or broker reports).\n\nCover:\n- how you ingest and normalize trades\n- how you correlate them to internal orders\n- how you ensure completeness (no missing trades)\n- reconciliation vs exchange/broker statements\n- what you persist and how you replay\n\nKeep it bounded (components + invariants).",
+    solution_md:
+      "Ingest drop-copy into a normalized trade event stream with stable identifiers (venue trade id, session, seq). Correlate to internal orders using client order id and execution ids; handle partial fills.\n\nEnsure completeness via seq/gap detection and periodic statement reconciliation. Persist an append-only immutable trade log (with schema version and checksums) for replay; maintain projections (positions/PnL) as derived state with checkpoints. Alert on mismatches and build resync tooling.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "reconciliation", "correctness"],
+    source: "Trading ops staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 190,
+      rubric: [
+        "Defines ingestion + normalization + stable identifiers and correlation to internal orders: 40%",
+        "Explains completeness guarantees (seq/gaps) and reconciliation with external statements: 35%",
+        "Defines persistence/replay (append-only log, checksums/schema version) and projections/checkpoints: 25%",
+      ],
+      reference_solution_md:
+        "Normalize drop-copy into trade events with stable ids (trade id/session/seq) and correlate via client order ids/execution ids. Ensure completeness via seq/gap detection and reconcile with broker/exchange statements. Persist append-only trade log for replay; derive positions/PnL via projections with checkpoints; alert and resync on mismatches.\n",
+    },
+  },
 ];

@@ -1553,4 +1553,38 @@ export const PROBABILITY_SEED: SeedQuestion[] = [
     source: "Tail integral trick",
     target_roles: ["Researcher"],
   },
+  {
+    slug: "poisson-superposition-conditional-binomial",
+    topic: "Probability",
+    track: "researcher",
+    title: "Poisson Superposition: Conditional is Binomial",
+    prompt_md:
+      "Let $N_1\\sim\\text{Poisson}(\\lambda_1)$ and $N_2\\sim\\text{Poisson}(\\lambda_2)$ be independent, and let $N=N_1+N_2$.\n\nWhat is the conditional distribution of $N_1\\mid N=n$?",
+    solution_md:
+      "$N_1\\mid N=n\\sim\\text{Binomial}\\left(n,\\frac{\\lambda_1}{\\lambda_1+\\lambda_2}\\right)$.\n\nIntuition: arrivals in the superposed process can be labeled as type 1 vs type 2 with probabilities proportional to their rates.",
+    answer_kind: "exact",
+    answer_value: "Binomial(n, lambda1/(lambda1+lambda2))",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["poisson", "conditioning", "thinning"],
+    source: "Classic Poisson superposition fact",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "min-of-independent-exponentials",
+    topic: "Probability",
+    track: "researcher",
+    title: "Minimum of Independent Exponentials",
+    prompt_md:
+      "Let $X_i\\sim\\text{Exp}(\\lambda_i)$ be independent for $i=1,\\dots,n$. Let $M=\\min_i X_i$.\n\nWhat is the distribution of $M$?",
+    solution_md:
+      "$M\\sim\\text{Exp}\\left(\\sum_{i=1}^n \\lambda_i\\right)$.\n\nReason: $P(M>t)=\\prod_i P(X_i>t)=\\prod_i e^{-\\lambda_i t}=e^{-(\\sum_i\\lambda_i)t}$.",
+    answer_kind: "exact",
+    answer_value: "Exp(sum_i lambda_i)",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["exponential", "minimum", "memoryless"],
+    source: "Classic exponential race fact",
+    target_roles: ["Researcher"],
+  },
 ];
