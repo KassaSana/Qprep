@@ -288,4 +288,107 @@ export const SYSTEM_DESIGN_SEED: SeedQuestion[] = [
         "Authoritative enforcement in gateway via token buckets per (strategy,symbol) plus per-strategy global bucket. Keep state in fixed-capacity arrays/maps on single thread; reject quickly. Optionally soft-limit in strategy; tune via metrics.\n",
     },
   },
+  {
+    slug: "sysdesign-market-data-fanout",
+    topic: "System Design",
+    track: "dev",
+    title: "Market Data Fanout to Many Strategies",
+    prompt_md:
+      "You have one normalized market data stream and many strategies consuming it on the same machine.\n\nDesign how you fan out updates so that:\n- each strategy sees a consistent ordered stream\n- a slow strategy does not block others\n- you can measure per-strategy lag\n- the hot path stays low-latency\n\nAssume colocated machine; keep it in-process.",
+    solution_md:
+      "Use a single producer (normalizer) and per-strategy SPSC ring buffers. Producer writes each update into all rings (or a shared ring + per-strategy cursors if you accept more complexity). Each strategy reads independently, so slow consumers don't block others. Track lag by comparing producer sequence to consumer cursor.\n\nKeep rings fixed-size and preallocated; on overflow, decide policy (drop, disconnect, or apply backpressure upstream). Avoid locks by pinning threads and using cache-line separated cursors.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "market-data", "low-latency"],
+    source: "Quant-dev system design staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Proposes per-consumer queueing model (per-strategy rings or shared log + cursors) and ordered delivery: 40%",
+        "Explains isolation from slow consumers and overflow policy: 30%",
+        "Mentions how to measure lag (seq/cursors) and observability: 15%",
+        "Mentions hot-path perf practices (prealloc, no locks, pinning, avoid false sharing): 15%",
+      ],
+      reference_solution_md:
+        "Use one producer and per-strategy SPSC rings (or shared log + cursors). Each consumer reads independently so slow strategies don't block others. Track lag via producer seq vs consumer cursor. Fixed-size preallocated buffers with overflow policy; avoid locks via pinning and cache-line separated cursors.\n",
+    },
+  },
+  {
+    slug: "sysdesign-backpressure-streaming",
+    topic: "System Design",
+    track: "dev",
+    title: "Backpressure in a Streaming Pipeline",
+    prompt_md:
+      "Design how you handle backpressure in a low-latency streaming pipeline (market data → normalization → signals → orders).\n\nCover:\n- where queues live\n- what happens when a queue is full\n- how you prevent unbounded memory growth\n- how you surface overload to operators\n\nKeep it practical for colocated systems.",
+    solution_md:
+      "Use bounded queues between stages (SPSC rings). When full, choose policy per stage: drop non-critical messages, coalesce (keep latest per symbol), or shed load (disable strategy) rather than blocking the entire pipeline. Avoid unbounded memory by fixed capacities.\n\nSurface overload with metrics: queue depth, drop counts, lag in seq, and alerts. For critical correctness paths, prefer gap-fill/snapshot recovery rather than buffering indefinitely.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "backpressure", "performance"],
+    source: "Production systems staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Mentions bounded queues between stages and why unbounded queues are dangerous: 40%",
+        "Describes at least two overload policies (drop, coalesce latest, shed/disable, backpressure) with tradeoffs: 35%",
+        "Mentions observability (queue depth, drops, lag) and operator surfacing: 15%",
+        "Keeps correctness considerations clear (critical paths vs best-effort): 10%",
+      ],
+      reference_solution_md:
+        "Use bounded rings between stages. When full: drop/coalesce (latest per symbol) or shed load/disable slow strategies rather than blocking everything. Fixed capacities prevent memory blowups. Surface overload via queue depth, drop counts, seq lag, and alerts; treat correctness-critical paths differently.\n",
+    },
+  },
+  {
+    slug: "sysdesign-exactly-once-analytics",
+    topic: "System Design",
+    track: "dev",
+    title: "Exactly-Once-ish Analytics (At-Least-Once Transport)",
+    prompt_md:
+      "You compute PnL/positions/analytics from an at-least-once event stream of orders/acks/fills.\n\nDesign an approach that makes the analytics result effectively exactly-once.\n\nCover:\n- event identity and dedup\n- checkpointing state\n- replay on restart\n\nYou can assume a single-writer partition per account/order-id if useful.",
+    solution_md:
+      "Make events idempotent via stable identifiers (order_id,event_seq) or (session,seq). Maintain state keyed by account and last_processed_seq per partition. Persist checkpoints: (offset, state snapshot) or (offset, write-ahead log of state updates). On restart, restore last checkpoint and replay events from the stream, dropping duplicates/out-of-order using seq guards.\n\nIf you can partition by account, a single consumer per partition simplifies ordering and exactly-once semantics.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "streaming", "correctness"],
+    source: "Streaming analytics staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Defines event identity and dedup/idempotent apply using seq guards: 45%",
+        "Explains checkpointing state + offsets and how replay works on restart: 40%",
+        "Mentions partitioning/single-writer per key as simplifying assumption and implications: 15%",
+      ],
+      reference_solution_md:
+        "Use stable event ids (order_id+event_seq) and apply state updates idempotently guarded by last_seen_seq per key/partition. Persist checkpoints (offset + state snapshot or WAL). On restart restore checkpoint and replay from offset; duplicates are dropped by seq guards. Partition by account/order to preserve ordering.\n",
+    },
+  },
+  {
+    slug: "sysdesign-disaster-recovery-replay-integrity",
+    topic: "System Design",
+    track: "dev",
+    title: "Disaster Recovery + Replay Integrity",
+    prompt_md:
+      "Design a disaster recovery plan for a trading system that relies on event logs and replay.\n\nCover:\n- what you replicate (configs, limits, event logs)\n- how you ensure replay integrity (no missing/duplicated events)\n- how you fail over safely (avoid double-sending orders)\n\nKeep it bounded (components + invariants).",
+    solution_md:
+      "Replicate immutable event logs (orders/acks/fills) and critical configs/limits to a second site. Use checksums/sequence numbers and periodic consistency audits to ensure log completeness. Replay integrity relies on stable event ids and monotonic sequences; consumers detect gaps.\n\nFailover safety: ensure only one active order-sending authority (leader election / manual cutover) and enforce idempotency on the exchange session (client order ids) so duplicates are rejected. Run DR in shadow until cutover, then reconcile positions and resume.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "reliability", "correctness"],
+    source: "Trading ops staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 190,
+      rubric: [
+        "States what must be replicated (event logs + configs/limits/state) and why: 30%",
+        "Explains replay integrity via seq/gap detection/checksums and stable event ids: 35%",
+        "Explains safe failover avoiding double-send (single authority, idempotent IDs, cutover): 25%",
+        "Mentions validation/reconciliation (shadow mode, position checks) briefly: 10%",
+      ],
+      reference_solution_md:
+        "Replicate immutable event logs and critical configs/limits. Use seq numbers/checksums and audits for completeness; replay relies on stable event ids and gap detection. Safe failover requires single active order-sending authority and idempotent client order ids; run shadow DR and reconcile before cutover.\n",
+    },
+  },
 ];
