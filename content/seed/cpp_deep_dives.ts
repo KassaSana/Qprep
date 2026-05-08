@@ -944,5 +944,620 @@ export const CPP_DEEP_DIVES_SEED: SeedQuestion[] = [
         "Exceptions keep hot path clean if failures are rare, but unwinding is expensive and may affect code size/inlining. Error codes are explicit/predictable but add checks/branches. Many systems use error codes on hottest paths and exceptions in init/rare cases.\n",
     },
   },
+  {
+    slug: "cpp-zero-initialization-vs-default-init-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Initialization: Default vs Value vs Zero (Common Bug)",
+    prompt_md:
+      "Explain a common bug related to uninitialized variables/fields in C++ and how initialization syntax affects it.\n\nAnswer in 6–10 sentences and mention that POD members may be uninitialized with default initialization.",
+    solution_md:
+      "In C++, default initialization of built-in types (like `int`) does not initialize them; they contain indeterminate values. This often bites when you create a struct/class with primitive members and rely on an implicit default constructor that doesn't set them.\n\nUsing value initialization (e.g., braces `{}`) typically zero-initializes aggregates and primitives. Best practice: always initialize members (in-class member initializers or constructors) and prefer brace initialization when you want zero-initialization.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["cpp", "bugs", "initialization"],
+    source: "C++ fundamentals",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "States default initialization can leave primitives/fields indeterminate (uninitialized): 50%",
+        "Contrasts with value/brace initialization leading to zero init in common cases: 35%",
+        "Mentions mitigation (member initializers/constructors; brace init) clearly: 15%",
+      ],
+      reference_solution_md:
+        "Default init can leave primitive members uninitialized. Brace/value init often zero-initializes. Fix by always initializing members (in-class initializers/ctors) and using {} when you need zero.\n",
+    },
+  },
+  {
+    slug: "cpp-one-definition-rule-violation-symptoms-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "ODR Violations — How They Show Up",
+    prompt_md:
+      "What is an ODR (One Definition Rule) violation and how can it show up in practice?\n\nAnswer in 6–10 sentences and mention inline functions/templates vs non-inline globals.",
+    solution_md:
+      "An ODR violation occurs when the program contains multiple conflicting definitions of an entity that must have a single definition (e.g., non-inline function, non-inline global variable). It can show up as link errors (multiple definition) or, worse, as runtime bugs if the linker allows multiple copies with different definitions (e.g., violating 'same definition' requirements for inline functions across TUs).\n\nTemplates and inline functions are allowed to have multiple identical definitions, but non-inline globals/functions in headers are a common trap.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cpp", "linking", "odr"],
+    source: "C++ build/linking staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 140,
+      rubric: [
+        "Defines ODR violation as multiple conflicting definitions of an entity requiring one definition: 50%",
+        "Mentions manifestations (linker multiple-definition errors or subtle runtime behavior): 25%",
+        "Mentions header trap (non-inline globals/functions) and contrasts with allowed identical inline/template defs: 25%",
+      ],
+      reference_solution_md:
+        "ODR violation: multiple conflicting definitions of an entity that must be single-defined. Often link errors, sometimes subtle runtime issues. Inline/template entities can have multiple identical defs; non-inline globals/functions in headers are common trap.\n",
+    },
+  },
+  {
+    slug: "cpp-const-correctness-why-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Const Correctness — Why It Matters",
+    prompt_md:
+      "Why does const correctness matter in C++ APIs?\n\nAnswer in 5–10 sentences and mention compiler guarantees and overloading.",
+    solution_md:
+      "Const correctness lets the compiler enforce which functions mutate state and which don't, preventing accidental modification and enabling safer interfaces. It allows calling methods on const objects and enables overloads (`T&` vs `const T&`) and optimizations (reasoning about aliasing/mutation).\n\nIt also improves readability: callers know what a function can do. Violating const correctness often forces unnecessary copying or prevents use in generic code.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["cpp", "api-design"],
+    source: "C++ fundamentals",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 120,
+      rubric: [
+        "Mentions compiler-enforced non-mutation guarantees and safer APIs: 55%",
+        "Mentions enabling const overloads / calling methods on const objects: 25%",
+        "Mentions readability/generic-code/avoid copying angle appropriately: 20%",
+      ],
+      reference_solution_md:
+        "Const correctness makes mutation explicit and compiler-enforced, enables const overloads and calling on const objects, and improves readability and generic usability.\n",
+    },
+  },
+  {
+    slug: "cpp-copy-elision-not-a-optimization-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Copy Elision — Not Just an Optimization",
+    prompt_md:
+      "Explain why copy elision (RVO) isn't just an optimization detail you can ignore.\n\nAnswer in 5–10 sentences and mention C++17 guaranteed elision and observable behavior (constructors not called).",
+    solution_md:
+      "With copy elision, the compiler can construct an object directly in its final storage without calling copy/move constructors at all. In C++17, some elisions are guaranteed, meaning your code must be correct even if copy/move constructors are never invoked for certain return patterns.\n\nThis affects observable behavior: side effects in copy/move constructors may not run, and it changes when objects are constructed/destructed. Therefore you should not rely on copy/move side effects for correctness.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cpp", "rvo", "performance"],
+    source: "Modern C++ semantics",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 130,
+      rubric: [
+        "States copy elision can skip copy/move constructor calls entirely: 45%",
+        "Mentions C++17 guaranteed elision and that code must be correct under it: 35%",
+        "Mentions observable behavior angle (side effects may not happen; lifetime differences): 20%",
+      ],
+      reference_solution_md:
+        "Copy elision can skip copy/move constructors; in C++17 some cases are guaranteed. Thus you can't rely on copy/move side effects; lifetimes/side effects may differ.\n",
+    },
+  },
+  {
+    slug: "cpp-std-visit-exhaustiveness-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "`std::visit` — Why It's Powerful",
+    prompt_md:
+      "Why is `std::visit` with `std::variant` often preferable to manual type tags + `switch`?\n\nAnswer in 5–10 sentences and mention exhaustiveness and type safety.",
+    solution_md:
+      "`std::visit` dispatches based on the active alternative of a variant in a type-safe way. It encourages handling all alternatives, and with helper patterns you can make missing cases a compile error (exhaustiveness).\n\nCompared to manual tags and void pointers/unions, variant+visit keeps the tag and value together, prevents mismatched tags, and makes refactoring safer when adding new alternatives.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["cpp", "variant", "api-design"],
+    source: "Modern C++ best practice",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 120,
+      rubric: [
+        "Explains visit dispatches on active alternative with type safety: 50%",
+        "Mentions exhaustiveness/refactor safety when adding alternatives: 35%",
+        "Mentions avoiding mismatched tag/value bugs vs manual tagging: 15%",
+      ],
+      reference_solution_md:
+        "visit dispatches based on variant alternative safely; it keeps tag+value together and can enforce handling all cases, making refactors safer than manual tags/switches.\n",
+    },
+  },
+  {
+    slug: "cpp-template-instantiation-code-bloat-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Templates and Code Bloat",
+    prompt_md:
+      "Why can heavy use of templates increase binary size and compile times, and why does that matter for performance?\n\nAnswer in 6–10 sentences and mention instruction cache.",
+    solution_md:
+      "Templates are instantiated for each set of template arguments used, potentially producing many copies of similar code. This increases compile times and can increase binary size.\n\nLarge binaries can harm runtime performance by increasing instruction cache pressure and reducing locality, which can hurt tail latency in hot loops. Mitigations include reducing template instantiations, using type-erasure in non-hot paths, explicit instantiation, and careful API design.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cpp", "performance", "build"],
+    source: "C++ performance engineering",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "Explains template instantiation produces multiple code copies and increases compile time/binary size: 55%",
+        "Connects large binaries to I-cache pressure/runtime performance/tail: 30%",
+        "Mentions at least one mitigation (explicit instantiation, reduce variants, type erasure off hot path): 15%",
+      ],
+      reference_solution_md:
+        "Templates instantiate per type set → code bloat and compile time. Bigger binaries can worsen I-cache locality and tail latency. Mitigate via fewer instantiations, explicit instantiation, and moving flexibility off hot paths.\n",
+    },
+  },
+  {
+    slug: "cpp-union-inactive-member-ub-mcq",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "UB: Reading Inactive Union Member",
+    prompt_md:
+      "In C++, which statement is most accurate about reading from a union member that was not most recently written?",
+    solution_md:
+      "In general it is undefined behavior (with some narrow exceptions like common initial sequence in standard-layout structs or reading object representation via unsigned char).",
+    answer_kind: "mcq",
+    answer_value: "ub-general",
+    answer_tolerance: null,
+    difficulty: 5,
+    tags: ["cpp", "ub"],
+    source: "C++ object model deep cut",
+    target_roles: ["Dev"],
+    answer_meta: {
+      options: [
+        {
+          id: "ub-general",
+          label:
+            "Generally UB (with narrow exceptions like common initial sequence / object representation rules).",
+          correct: true,
+        },
+        { id: "always-ok", label: "Always well-defined; unions are meant for type punning.", correct: false },
+        { id: "always-compile-error", label: "Always a compile error.", correct: false },
+        { id: "only-runtime", label: "Only a runtime error, never UB.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "cpp-lifetime-of-temporary-extension-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Temporary Lifetime Extension — When It Does/Doesn't Happen",
+    prompt_md:
+      "When does binding a reference extend the lifetime of a temporary in C++?\n\nAnswer in 6–10 sentences and mention the common trap with returning references/views.",
+    solution_md:
+      "Binding a temporary directly to a `const T&` in a local variable declaration extends the temporary's lifetime to the lifetime of that reference. However, this does not generally extend across function boundaries: returning a reference or `string_view` to a temporary/local object will still dangle.\n\nA common trap is constructing a temporary string in an expression and storing a view/reference that outlives it. The safe approach is to return/store an owning object, or ensure the referenced object has a longer lifetime.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cpp", "lifetime", "bugs"],
+    source: "C++ lifetime rules staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 140,
+      rubric: [
+        "States lifetime extension occurs when binding temporary to const reference in a local declaration: 50%",
+        "States it doesn't save returning references/views to locals/temporaries (dangling trap): 35%",
+        "Mentions mitigation (owning return, ensure lifetime) clearly: 15%",
+      ],
+      reference_solution_md:
+        "Temporary lifetime can be extended by binding to a const reference in a local declaration, but returning references/views to temporaries/locals still dangles. Prefer owning returns or ensure longer-lived storage.\n",
+    },
+  },
+  {
+    slug: "cpp-sso-and-string-view-interaction-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "SSO and `string_view` Interaction",
+    prompt_md:
+      "Why can SSO make `string_view` bugs harder to detect?\n\nAnswer in 4–8 sentences and mention that a dangling view might appear to work sometimes.",
+    solution_md:
+      "With SSO, small strings store their characters inside the string object itself. If you take a `string_view` to a small temporary string, the view may point into stack memory that happens to remain unchanged for a while, making the bug appear to work in tests.\n\nWhen the string grows (heap allocation) or stack layout changes, it breaks. SSO increases the chance of \"heisenbugs\" because memory may look valid temporarily.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cpp", "lifetime", "bugs"],
+    source: "Modern C++ pitfall",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 115,
+      rubric: [
+        "Explains SSO stores small data inline in object (often stack) so views can point to stack memory: 50%",
+        "Explains why bug can seem to work (stack memory unchanged) and later fail: 35%",
+        "Mentions mitigation (avoid views to temporaries; own data) briefly: 15%",
+      ],
+      reference_solution_md:
+        "SSO keeps small string bytes inline; a view to a temporary may point into stack memory that 'looks valid' for a while, hiding dangling bugs until layout changes. Avoid views to temporaries; keep ownership/lifetime clear.\n",
+    },
+  },
+  {
+    slug: "cpp-returning-span-from-vector-ub-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Returning a `span`/Pointer into a Temporary",
+    prompt_md:
+      "Explain why returning a `std::span` (or pointer) into a temporary container (like a local `std::vector`) is a bug.\n\nAnswer in 5–10 sentences and connect to lifetime.",
+    solution_md:
+      "A span/pointer is non-owning and references memory owned by something else. If you return a span into a local vector, the vector is destroyed at function exit and its buffer is freed; the returned span dangles immediately.\n\nEven if it appears to work in tests, it's undefined behavior. The fix is to return an owning object (vector/string) or ensure the referenced storage outlives the span (caller-owned buffer, static storage, arena with appropriate lifetime).",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["cpp", "lifetime", "bugs"],
+    source: "Modern C++ pitfall",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 120,
+      rubric: [
+        "States span/pointer is non-owning and depends on underlying storage lifetime: 45%",
+        "Explains local container destruction frees buffer → dangling view: 45%",
+        "Mentions a correct fix (return owning; caller-owned storage; longer lifetime): 10%",
+      ],
+      reference_solution_md:
+        "Returning span/pointer into local vector returns a non-owning view to memory that is freed when vector is destroyed → dangling UB. Fix: return owning object or ensure storage outlives the view.\n",
+    },
+  },
+  {
+    slug: "cpp-aliasing-and-restrict-equivalent-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Aliasing and Optimizations (Why Compilers Care)",
+    prompt_md:
+      "Why do compilers care about aliasing, and how does it relate to performance?\n\nAnswer in 6–10 sentences and mention that fewer aliasing possibilities enable better optimization.",
+    solution_md:
+      "If the compiler can assume two pointers don't alias, it can keep values in registers, reorder loads/stores, and vectorize more aggressively because it doesn't need to conservatively reload memory after every store. If aliasing is possible, it must assume stores may affect later loads through other pointers.\n\nC++ strict aliasing and type-based alias analysis are key tools. In performance-critical code, writing alias-friendly code (clear ownership, restrict-like patterns, avoiding ambiguous pointers) can materially improve optimization.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cpp", "optimization", "performance"],
+    source: "Compiler optimization staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "Explains non-aliasing assumptions enable register caching/reordering/vectorization: 55%",
+        "Explains aliasing forces conservative reloads and blocks some optimizations: 30%",
+        "Mentions strict aliasing / TBAA or writing alias-friendly code as practical lever: 15%",
+      ],
+      reference_solution_md:
+        "If pointers don't alias, compiler can reorder and keep values in registers and vectorize. If aliasing possible, it must reload conservatively. Strict aliasing/TBAA and clear ownership patterns enable better optimization.\n",
+    },
+  },
+  {
+    slug: "cpp-std-byte-why-mcq",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Why `std::byte` Exists",
+    prompt_md:
+      "Which statement best describes why `std::byte` exists (vs using `char`)?",
+    solution_md:
+      "`std::byte` is a distinct type intended for raw memory/object representation, making intent explicit and avoiding accidental arithmetic/character semantics.",
+    answer_kind: "mcq",
+    answer_value: "intent",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["cpp", "memory"],
+    source: "Modern C++ library design",
+    target_roles: ["Dev"],
+    answer_meta: {
+      options: [
+        {
+          id: "intent",
+          label:
+            "`std::byte` is a distinct type for raw memory/object representation; it makes intent explicit and avoids char/arith semantics.",
+          correct: true,
+        },
+        { id: "faster", label: "`std::byte` is always faster than `char`.", correct: false },
+        { id: "bigger", label: "`std::byte` is 16 bits; `char` is 8 bits.", correct: false },
+        { id: "unicode", label: "`std::byte` is for Unicode text.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "cpp-byte-object-representation-aliasing-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "`std::byte` vs `unsigned char` for Object Representation",
+    prompt_md:
+      "When dealing with raw object representation bytes, why do many C++ rules mention `unsigned char` (and now `std::byte`)?\n\nAnswer in 5–10 sentences and mention aliasing rules at a high level.",
+    solution_md:
+      "The language grants special aliasing permissions to character types: you can inspect an object's representation via `unsigned char*` safely. This exists so low-level code can copy/serialize/inspect bytes without violating strict aliasing. `std::byte` provides an explicit \"byte\" type for intent, but aliasing rules historically center on `char`/`unsigned char`.\n\nThe key point is: arbitrary type-punning through unrelated pointer types is UB; viewing as bytes is the sanctioned route.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["cpp", "ub", "memory"],
+    source: "C++ object model staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "States character types have special permission to view object representation as bytes: 55%",
+        "Connects this to strict aliasing/type-punning being UB and bytes as the sanctioned route: 30%",
+        "Mentions std::byte as intent type and why rules historically mention unsigned char: 15%",
+      ],
+      reference_solution_md:
+        "C++ allows examining object representation via (unsigned) char pointers (aliasing exception). This enables byte-level inspection without UB. std::byte makes intent explicit; unrelated type-punning remains UB.\n",
+    },
+  },
+  {
+    slug: "cpp-mutex-move-copy-mcq",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Why `std::mutex` Is Non-Copyable",
+    prompt_md:
+      "Why is `std::mutex` non-copyable (and non-movable) in C++?",
+    solution_md:
+      "Copying/moving a mutex would be ambiguous/unsafe because it represents a synchronization primitive tied to a specific state/OS object; duplicating it would break mutual exclusion semantics.",
+    answer_kind: "mcq",
+    answer_value: "semantics",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["cpp", "concurrency"],
+    source: "C++ core rule",
+    target_roles: ["Dev"],
+    answer_meta: {
+      options: [
+        {
+          id: "semantics",
+          label:
+            "Because copying/moving would be ambiguous/unsafe for a primitive tied to a specific OS/state; it would break mutual exclusion semantics.",
+          correct: true,
+        },
+        { id: "performance", label: "Because it would be too slow.", correct: false },
+        { id: "templates", label: "Because mutexes cannot be templates.", correct: false },
+        { id: "alignment", label: "Because it cannot be aligned.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "cpp-std-vector-growth-factor-why-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Vector Growth Factor — Why Not Grow by +1?",
+    prompt_md:
+      "Why do dynamic arrays (like `std::vector`) typically grow geometrically (e.g., ×1.5 or ×2) instead of growing by +1 element each time?\n\nAnswer in 5–10 sentences and mention amortized cost.",
+    solution_md:
+      "Growing by +1 would cause a reallocation and copy/move of all elements on almost every insertion, making the total cost over n pushes O(n^2). Geometric growth makes the total relocation work O(n) via a geometric series, giving O(1) amortized insertion.\n\nThe tradeoff is some unused capacity (memory overhead) for better performance and fewer reallocations (better tail latency).",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["cpp", "performance", "amortized-analysis"],
+    source: "CS/DS staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 120,
+      rubric: [
+        "Explains +1 growth leads to O(n^2) total copies/moves over n inserts: 45%",
+        "Explains geometric growth yields O(1) amortized insertion via O(n) total relocation: 40%",
+        "Mentions tradeoff (extra capacity/memory) and benefit (fewer spikes): 15%",
+      ],
+      reference_solution_md:
+        "Growing by +1 reallocates almost every push → O(n^2) total work. Geometric growth makes total relocation O(n), yielding O(1) amortized insertion; tradeoff is extra capacity.\n",
+    },
+  },
+  {
+    slug: "cpp-std-memcpy-nontrivial-why-ub-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Why `memcpy`ing Non-Trivial Types Is Dangerous",
+    prompt_md:
+      "Why is using `memcpy` to copy non-trivially-copyable C++ objects dangerous?\n\nAnswer in 6–10 sentences and mention invariants/ownership.",
+    solution_md:
+      "Non-trivial types often manage resources (ownership, pointers, reference counts) and have invariants maintained by constructors/destructors. `memcpy` performs a byte-wise copy without running those operations, which can duplicate pointers/handles and cause double-free, leaks, or broken invariants.\n\nOnly trivially copyable types can be safely copied this way. For others, use copy/move constructors or serialization logic that understands the type.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["cpp", "ub", "memory"],
+    source: "C++ fundamentals",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 130,
+      rubric: [
+        "States non-trivial types have invariants/resources managed by ctors/dtors: 45%",
+        "Explains memcpy bypasses ctors/dtors causing double-free/leaks/broken invariants: 45%",
+        "States safe rule: only trivially copyable; otherwise use proper copy/move/serialize: 10%",
+      ],
+      reference_solution_md:
+        "memcpy bypasses constructors/destructors; for non-trivial resource-owning types it duplicates internal pointers/handles causing double-free/leaks/invariant break. Only trivially copyable types are safe for byte-wise copy.\n",
+    },
+  },
+  {
+    slug: "cpp-hidden-allocations-hot-path-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Design Smell: Hidden Allocations on Hot Paths",
+    prompt_md:
+      "Give three examples of standard C++ library operations that can hide allocations (and thus cause tail-latency spikes) if you're not careful.\n\nAnswer in 6–10 sentences and include at least one mitigation technique.",
+    solution_md:
+      "Examples: `std::string` growth/appends reallocating; `std::vector` growth without reserve; `std::unordered_map` rehashing; `std::function` allocating for large callables; `shared_ptr` control-block allocations.\n\nMitigations include reserving capacity, using `pmr`/pool allocators, preallocating and reusing buffers, and keeping allocation off the hot path by moving work to a background thread.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cpp", "performance", "allocations"],
+    source: "Low-latency engineering staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 145,
+      rubric: [
+        "Lists at least three real hidden-allocation sources in stdlib containers/abstractions: 55%",
+        "Connects hidden allocations to tail-latency spikes: 15%",
+        "Mentions at least one mitigation (reserve, pmr/pool, reuse buffers, move off hot path): 30%",
+      ],
+      reference_solution_md:
+        "Hidden allocations: string/vector growth, unordered_map rehash, std::function for large callables, shared_ptr control blocks. Mitigate with reserve, pmr/pools, buffer reuse, and keeping allocs off hot path.\n",
+    },
+  },
+  {
+    slug: "cpp-atomic-ref-what-when-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "`std::atomic_ref` — What Problem It Solves",
+    prompt_md:
+      "What is `std::atomic_ref<T>`, and when would you use it instead of `std::atomic<T>`?\n\nAnswer in 6–10 sentences and mention that it refers to existing storage and alignment requirements.",
+    solution_md:
+      "`std::atomic_ref<T>` provides atomic operations on an existing `T` object without changing its type to `std::atomic<T>`. It’s useful when you need atomic access to data that is stored in a layout you can’t change (e.g., a struct shared with C/FFI, a packed array, or memory-mapped/shared memory layout).\n\nBecause it references existing storage, the referenced object must be suitably aligned and must not be concurrently accessed non-atomically (data race rules still apply). Lifetime also matters: the referenced `T` must outlive the `atomic_ref`.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["cpp", "atomics", "memory-model"],
+    source: "Modern C++ concurrency tool",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 140,
+      rubric: [
+        "Defines atomic_ref as providing atomic ops on existing non-atomic storage (without changing the object type): 55%",
+        "Gives a plausible use case where you can't change layout/type (FFI/shared memory/arrays): 25%",
+        "Mentions key caveats: alignment + no mixed atomic/non-atomic concurrent access + lifetime: 20%",
+      ],
+      reference_solution_md:
+        "atomic_ref gives atomic operations over existing storage (no need to store as std::atomic). Use it when layout/type can't change (FFI/shared memory/arrays). Caveats: alignment, lifetime, and you still must avoid mixed atomic/non-atomic concurrent access.\n",
+    },
+  },
+  {
+    slug: "cpp-relaxed-atomic-when-ok-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "When Is `memory_order_relaxed` OK?",
+    prompt_md:
+      "Give one scenario where `memory_order_relaxed` is correct, and one where it is not.\n\nAnswer in 6–10 sentences and mention that relaxed gives atomicity but not ordering.",
+    solution_md:
+      "Relaxed atomics provide atomic read-modify-write/loads/stores but do not create ordering or synchronization with other memory operations. A correct use is a statistics counter where you only need atomicity of the increment and don't use the value to publish or guard access to other data.\n\nA not-correct use is a “publish data then set flag” pattern: if a reader uses a relaxed load of the flag to decide the data is ready, it may observe the flag but still see stale data due to reordering/visibility. That needs release/acquire (or stronger).",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cpp", "atomics", "memory-model"],
+    source: "C++ memory model staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "States relaxed provides atomicity but no ordering/synchronization: 45%",
+        "Gives a correct example use case (counters/stats) with appropriate reasoning: 30%",
+        "Gives a not-correct example (publish flag) and mentions release/acquire as fix: 25%",
+      ],
+      reference_solution_md:
+        "Relaxed = atomicity without ordering. OK for independent counters/stats. Not OK for publish-then-flag; reader might see flag without data. Use release/acquire for publication.\n",
+    },
+  },
+  {
+    slug: "cpp-shared-ptr-aliasing-ctor-why-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "`shared_ptr` Aliasing Constructor — Why It Exists",
+    prompt_md:
+      "What is the `shared_ptr` aliasing constructor, and what problem does it solve?\n\nAnswer in 6–10 sentences and mention shared ownership + pointing to a subobject.",
+    solution_md:
+      "The aliasing constructor lets you create a `shared_ptr<U>` that shares ownership with an existing `shared_ptr<T>` (same control block) but points to a different address, typically a subobject (like a field inside `T`) or an element within a managed buffer.\n\nThis solves the problem of wanting a non-owning pointer into an object while still keeping the object alive via shared ownership. Without it, you might use a raw pointer to a subobject and accidentally outlive the owning shared_ptr.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cpp", "smart-pointers", "lifetime"],
+    source: "Modern C++ standard library",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 130,
+      rubric: [
+        "Defines aliasing constructor as sharing ownership/control block but pointing to a different address (subobject): 55%",
+        "Explains the problem it solves (keep owner alive while exposing subobject pointer safely): 35%",
+        "Mentions a realistic example category (field/view into buffer) without confusion: 10%",
+      ],
+      reference_solution_md:
+        "Aliasing ctor: new shared_ptr shares the same control block/ownership but points at a subobject/other address. It keeps the owner alive while handing out a pointer to part of it, avoiding dangling raw subobject pointers.\n",
+    },
+  },
+  {
+    slug: "cpp-virtual-inheritance-costs-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Virtual Inheritance — What Does It Cost?",
+    prompt_md:
+      "At a high level, what does virtual inheritance change, and what costs can it introduce?\n\nAnswer in 6–10 sentences and mention object layout and pointer adjustment.",
+    solution_md:
+      "Virtual inheritance ensures there is only one shared base subobject when multiple paths inherit from the same base (diamond problem). To support this, object layout becomes more complex and access to the virtual base can require runtime pointer adjustment (often via extra metadata).\n\nCosts include larger objects (extra pointers/offset tables), more complex construction/destruction, and potentially slower base access and worse cache locality. It’s primarily a correctness/design tool, not a performance one.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["cpp", "abi", "performance"],
+    source: "C++ object model/ABI intuition",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 140,
+      rubric: [
+        "States what virtual inheritance achieves (single shared base in diamond): 40%",
+        "Mentions layout complexity/pointer adjustment/metadata as the mechanism: 35%",
+        "Mentions realistic costs (size, ctor/dtor complexity, slower access/cache): 25%",
+      ],
+      reference_solution_md:
+        "Virtual inheritance ensures one shared base in diamond. Mechanism involves more complex layout and runtime pointer adjustments/metadata. Costs: bigger objects, more complex ctors/dtors, potentially slower access and worse locality.\n",
+    },
+  },
+  {
+    slug: "cpp-small-object-optimization-when-breaks-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Small Object Optimization — When It Breaks",
+    prompt_md:
+      "Many standard-library types use small-object optimization (SBO/SSO). Give one example and explain what changes when the object exceeds the small buffer.\n\nAnswer in 6–10 sentences and connect to tail latency.",
+    solution_md:
+      "Examples include `std::string` (SSO) and `std::function` (SBO for small callables). When the payload fits, the object stores data inline with no heap allocation; once it exceeds the small buffer, it allocates on the heap and stores a pointer.\n\nCrossing that threshold can create unexpected allocations and copies/moves, causing latency spikes. In low-latency code, you often constrain sizes, preallocate, or use alternative representations to avoid threshold-crossing on hot paths.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cpp", "performance", "allocations"],
+    source: "Low-latency C++ staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "Gives a correct SBO/SSO example (string/function/etc.) and states it stores small payload inline: 45%",
+        "Explains what changes when exceeding buffer (heap allocation + pointer indirection): 35%",
+        "Connects threshold crossing to tail latency and mentions a mitigation: 20%",
+      ],
+      reference_solution_md:
+        "SBO/SSO stores small payload inline (e.g., string, function). If it exceeds the buffer, it heap-allocates and adds indirection. Crossing the threshold can cause allocation spikes; mitigate by size constraints, preallocation, or alternatives.\n",
+    },
+  },
+  {
+    slug: "cpp-bool-bitset-atomicity-false-sharing-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Packed Bits and 'Accidental Sharing'",
+    prompt_md:
+      "Why can packing many flags into a single word (bitset/bitfield) create contention between threads even if each thread updates a different flag?\n\nAnswer in 6–10 sentences and mention cache lines / read-modify-write.",
+    solution_md:
+      "Even if threads conceptually update different bits, the hardware typically updates the containing word using a read-modify-write sequence. That means both threads repeatedly write to the same cache line (and often the same word), causing heavy coherence traffic.\n\nThis is similar to false sharing but worse because it’s the same word. A fix is to use per-thread/sharded flags, separate words/cache lines for independently-updated flags, or redesign to avoid frequent shared writes.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["cpp", "performance", "cache", "concurrency"],
+    source: "Low-latency concurrency pitfall",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 140,
+      rubric: [
+        "Explains bit updates are read-modify-write on the containing word, not independent per-bit writes: 45%",
+        "Connects to cache-line sharing/coherence traffic/contestion correctly: 40%",
+        "Gives at least one correct mitigation (sharding, separate words/cache lines, redesign): 15%",
+      ],
+      reference_solution_md:
+        "Different bits still share the same word; updates are read-modify-write, so threads repeatedly write the same cache line/word causing coherence contention. Mitigate via sharding, separate words/cache lines, or avoiding shared hot writes.\n",
+    },
+  },
+  {
+    slug: "cpp-aba-problem-what-is-it-freeform",
+    topic: "C++ Deep Dives",
+    track: "dev",
+    title: "Lock-Free Pitfall: The ABA Problem",
+    prompt_md:
+      "What is the ABA problem in lock-free programming, and name two common mitigation strategies.\n\nAnswer in 6–10 sentences and mention CAS (compare-and-swap).",
+    solution_md:
+      "The ABA problem occurs when a thread reads a value A, gets descheduled, and later uses CAS expecting the value is still A. If another thread changes the value from A→B→A in the meantime, the CAS can succeed even though the underlying state changed, breaking correctness (e.g., in lock-free stacks/queues with pointer reuse).\n\nMitigations include tagging/versioning (store a counter with the pointer/value so A with version 1 differs from A with version 2), hazard pointers/epochs to prevent reclamation/reuse while readers exist, and using APIs that avoid ABA-sensitive representations.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["cpp", "concurrency", "lock-free"],
+    source: "Lock-free programming staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 150,
+      rubric: [
+        "Defines ABA in the CAS context (A read; changes A→B→A; CAS spuriously succeeds): 55%",
+        "Connects to pointer reuse/memory reclamation as common trigger: 20%",
+        "Names two correct mitigations (tagged/versioned pointers, hazard pointers/epochs/RCU-style): 25%",
+      ],
+      reference_solution_md:
+        "ABA: CAS sees A again after A→B→A, so it succeeds though state changed (often due to pointer reuse). Mitigate with version tags/counters (tagged pointers) and safe reclamation (hazard pointers/epochs/RCU).\n",
+    },
+  },
 ];
 

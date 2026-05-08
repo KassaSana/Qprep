@@ -1182,5 +1182,330 @@ export const SYSTEMS_SEED: SeedQuestion[] = [
         "Demand paging loads pages into RAM only when accessed (fault). Thus VSZ can be large (mapped) while RSS stays smaller (resident pages only).\n",
     },
   },
+  {
+    slug: "sys-read-vs-write-page-cache-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "Buffered IO: `write()` Doesn’t Mean It Hit Disk",
+    prompt_md:
+      "On a typical OS with a page cache, why does a successful `write()` not necessarily mean the data is on disk?\n\nAnswer in 5–10 sentences and mention the page cache and fsync.",
+    solution_md:
+      "With buffered IO, `write()` usually copies data into the kernel page cache and returns once it is in memory, not once it is persisted. The kernel later flushes dirty pages to disk asynchronously.\n\nTo ensure data is durably on disk, you typically need `fsync()`/`fdatasync()` (and possibly syncing directory metadata). This matters for correctness (crash consistency) and for latency because forcing durability can be very slow.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["os", "io", "persistence"],
+    source: "CSAPP / OS IO staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 125,
+      rubric: [
+        "States write() often copies into page cache and returns before disk persistence: 55%",
+        "Mentions asynchronous flush of dirty pages and that crash can lose data: 25%",
+        "Mentions fsync/fdatasync for durability and tail-latency cost: 20%",
+      ],
+      reference_solution_md:
+        "Buffered write() typically writes to page cache and returns; kernel flushes later. For durability, use fsync/fdatasync (and dir sync). Forcing durability is slow and affects tail latency.\n",
+    },
+  },
+  {
+    slug: "sys-fsync-what-it-does-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "`fsync()` — What Does It Guarantee?",
+    prompt_md:
+      "What does `fsync()` (or `fdatasync()`) guarantee, and what is a common misconception about it?\n\nAnswer in 6–10 sentences and mention metadata vs data.",
+    solution_md:
+      "`fsync(fd)` forces dirty data and metadata for that file to be flushed to stable storage (as defined by the OS and storage stack), so that after it returns the file contents and metadata updates are durable across a crash (assuming the storage honors the contract). `fdatasync` focuses on file data and minimal metadata.\n\nA common misconception is that `write()` is durable without fsync, or that fsync is cheap. Another is forgetting to fsync the directory after creating/renaming a file, which can lose the directory entry on crash.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["os", "io", "persistence"],
+    source: "Systems correctness staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 140,
+      rubric: [
+        "States fsync flushes file data and metadata (fdatasync flushes data + minimal metadata): 55%",
+        "Mentions common misconception (write is durable; fsync cheap; ignoring dir fsync): 30%",
+        "Mentions crash-consistency framing and storage-stack caveat appropriately: 15%",
+      ],
+      reference_solution_md:
+        "fsync flushes file data+metadata to stable storage; fdatasync focuses on data. Misconceptions: write() is durable; fsync is cheap; forgetting to fsync directory for create/rename.\n",
+    },
+  },
+  {
+    slug: "sys-o_direct-what-is-it-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "`O_DIRECT` — Why It’s Tricky",
+    prompt_md:
+      "What is `O_DIRECT` and why is it tricky to use correctly?\n\nAnswer in 6–10 sentences and mention alignment and page cache bypass.",
+    solution_md:
+      "`O_DIRECT` requests direct IO that bypasses the page cache for reads/writes. It’s tricky because it typically requires strict alignment (buffer alignment, IO size alignment) and has filesystem/device-specific constraints. Bypassing the page cache can reduce double buffering and cache pollution for some workloads, but it can also hurt performance if you lose readahead/caching benefits.\n\nIt also complicates latency: IO completion is tied more directly to storage behavior. Many systems prefer buffered IO with careful flushing unless they truly need direct control.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["linux", "io", "performance"],
+    source: "Linux IO deep dive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 140,
+      rubric: [
+        "Defines O_DIRECT as bypassing the page cache for IO: 45%",
+        "Mentions alignment/size constraints and portability pitfalls: 35%",
+        "Mentions tradeoffs (avoid double buffering vs lose cache/readahead; latency implications): 20%",
+      ],
+      reference_solution_md:
+        "O_DIRECT bypasses page cache; tricky due to alignment/size constraints and FS/device quirks. Can avoid double buffering but loses caching/readahead; can expose storage latency directly.\n",
+    },
+  },
+  {
+    slug: "sys-read-vs-pread-offset-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "`read()` vs `pread()`",
+    prompt_md:
+      "What is the difference between `read()` and `pread()`?\n\nAnswer in 4–8 sentences and mention shared file offsets and thread safety.",
+    solution_md:
+      "`read()` reads from the file’s current offset in the underlying open file object and advances that offset. If multiple threads/processes share the same open file object (dup/fork), they share and race on that offset.\n\n`pread()` reads from an explicit offset and does not change the file offset, making it easier to use safely in concurrent code and for random access.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["os", "io", "unix"],
+    source: "CSAPP staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 115,
+      rubric: [
+        "States read uses and advances the shared file offset: 55%",
+        "States pread uses explicit offset and does not change file offset: 35%",
+        "Mentions concurrency/thread-safety implication (shared offset races): 10%",
+      ],
+      reference_solution_md:
+        "read() uses/advances current file offset (shared across dup/fork). pread() reads at explicit offset without changing file offset, aiding concurrency and random access.\n",
+    },
+  },
+  {
+    slug: "sys-select-vs-epoll-readiness-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "Readiness vs Completion (and Why `read()` Can Still Block)",
+    prompt_md:
+      "In event-driven IO, what's the difference between readiness (select/epoll) and completion, and why can `read()` still block even after readiness is signaled?\n\nAnswer in 6–10 sentences and mention edge/level triggering at a high level.",
+    solution_md:
+      "Readiness means an fd is likely to make progress without blocking (e.g., some bytes available), not that your requested amount is available. If you call `read()` requesting more than available and the fd is blocking, it can still block waiting for more data. Even in nonblocking mode, you may get a short read.\n\nWith level-triggered readiness, you keep getting notified while the condition holds; with edge-triggered, you must drain the fd until EAGAIN to avoid missing future notifications. Completion-based APIs instead notify when a specific IO request finishes.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["linux", "io", "epoll"],
+    source: "Event-driven IO staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 145,
+      rubric: [
+        "Explains readiness is 'can make progress' not 'request complete': 45%",
+        "Explains why read can block/short-read (amount requested vs available; blocking vs nonblocking): 35%",
+        "Mentions edge vs level trigger and draining to EAGAIN as a key practical detail: 20%",
+      ],
+      reference_solution_md:
+        "Readiness ≠ completion. After readiness, read may short-read or block if requesting more than available on blocking fd. Edge-triggered requires draining to EAGAIN; level-triggered repeats while condition holds.\n",
+    },
+  },
+  {
+    slug: "sys-accept-backlog-what-means-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "`listen(backlog)` — What Does Backlog Mean?",
+    prompt_md:
+      "In TCP servers, what does the `backlog` argument to `listen()` represent?\n\nAnswer in 5–10 sentences and mention connection queues and overload behavior.",
+    solution_md:
+      "`backlog` controls how many pending connections the kernel will queue before `accept()` picks them up. In practice there are often two queues (SYN/half-open and accept/fully established) and OS-specific tuning limits. If the queues fill, new connection attempts may be dropped, refused, or experience retransmission delays.\n\nFor latency and reliability, you tune backlog and ensure the accept loop keeps up, often using multiple acceptor threads or `SO_REUSEPORT` to scale across cores.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["networking", "tcp", "linux"],
+    source: "Networking server staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "States backlog relates to queued pending connections before accept: 55%",
+        "Mentions queueing/overload behavior when full (drops/refusals/retries) and OS nuance: 25%",
+        "Mentions scaling/tuning idea (keep accept loop up; reuseport; multiple acceptors): 20%",
+      ],
+      reference_solution_md:
+        "backlog limits queued pending connections before accept. When queues fill, new connects can drop/refuse/retry. Tune backlog and accept throughput (reuseport/multi acceptors) to handle load.\n",
+    },
+  },
+  {
+    slug: "sys-so-reuseport-why-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "`SO_REUSEPORT` — Why Use It?",
+    prompt_md:
+      "What is `SO_REUSEPORT` on Linux, and why might it improve performance for multi-core servers?\n\nAnswer in 5–10 sentences and mention accept contention.",
+    solution_md:
+      "`SO_REUSEPORT` allows multiple sockets to bind to the same (ip,port), letting the kernel distribute incoming connections/packets across them. This can reduce lock contention on a single accept queue and allow each worker thread to have its own socket, improving cache locality and scaling.\n\nIt’s useful for high-connection-rate servers where a single acceptor becomes a bottleneck.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["networking", "linux", "performance"],
+    source: "Linux server scaling staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 125,
+      rubric: [
+        "Defines reuseport as multiple sockets bound to same port with kernel distribution: 55%",
+        "Mentions reducing accept/queue contention and scaling across cores: 35%",
+        "Mentions a practical use-case (high connection rate; per-thread socket) or caveat: 10%",
+      ],
+      reference_solution_md:
+        "SO_REUSEPORT lets multiple sockets bind same port; kernel distributes connections, reducing accept contention and improving multi-core scaling with per-thread sockets.\n",
+    },
+  },
+  {
+    slug: "sys-page-replacement-why-locality-matters-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "Page Replacement — Why Locality Matters",
+    prompt_md:
+      "Why does locality (temporal/spatial) matter for paging performance?\n\nAnswer in 5–10 sentences and connect to working set and page faults.",
+    solution_md:
+      "Paging works well when programs exhibit locality: they reuse the same pages over short periods and access nearby addresses. If the working set (the set of pages actively used) fits in physical memory, page faults are rare. If access patterns have poor locality and working set exceeds memory, the system thrashes: pages are constantly evicted and faulted back in, causing huge slowdowns.\n\nThis is why algorithms/data layouts that improve locality can dramatically reduce faults and tail latency.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["virtual-memory", "performance", "os"],
+    source: "CSAPP staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 125,
+      rubric: [
+        "Defines locality/working set idea and why fitting working set reduces faults: 55%",
+        "Mentions thrashing when working set exceeds memory and locality is poor: 35%",
+        "Connects to performance/tail latency and data layout implications: 10%",
+      ],
+      reference_solution_md:
+        "Locality keeps working set small; if it fits in RAM, few faults. Poor locality with working set > RAM → thrashing (constant faults). Locality-aware layouts reduce faults and tail latency.\n",
+    },
+  },
+  {
+    slug: "sys-write-allocate-what-is-it-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "Write-Allocate — What Is It?",
+    prompt_md:
+      "In cache design, what is write-allocate (a.k.a. fetch-on-write), and why might it exist?\n\nAnswer in 4–8 sentences.",
+    solution_md:
+      "Write-allocate means that on a write miss, the cache first loads the cache line into the cache (allocates a line) and then performs the write. This can be beneficial when programs tend to write to the same line multiple times (temporal locality), because subsequent writes hit in cache.\n\nIt pairs naturally with write-back caches. The downside is extra read-for-ownership traffic on write misses.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["cache", "computer-architecture"],
+    source: "CSAPP staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 115,
+      rubric: [
+        "Defines write-allocate as bringing the line into cache on write miss: 55%",
+        "Explains why (temporal locality; subsequent writes hit; pairs with write-back): 30%",
+        "Mentions tradeoff (extra traffic/read-for-ownership) correctly: 15%",
+      ],
+      reference_solution_md:
+        "Write-allocate loads/allocates a cache line on write miss then writes, helping when you write repeatedly to the line (locality). Tradeoff is extra traffic (RFO) on miss.\n",
+    },
+  },
+  {
+    slug: "sys-context-switch-vs-syscall-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "Syscall vs Context Switch (Cost Intuition)",
+    prompt_md:
+      "What's the difference between a syscall and a context switch, and why can a context switch be more expensive?\n\nAnswer in 5–10 sentences.",
+    solution_md:
+      "A syscall is a transition from user mode to kernel mode within the same thread to request a service; it may return without switching to another runnable thread. A context switch switches CPU execution from one thread/process to another, which involves scheduler decisions and saving/restoring a larger set of state.\n\nContext switches can be more expensive because they often blow away cache/TLB locality and may move execution to a different core/NUMA domain, increasing variance.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["os", "scheduling", "performance"],
+    source: "CSAPP staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 125,
+      rubric: [
+        "Distinguishes syscall as user→kernel service vs context switch as switching threads/processes: 45%",
+        "Mentions scheduler involvement and state save/restore for context switch: 25%",
+        "Mentions cache/TLB/NUMA locality loss as key reason for cost/variance: 30%",
+      ],
+      reference_solution_md:
+        "Syscall enters kernel for service and may return to same thread. Context switch switches to another runnable thread with scheduler involvement and hurts cache/TLB locality (and possibly NUMA), often more expensive.\n",
+    },
+  },
+  {
+    slug: "sys-endianness-what-is-it-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "Endianness — What Is It and Why It Matters",
+    prompt_md:
+      "What is endianness, and why does it matter for networking and binary file formats?\n\nAnswer in 5–10 sentences.",
+    solution_md:
+      "Endianness is the byte order used to represent multi-byte integers in memory: little-endian stores the least significant byte first; big-endian stores the most significant byte first. It matters when interpreting raw bytes across machines or protocols.\n\nNetworking often uses network byte order (big-endian), so code must convert (htonl/ntohl) when sending/receiving integers. Binary file formats likewise specify an endianness; reading on a machine with different endianness requires swapping.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["computer-architecture", "networking"],
+    source: "CSAPP staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 115,
+      rubric: [
+        "Defines endianness as byte order for multi-byte integers (little vs big): 55%",
+        "Explains why it matters for interpreting raw bytes across systems/protocols: 25%",
+        "Mentions networking 'network byte order' and conversion as a concrete example: 20%",
+      ],
+      reference_solution_md:
+        "Endianness = byte order (little vs big). Matters for binary interchange; network byte order is big-endian, so convert on send/recv (htonl/ntohl). File formats also specify endianness.\n",
+    },
+  },
+  {
+    slug: "sys-virtual-address-space-why-large-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "Why 64-bit Virtual Address Space Helps",
+    prompt_md:
+      "Why is a large virtual address space (e.g., 64-bit) useful even if your machine has much less physical RAM?\n\nAnswer in 5–10 sentences and mention mappings/isolation.",
+    solution_md:
+      "A large virtual address space allows each process to have its own spacious, sparsely populated address space with room for mappings (heap, stacks, shared libraries, mmapped files) without collisions. It improves isolation because different processes can use the same virtual addresses without conflict.\n\nIt also enables tricks like guard pages for stacks/heaps and memory-mapped IO/files. Physical RAM is managed separately; virtual memory lets you map more than you physically have, with demand paging and file-backed mappings.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["virtual-memory", "os"],
+    source: "CSAPP staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 125,
+      rubric: [
+        "Explains large VA space enables flexible sparse mappings (heap/stack/libs/mmap) without collisions: 45%",
+        "Mentions process isolation (same VA across processes) and guard pages as benefits: 35%",
+        "Mentions VA ≠ physical RAM; demand paging/file-backed mappings: 20%",
+      ],
+      reference_solution_md:
+        "Large virtual address space allows sparse mappings (heap/stack/libs/mmap) and guard pages, and isolates processes (each has its own VA space). It's separate from physical RAM; demand paging/file-backed mappings make it useful even with limited RAM.\n",
+    },
+  },
+  {
+    slug: "sys-atomicity-of-aligned-word-writes-freeform",
+    topic: "Systems",
+    track: "dev",
+    title: "Atomicity of Aligned Word Writes (Caveats)",
+    prompt_md:
+      "On many CPUs, aligned word-sized loads/stores are atomic at the hardware level. Why is it still a mistake to treat that as \"thread-safe\" in C/C++?\n\nAnswer in 6–10 sentences and mention the language memory model and data races.",
+    solution_md:
+      "Even if the hardware performs an aligned 64-bit store atomically, the C/C++ memory model says a data race on a non-atomic object is undefined behavior. The compiler is allowed to assume data races don't happen and can reorder or cache values in registers, breaking your intended synchronization.\n\nThread safety requires both atomicity and ordering/visibility guarantees; you need `std::atomic` (with appropriate memory order) or locks to establish happens-before. Hardware atomicity alone doesn't give you the required language-level semantics or portability.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["memory-model", "concurrency", "computer-architecture"],
+    source: "CSAPP + C++ memory model bridge",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 145,
+      rubric: [
+        "States C/C++ data races on non-atomics are UB regardless of hardware atomicity: 55%",
+        "Mentions compiler reordering/register caching and need for language memory model: 25%",
+        "Mentions correct fix (std::atomic/locks; happens-before) and portability: 20%",
+      ],
+      reference_solution_md:
+        "Hardware atomic loads/stores don't make non-atomic sharing safe: C/C++ data races are UB and compiler may reorder/cache. Use std::atomic/locks to establish happens-before and ordering/visibility.\n",
+    },
+  },
 ];
 
