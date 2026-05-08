@@ -798,6 +798,105 @@ export const STATISTICS_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "selection-bias-what-is-it-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Selection Bias",
+    prompt_md:
+      "What is selection bias, and why can it break inference?\n\nAnswer in 5–10 sentences and give one concrete example.",
+    solution_md:
+      "Selection bias occurs when the observed sample is not representative of the target population due to a selection mechanism related to the variables of interest. This can induce spurious correlations and bias estimates because $P(data\\mid\\text{selected})$ differs from the population distribution. Example: studying only people who opted into a program (or survived to be measured) can bias estimated treatment effects; classic survivorship bias or collider bias situations.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["bias", "causality", "inference"],
+    source: "Core concept",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Defines selection bias as non-representative sampling due to selection mechanism: 55%",
+        "Explains consequence: biased estimates / spurious relationships (collider/survivorship): 30%",
+        "Gives one concrete example: 15%",
+      ],
+      reference_solution_md:
+        "Selection bias: sample depends on variables of interest, so observed distribution differs from population → biased estimates (e.g., survivorship/collider bias).\n",
+    },
+  },
+  {
+    slug: "difference-in-differences-assumptions-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Difference-in-Differences — Key Assumption",
+    prompt_md:
+      "What is the key identification assumption behind difference-in-differences (DiD)?\n\nAnswer in 4–8 sentences and mention how you would sanity-check it.",
+    solution_md:
+      "The key assumption is parallel trends: absent treatment, treated and control groups would have followed the same trend over time. You can sanity-check by examining pre-treatment trends (event study / placebo tests) and ensuring no differential pre-trends; also check for compositional changes and anticipation effects.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["causality", "did", "identification"],
+    source: "Applied causal inference",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "States parallel trends assumption clearly: 65%",
+        "Mentions checking pre-trends / event study / placebo as sanity check: 35%",
+      ],
+      reference_solution_md:
+        "DiD relies on parallel trends (counterfactual trends match absent treatment). Check via pre-trends/event study/placebo tests.\n",
+    },
+  },
+  {
+    slug: "multiple-testing-bh-procedure-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Benjamini–Hochberg (BH) Procedure",
+    prompt_md:
+      "Describe the Benjamini–Hochberg procedure for controlling FDR.\n\nAnswer in 5–10 sentences; you may use ordered p-values notation.",
+    solution_md:
+      "Sort p-values $p_{(1)}\\le \\dots \\le p_{(m)}$. Find the largest $k$ such that $p_{(k)} \\le \\frac{k}{m}q$ where $q$ is the target FDR level. Reject all hypotheses with p-values $p_{(1)},\\dots,p_{(k)}$. Under independence (and some dependence conditions), this controls the false discovery rate.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["multiple-testing", "fdr", "bh"],
+    source: "Benjamini–Hochberg",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Mentions sorting p-values and using an increasing threshold of form (k/m)q: 55%",
+        "Mentions selecting the largest k satisfying the inequality and rejecting up to k: 35%",
+        "Mentions FDR control as the goal (and optional independence caveat): 10%",
+      ],
+      reference_solution_md:
+        "BH: sort p-values, find largest k with $p_{(k)}\\le (k/m)q$, reject all p-values up to k. Controls FDR under independence/conditions.\n",
+    },
+  },
+  {
+    slug: "posterior-predictive-checks-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Posterior Predictive Checks — Intuition",
+    prompt_md:
+      "In Bayesian modeling, what is a posterior predictive check (PPC)?\n\nAnswer in 4–8 sentences and explain what you're comparing.",
+    solution_md:
+      "A PPC samples parameters from the posterior, then simulates replicated data from the model, and compares simulated data (or summary statistics) to the observed data. If the model cannot generate data that looks like the observed data in relevant aspects, it indicates model misfit. PPCs are diagnostic tools, not formal hypothesis tests.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["bayes", "model-checking", "ppc"],
+    source: "Bayesian workflow",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "Describes sampling from posterior and generating replicated data from the model: 55%",
+        "Describes comparing replicated data/summaries to observed data: 35%",
+        "Mentions the goal is model-checking/diagnostics (not a proof of correctness): 10%",
+      ],
+      reference_solution_md:
+        "PPC: draw parameters from posterior, simulate replicated datasets, compare summaries/plots to observed data to diagnose misfit.\n",
+    },
+  },
+  {
     slug: "simpsons-paradox-freeform",
     topic: "Statistics",
     track: "researcher",

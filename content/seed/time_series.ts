@@ -289,6 +289,31 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ts-backtesting-leakage-lookahead-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Backtesting — Lookahead Bias",
+    prompt_md:
+      "What is lookahead bias in time-series backtesting/forecast evaluation?\n\nGive one example and one fix in 4–8 sentences.",
+    solution_md:
+      "Lookahead bias occurs when the evaluation uses information that would not have been available at the prediction time, making performance look unrealistically good. Example: using future revisions, future prices in features, or computing normalization using the full time span. Fix by enforcing timestamp cutoffs, using only data available as of each prediction date, and using walk-forward evaluation with causal feature pipelines.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "leakage", "evaluation"],
+    source: "Forecast/backtesting practice",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "Defines lookahead bias as using future information at prediction time: 55%",
+        "Gives a concrete example (future revisions/prices/full-span normalization): 25%",
+        "Gives a concrete fix (timestamp cutoffs, causal pipeline, walk-forward): 20%",
+      ],
+      reference_solution_md:
+        "Lookahead bias: future info leaks into features/eval. Example: full-span normalization or future revisions. Fix: causal features + strict timestamp cutoffs + walk-forward evaluation.\n",
+    },
+  },
+  {
     slug: "ts-ljung-box-what-tests-mcq",
     topic: "Statistics",
     track: "researcher",
@@ -466,6 +491,56 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
       ],
       reference_solution_md:
         "E.g. seasonal differencing $X_t-X_{t-7}$, seasonal dummies/Fourier terms, SARIMA/SARIMAX, or decomposition then model residual.\n",
+    },
+  },
+  {
+    slug: "ts-seasonal-differencing-why-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Seasonal Differencing — Why?",
+    prompt_md:
+      "What is seasonal differencing (e.g., $X_t-X_{t-s}$), and why is it used?\n\nAnswer in 4–8 sentences and give one example seasonal period.",
+    solution_md:
+      "Seasonal differencing subtracts the value from one seasonal period ago, removing repeating seasonal patterns and making the series closer to stationary. Example: with weekly seasonality in daily data, use $s=7$ and difference $X_t-X_{t-7}$. It is often used in SARIMA models as the seasonal integration component.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "seasonality", "differencing"],
+    source: "Forecasting basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Defines seasonal differencing as subtracting lag-s value $X_t-X_{t-s}$: 45%",
+        "Explains it removes seasonal pattern / improves stationarity: 40%",
+        "Gives a concrete example (s=7 weekly, s=12 monthly): 15%",
+      ],
+      reference_solution_md:
+        "Seasonal differencing: $X_t-X_{t-s}$ removes repeating seasonal patterns (e.g., s=7 for weekly in daily data) and helps stationarity; used in SARIMA.\n",
+    },
+  },
+  {
+    slug: "ts-decomposition-additive-multiplicative-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Decomposition: Additive vs Multiplicative",
+    prompt_md:
+      "In classical time-series decomposition, when is a multiplicative decomposition often more appropriate than an additive one?",
+    solution_md:
+      "When seasonal amplitude grows/shrinks with the level (seasonality proportional to trend), multiplicative can be more appropriate.",
+    answer_kind: "mcq",
+    answer_value: "amplitude-scales",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["time-series", "decomposition", "seasonality"],
+    source: "Forecasting practice",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "amplitude-scales", label: "When seasonal fluctuations scale with the series level (proportional seasonality).", correct: true },
+        { id: "always", label: "Always; multiplicative is universally better.", correct: false },
+        { id: "no-season", label: "When there is no seasonality.", correct: false },
+        { id: "stationary", label: "When the series is already stationary.", correct: false },
+      ],
     },
   },
   {

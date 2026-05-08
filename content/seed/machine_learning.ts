@@ -600,6 +600,80 @@ export const MACHINE_LEARNING_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ml-covariate-shift-vs-concept-drift-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Covariate Shift vs Concept Drift",
+    prompt_md:
+      "Explain covariate shift and concept drift.\n\nIn 6–10 sentences: describe what changes, why it breaks models, and one mitigation for each.",
+    solution_md:
+      "Covariate shift: the input distribution $P(X)$ changes between training and deployment, but $P(Y\\mid X)$ stays the same. Concept drift: the conditional relationship $P(Y\\mid X)$ changes (labels/behavior changes).\n\nBoth can degrade performance because the model is optimized for the training distribution. Mitigations: for covariate shift, reweighting, importance sampling, domain adaptation, or collecting new training data matching deployment; for drift, monitoring, retraining, online learning, and robust/continual evaluation with recent data.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["distribution-shift", "evaluation", "deployment"],
+    source: "Production ML",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 105,
+      rubric: [
+        "Defines covariate shift as change in $P(X)$ with stable $P(Y\\mid X)$: 35%",
+        "Defines concept drift as change in $P(Y\\mid X)$: 35%",
+        "Gives at least one mitigation for each (reweight/domain adaptation vs monitoring/retraining): 30%",
+      ],
+      reference_solution_md:
+        "Covariate shift: $P(X)$ changes, $P(Y|X)$ stable → reweight/adapt. Concept drift: $P(Y|X)$ changes → monitor/retrain/online learning.\n",
+    },
+  },
+  {
+    slug: "ml-monitoring-drift-detection-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Monitoring: How to Detect Drift",
+    prompt_md:
+      "You deployed a model. How would you detect distribution shift/drift over time?\n\nAnswer in 5–10 sentences and mention both feature drift and performance drift, plus one statistical tool.",
+    solution_md:
+      "Monitor feature distributions (unlabeled drift) and model output distributions, comparing to training/validation baselines. Use statistical tests or divergence metrics (e.g., KS test for continuous features, PSI, Wasserstein distance) and alert when shifts exceed thresholds. Also monitor performance metrics on delayed labels (accuracy/AUC/calibration) to detect concept drift. Use dashboards with stratification (by segment) and retraining triggers.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["deployment", "distribution-shift", "monitoring"],
+    source: "Production ML",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 105,
+      rubric: [
+        "Mentions monitoring feature/output distributions vs baseline (feature drift): 40%",
+        "Mentions monitoring performance with labels over time (performance/concept drift): 35%",
+        "Mentions at least one tool/metric (KS/PSI/Wasserstein/divergence): 25%",
+      ],
+      reference_solution_md:
+        "Detect drift by monitoring feature/output distribution shifts (KS/PSI/Wasserstein) and by monitoring performance on delayed labels; stratify and trigger retraining.\n",
+    },
+  },
+  {
+    slug: "ml-data-snooping-in-feature-engineering-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Data Snooping in Feature Engineering",
+    prompt_md:
+      "Give an example of data snooping/leakage that can occur during feature engineering, and how to prevent it.\n\nAnswer in 4–8 sentences.",
+    solution_md:
+      "Example: computing global target statistics (mean target by category) using the full dataset before splitting, leaking information about the validation/test labels into training. Prevent by computing such encodings only on the training split (or using out-of-fold target encoding) and applying to validation/test; use strict pipeline boundaries and CV-aware transformations.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["leakage", "features", "evaluation"],
+    source: "Practical ML",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "Provides a concrete snooping example (target encoding, global imputation/statistics using full data): 55%",
+        "Provides a concrete prevention method (fit on train only / out-of-fold encoding / pipeline boundaries): 45%",
+      ],
+      reference_solution_md:
+        "Leakage example: target encoding computed on full data. Prevent: compute encodings on train only (or out-of-fold), apply to val/test; enforce pipeline boundaries.\n",
+    },
+  },
+  {
     slug: "ml-threshold-selection-costs-freeform",
     topic: "Statistics",
     track: "researcher",
