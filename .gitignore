@@ -33,3 +33,6 @@ yarn-error.log*
 
 # tests
 coverage/
+
+# UI screenshots (local visual reference)
+.ui-snapshots/

@@ -889,5 +889,180 @@ export const MACHINE_LEARNING_SEED: SeedQuestion[] = [
         "Covariate shift: $P(X)$ changes, $P(Y|X)$ stable → importance-weight / adapt. Label shift: $P(Y)$ changes, $P(X|Y)$ stable → estimate new priors and reweight/adjust thresholds.\n",
     },
   },
+  {
+    slug: "ml-importance-weighting-covariate-shift-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Importance Weighting Under Covariate Shift",
+    prompt_md:
+      "Suppose training and test differ by covariate shift: $P_{train}(X)\\ne P_{test}(X)$ but $P(Y\\mid X)$ is the same.\n\nExplain why importance weighting works and write the weight function $w(x)$ you would use.\n\nAnswer in 6–10 sentences.",
+    solution_md:
+      "Under covariate shift, the target risk is $E_{test}[\\ell(f(X),Y)]$. Using a change of measure,\n\n$$E_{test}[g(X,Y)] = E_{train}\\left[\\frac{p_{test}(X)}{p_{train}(X)} g(X,Y)\\right].$$\n\nSo you can estimate test risk by weighting training examples with $w(x)=p_{test}(x)/p_{train}(x)$. In practice you estimate density ratios (e.g., via a classifier distinguishing train vs test) and clip weights to control variance.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["distribution-shift", "importance-weighting", "generalization"],
+    source: "Domain adaptation staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 120,
+      rubric: [
+        "States covariate shift assumption (P(Y|X) same) and change-of-measure idea: 40%",
+        "Provides correct weight w(x)=p_test(x)/p_train(x): 40%",
+        "Mentions a practical issue (weight estimation/variance/clipping) appropriately: 20%",
+      ],
+      reference_solution_md:
+        "Under covariate shift, E_test[loss] = E_train[w(X) loss] with w(x)=p_test(x)/p_train(x). In practice estimate density ratios and control variance via clipping/regularization.\n",
+    },
+  },
+  {
+    slug: "ml-expected-calibration-error-pitfalls-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Expected Calibration Error (ECE) — Pitfalls",
+    prompt_md:
+      "Define Expected Calibration Error (ECE) at a high level, and give two pitfalls when using it.\n\nAnswer in 6–10 sentences and mention binning.",
+    solution_md:
+      "ECE bins predicted probabilities and compares average predicted probability to empirical accuracy in each bin, then aggregates weighted by bin frequency. Pitfalls: it depends on the binning scheme (number of bins, adaptive vs fixed) and can be noisy for small datasets (empty/small bins). It can also hide miscalibration patterns (e.g. cancellation across bins) and ECE itself is not a proper scoring rule.\n\nReliability plots plus proper scoring rules (Brier/log loss) complement ECE.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["calibration", "evaluation"],
+    source: "Calibration practice",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 110,
+      rubric: [
+        "Defines ECE via binning and comparing confidence vs accuracy: 45%",
+        "Gives two real pitfalls (binning dependence, small-sample noise, not proper, masking patterns): 45%",
+        "Mentions at least one complementary diagnostic/metric (reliability plot, Brier/log loss): 10%",
+      ],
+      reference_solution_md:
+        "ECE: bin predicted probabilities; compare mean confidence to empirical accuracy per bin; average weighted by bin sizes. Pitfalls: binning choice sensitivity and small-sample noise; also not a proper scoring rule and can mask patterns. Use reliability plots and proper scores (Brier/log loss) too.\n",
+    },
+  },
+  {
+    slug: "ml-temperature-scaling-what-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Temperature Scaling (Post-hoc Calibration)",
+    prompt_md:
+      "What is temperature scaling for calibrating a classifier, and why is it often effective for modern neural nets?\n\nAnswer in 5–10 sentences and mention logits.",
+    solution_md:
+      "Temperature scaling rescales logits by a single scalar T>0 before softmax: softmax(z/T). T is fit on a held-out calibration set to minimize log loss. It adjusts confidence without changing the predicted class ranking.\n\nIt's often effective because many models are well-ranked but miscalibrated in confidence; a single-parameter rescaling can fix overconfidence with low variance.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["calibration", "softmax", "neural-nets"],
+    source: "Calibration staple",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 100,
+      rubric: [
+        "Defines temperature scaling as dividing logits by T before softmax and fitting T on calibration set: 55%",
+        "States it preserves ranking/argmax (doesn't change predicted class): 20%",
+        "Explains why it can work (fix overconfidence; low-variance 1-parameter): 25%",
+      ],
+      reference_solution_md:
+        "Temperature scaling: replace softmax(z) with softmax(z/T) and fit T on held-out calibration data (optimize log loss). It preserves the argmax/ranking and mainly corrects overconfidence.\n",
+    },
+  },
+  {
+    slug: "ml-double-descent-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Double Descent — Intuition",
+    prompt_md:
+      "What is the double descent phenomenon in modern ML?\n\nIn 6–10 sentences, describe how test error can behave as model capacity increases past the interpolation threshold, and give one intuition for why.",
+    solution_md:
+      "Classical bias-variance suggests a U-shaped test error vs capacity. Double descent observes that as capacity increases, test error first decreases, then increases near the interpolation threshold (where training error reaches ~0), and then decreases again as capacity grows further. Intuitions include implicit regularization of optimization (e.g., SGD), benign overfitting under certain data/noise structures, and that highly overparameterized models can find low-norm or otherwise simple solutions that generalize.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["generalization", "overparameterization"],
+    source: "Modern generalization interviews",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 120,
+      rubric: [
+        "Describes the non-monotone test error curve with a second descent after interpolation: 55%",
+        "Explains what 'interpolation threshold' means (near-zero training error): 20%",
+        "Gives at least one plausible intuition (implicit regularization, benign overfitting, low-norm solutions): 25%",
+      ],
+      reference_solution_md:
+        "Double descent: test error decreases, rises near the interpolation threshold (training error ~0), then decreases again with further overparameterization. Intuitions include implicit regularization and benign overfitting/low-norm solutions.\n",
+    },
+  },
+  {
+    slug: "ml-stacking-vs-bagging-what-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Stacking (Stacked Generalization) vs Bagging",
+    prompt_md:
+      "What is stacking (stacked generalization) and how does it differ from bagging?\n\nIn 6–10 sentences, explain how stacking avoids leakage when training the meta-model.",
+    solution_md:
+      "Bagging averages many base models trained independently on bootstrap samples, primarily reducing variance. Stacking trains multiple base models and then trains a meta-model that takes base-model predictions as features to combine them.\n\nTo avoid leakage, the meta-model should be trained on out-of-fold predictions: for each training point, generate base-model predictions from a model that was not trained on that point (via CV). Then fit the meta-model on those out-of-fold predictions; finally refit base models on full training data and use them at inference.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["ensembles", "evaluation", "leakage"],
+    source: "Ensembling practice",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 120,
+      rubric: [
+        "Defines stacking as training a meta-model on base-model predictions (and contrasts with bagging averaging): 45%",
+        "Explains out-of-fold prediction protocol to prevent leakage: 45%",
+        "Mentions final refit and inference-time usage correctly: 10%",
+      ],
+      reference_solution_md:
+        "Stacking trains a meta-model that combines base model predictions; bagging averages bootstrap models. Train meta-model on out-of-fold base predictions so each training point's features come from models that did not train on it; then refit bases on full data for inference.\n",
+    },
+  },
+  {
+    slug: "ml-collider-bias-feature-leakage-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Collider Bias as 'Leakage' in Feature Selection",
+    prompt_md:
+      "Explain collider bias and how conditioning on a collider (or selecting data based on it) can create spurious correlations.\n\nGive a simple 3-variable example and one practical ML implication (e.g., selecting a dataset, filtering, or using post-treatment variables as features).",
+    solution_md:
+      "A collider is a variable influenced by two other variables (A -> C <- B). Even if A and B are independent marginally, conditioning on C (or selecting cases with certain C values) can induce correlation between A and B. Example: ability and effort both affect admission; conditioning on admitted can make ability and effort appear negatively correlated.\n\nIn ML, filtering data based on outcomes influenced by both features and unobserved factors (or using post-treatment variables) can induce misleading relationships and unstable models.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["causality", "bias", "data-selection"],
+    source: "Causal inference staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 120,
+      rubric: [
+        "Correctly defines a collider structure A->C<-B and explains conditioning induces correlation: 55%",
+        "Provides a concrete 3-variable example (not just abstract symbols): 25%",
+        "States one practical ML implication (selection/filtering/post-treatment feature) clearly: 20%",
+      ],
+      reference_solution_md:
+        "Collider: A->C<-B. Conditioning on C (or selecting on C) induces dependence between A and B even if marginally independent. Example: ability and effort both affect admission; conditioning on admitted creates a spurious negative association. Practical: selection/filtering or post-treatment features can create misleading correlations.\n",
+    },
+  },
+  {
+    slug: "ml-group-leakage-entity-splitting-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Group Leakage — When i.i.d. Splits Overestimate Performance",
+    prompt_md:
+      "Give one scenario where random train/test splitting can leak information because observations are not independent (e.g., repeated entities).\n\nExplain what goes wrong and name the correct split strategy.\n\nAnswer in 4–8 sentences.",
+    solution_md:
+      "If the same entity (user, device, patient, product) appears in both train and test, the model can effectively memorize entity-specific patterns, inflating test performance. This is common with multiple rows per user or near-duplicates. The correct strategy is a group-aware split (e.g., GroupKFold or splitting by user/device) so all observations for an entity stay in a single fold, and to also deduplicate or hash-join to detect near-duplicates.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["evaluation", "leakage", "cross-validation"],
+    source: "Practical ML evaluation",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Provides a concrete non-i.i.d. scenario (repeated entities / duplicates) where random split leaks: 45%",
+        "Explains the failure mode (memorization / information sharing across splits): 35%",
+        "Names an appropriate fix (group-aware split like GroupKFold / split by entity): 20%",
+      ],
+      reference_solution_md:
+        "If repeated entities appear in both train and test, random splitting leaks entity information and overestimates performance. Fix with group-aware splits (e.g., GroupKFold / split by user/device) so all rows for an entity stay in one fold; deduplicate as needed.\n",
+    },
+  },
 ];
 

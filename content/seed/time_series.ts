@@ -890,5 +890,155 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
       ],
     },
   },
+  {
+    slug: "ts-arma-causality-vs-invertibility-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "ARMA Causality vs Invertibility (High Level)",
+    prompt_md:
+      "For an ARMA model, what do the terms **causal** and **invertible** mean at a high level?\n\nAnswer in 5–10 sentences and connect each to a condition on roots being outside the unit circle.",
+    solution_md:
+      "Causality roughly means the process can be written as a stable infinite MA in past shocks (depends only on present/past innovations) and is well-defined without exploding; this corresponds to AR polynomial roots outside the unit circle.\n\nInvertibility means the shocks/innovations can be expressed as a stable infinite AR in past observations (so the MA part is not redundant/aliased); this corresponds to MA polynomial roots outside the unit circle. Both are about stable representations and identifiability.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["time-series", "arma", "stationarity"],
+    source: "Time series theory basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Defines causality as a stable representation in terms of present/past shocks (infinite MA) and connects to AR roots: 45%",
+        "Defines invertibility as recovering innovations via a stable representation (infinite AR) and connects to MA roots: 45%",
+        "Mentions stability/identifiability intuition (why we care): 10%",
+      ],
+      reference_solution_md:
+        "Causal ARMA: stable infinite MA in past innovations; AR polynomial roots outside unit circle. Invertible ARMA: innovations expressible as stable infinite AR in past X; MA polynomial roots outside unit circle. These ensure stable/identifiable representations.\n",
+    },
+  },
+  {
+    slug: "ts-ma1-acf-what-is-it-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "MA(1) Autocorrelation Pattern",
+    prompt_md:
+      "Let $X_t = \\varepsilon_t + \\theta\\varepsilon_{t-1}$ with iid mean-zero innovations.\n\nWhat are $\\rho(1)$ and $\\rho(k)$ for $k\\ge 2$? (You can answer in words or formulas.)",
+    solution_md:
+      "For MA(1), autocorrelation cuts off after lag 1. Specifically, $\\rho(1)=\\theta/(1+\\theta^2)$ and $\\rho(k)=0$ for $k\\ge 2$.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "ma1", "acf"],
+    source: "Classic MA(1) property",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 45,
+      rubric: [
+        "States cutoff property: rho(k)=0 for k>=2: 55%",
+        "Gives correct expression for rho(1)=theta/(1+theta^2) (or equivalent): 35%",
+        "Mentions it's a property of MA(q) in general (optional): 10%",
+      ],
+      reference_solution_md:
+        "MA(1): rho(1)=theta/(1+theta^2), rho(k)=0 for k>=2 (ACF cuts off at lag q for MA(q)).\n",
+    },
+  },
+  {
+    slug: "ts-adf-kpss-disagree-why-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "ADF vs KPSS — Why They Can Disagree",
+    prompt_md:
+      "You run ADF and fail to reject a unit root, but KPSS rejects stationarity. Explain why this can happen and what you would do next.\n\nAnswer in 5–10 sentences.",
+    solution_md:
+      "ADF has null of unit root; KPSS has null of stationarity, so disagreement can happen due to low power, model specification (trend vs level), structural breaks, or near-unit-root behavior. Next steps: check deterministic components (include/exclude trend), inspect residual diagnostics/lag length selection, consider break-robust unit-root tests, and use domain knowledge plus out-of-sample forecast performance. Plotting and examining differenced series can also help.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["time-series", "adf", "kpss", "stationarity"],
+    source: "Econometrics practice",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Explains opposing nulls and that disagreement can be due to power/specification/near-unit-root: 55%",
+        "Mentions at least one concrete cause (trend term, structural break, lag choice): 30%",
+        "Suggests a reasonable next step (trend spec, break tests, diagnostics, OOS eval): 15%",
+      ],
+      reference_solution_md:
+        "ADF null: unit root; KPSS null: stationarity. Disagreement can arise from low power, near-unit-root, trend specification, lag selection, or structural breaks. Next: verify trend/level spec, lag length, consider break-robust tests, and triangulate with plots and out-of-sample evaluation.\n",
+    },
+  },
+  {
+    slug: "ts-forecast-interval-vs-point-forecast-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Point Forecast vs Forecast Interval",
+    prompt_md:
+      "Explain what a forecast interval is and what it accounts for.\n\nIn 5–10 sentences, contrast it with a point forecast and mention at least one source of uncertainty it should include.",
+    solution_md:
+      "A point forecast is a single best estimate (e.g., conditional mean). A forecast interval provides a range that should contain the future observation with a stated probability (e.g., 95%). It accounts for uncertainty from future shocks/innovations and often also parameter/model uncertainty (sometimes approximated or ignored). Intervals widen with horizon as uncertainty accumulates.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "forecasting", "uncertainty"],
+    source: "Forecasting fundamentals",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Defines forecast interval as a probabilistic range vs a point estimate: 45%",
+        "Mentions at least one uncertainty source (innovation noise; parameter/model uncertainty): 35%",
+        "Mentions horizon effect (intervals widen with horizon): 20%",
+      ],
+      reference_solution_md:
+        "Point forecast: single estimate (often conditional mean). Forecast interval: range with coverage probability; includes uncertainty from future shocks (and ideally parameter/model uncertainty). Intervals typically widen with horizon.\n",
+    },
+  },
+  {
+    slug: "ts-walk-forward-scaling-leakage-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Walk-Forward Evaluation — Scaling Leakage",
+    prompt_md:
+      "In a walk-forward forecasting pipeline, how can feature scaling/normalization still introduce leakage?\n\nGive one example and one fix in 4–8 sentences.",
+    solution_md:
+      "Leakage occurs if you compute normalization parameters (mean/std, PCA, etc.) using data that includes the validation window (or the full series), which uses future information relative to the training cutoff. Fix by fitting the scaler on each training window only, then applying it to the subsequent validation window; implement it as a pipeline step inside each walk-forward split.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "leakage", "pipelines"],
+    source: "Practical time-series ML",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 75,
+      rubric: [
+        "Explains the leakage mechanism (scaler/PCA fit using future/validation data): 55%",
+        "Gives a concrete fix (fit on train window only; pipeline per split): 35%",
+        "Mentions walk-forward split discipline explicitly: 10%",
+      ],
+      reference_solution_md:
+        "Scaling leakage: computing mean/std (or PCA) using data that includes the future validation window. Fix: fit transforms on each training window only and apply to the next window; enforce via per-split pipelines.\n",
+    },
+  },
+  {
+    slug: "ts-pacf-cutoff-ar-interpretation-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "PACF Cutoff for AR(p) — What It Really Means",
+    prompt_md:
+      "People say \"for AR(p), the PACF cuts off after lag p.\" What does that statement mean more precisely?\n\nAnswer in 4–8 sentences, referencing conditional correlation / regression coefficients.",
+    solution_md:
+      "For an AR(p), the partial autocorrelation at lag k equals the coefficient on X_{t-k} in the best linear prediction of X_t from lags 1..k, after controlling for intermediate lags. In the ideal/infinite-sample AR(p) case, those coefficients are zero for k>p, so PACF(k)=0 beyond p (up to sampling variability). In finite samples you expect estimates to hover near zero with confidence bands; the cutoff is a heuristic, not a guarantee.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["time-series", "pacf", "ar"],
+    source: "Time series identification nuance",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 90,
+      rubric: [
+        "Connects PACF(k) to regression/conditional correlation after controlling for lags 1..k-1: 55%",
+        "States the AR(p) ideal property that PACF(k)=0 for k>p (in population): 30%",
+        "Mentions finite-sample variability / heuristic nature (confidence bands): 15%",
+      ],
+      reference_solution_md:
+        "PACF(k) is the coefficient/conditional correlation of lag k after controlling for lags 1..k-1. For a population AR(p), PACF(k)=0 for k>p. In samples it's approximate; use confidence bands and treat as a heuristic.\n",
+    },
+  },
 ];
 

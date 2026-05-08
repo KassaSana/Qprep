@@ -430,5 +430,72 @@ export const STOCHASTIC_SEED: SeedQuestion[] = [
     source: "Classic",
     target_roles: ["Researcher"],
   },
+  {
+    slug: "strong-markov-property-what-is-it-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Strong Markov Property (What It Says)",
+    prompt_md:
+      "State the strong Markov property (in words) for a Markov process (or Brownian motion).\n\nThen give one example of how you would use it at a stopping time (e.g., a hitting time). Answer in 6–10 sentences.",
+    solution_md:
+      "Strong Markov property: for a stopping time \\(\\tau\\), conditional on \\(\\mathcal{F}_\\tau\\), the post-\\(\\tau\\) process \\(\\{X_{\\tau+t}:t\\ge 0\\}\\) behaves like the original process started from \\(X_\\tau\\) and is independent of the pre-\\(\\tau\\) history (given \\(X_\\tau\\)).\n\nExample: for Brownian motion, after hitting a level a at time \\(\\tau_a\\), the increment process \\(B_{\\tau_a+t}-B_{\\tau_a}\\) is a fresh Brownian motion independent of the past. This lets you compute distributions after hitting events by “restarting” the process.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["markov-property", "stopping-times", "brownian-motion"],
+    source: "Stochastic processes staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 150,
+      rubric: [
+        "States strong Markov idea at stopping times (restart from X_tau) correctly: 55%",
+        "Mentions conditional independence of the future from the past given present at tau: 25%",
+        "Gives a coherent example use (hitting time restart for BM/Markov chain): 20%",
+      ],
+      reference_solution_md:
+        "Strong Markov: at a stopping time τ, the future process (X_{τ+t}) behaves like a fresh copy started at X_τ and is independent of the pre-τ past (given X_τ). Example: BM after hitting level a, increments after τ_a form an independent Brownian motion; lets you restart computations after hitting events.\n",
+    },
+  },
+  {
+    slug: "donsker-invariance-principle-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Invariance Principle (Random Walk → Brownian Motion)",
+    prompt_md:
+      "Which statement best matches Donsker’s invariance principle (functional CLT) for a simple symmetric random walk?",
+    solution_md:
+      "The appropriately rescaled random-walk path converges in distribution to Brownian motion as a process (in a function space sense).",
+    answer_kind: "mcq",
+    answer_value: "functional-clt",
+    answer_tolerance: null,
+    difficulty: 5,
+    tags: ["random-walk", "brownian-motion", "clt"],
+    source: "Classic limit theorem",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "functional-clt",
+          label:
+            "As n→∞, the process t↦S_{⌊nt⌋}/√n converges in distribution (as a function of t) to standard Brownian motion.",
+          correct: true,
+        },
+        {
+          id: "pointwise-only",
+          label: "It only says S_n/√n converges to N(0,1); it says nothing about paths.",
+          correct: false,
+        },
+        {
+          id: "almost-sure",
+          label: "It says S_{⌊nt⌋}/√n converges almost surely to Brownian motion for all t.",
+          correct: false,
+        },
+        {
+          id: "no-scaling",
+          label: "It says S_{⌊nt⌋} converges to Brownian motion without scaling.",
+          correct: false,
+        },
+      ],
+    },
+  },
 ];
 
