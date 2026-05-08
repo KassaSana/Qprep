@@ -36,16 +36,12 @@ describe("runCode", () => {
     process.env.CODE_RUNNER_URL = "https://example.invalid/piston";
 
     // 1) runtimes call
-    const fetchMock = vi.fn(async (url: string) => {
+    const fetchMock = vi.fn(async (url: string | URL | Request) => {
       if (String(url).includes("/runtimes")) {
-        return {
-          ok: true,
-          status: 200,
-          json: async () => [{ language: "python", version: "3.11.0" }],
-        } as any;
+        return Response.json([{ language: "python", version: "3.11.0" }]);
       }
       // 2) execute call fails
-      return { ok: false, status: 500, json: async () => ({}) } as any;
+      return Response.json({}, { status: 500 });
     });
     vi.stubGlobal("fetch", fetchMock);
 

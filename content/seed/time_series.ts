@@ -140,6 +140,111 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ts-ar1-stationarity-condition-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "AR(1) Stationarity Condition",
+    prompt_md:
+      "For $X_t = \\phi X_{t-1} + \\varepsilon_t$ with iid noise, which condition on $\\phi$ ensures a weakly stationary solution exists?",
+    solution_md:
+      "A stationary AR(1) requires $|\\phi|<1$.",
+    answer_kind: "mcq",
+    answer_value: "abslt1",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["time-series", "ar1", "stationarity"],
+    source: "AR(1) basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "abslt1", label: "$|\\phi|<1$", correct: true },
+        { id: "absle1", label: "$|\\phi|\\le 1$", correct: false },
+        { id: "phi0", label: "$\\phi=0$", correct: false },
+        { id: "philarge", label: "$|\\phi|>1$", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "ts-walk-forward-validation-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Walk-Forward Validation (Time Series)",
+    prompt_md:
+      "Describe walk-forward (rolling-origin) validation for time series forecasting.\n\nIn 4–8 sentences: explain the split procedure and why it avoids leakage.",
+    solution_md:
+      "Walk-forward validation uses a sequence of train/validation splits that respect time order: train on an initial window, validate on the next block; then expand or roll the training window forward and validate on the subsequent block, repeating. This avoids leakage because each validation window occurs strictly after the data used for training and preprocessing.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "evaluation", "leakage"],
+    source: "Forecasting evaluation best practices",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 70,
+      rubric: [
+        "Describes repeated forward-in-time splits (train window before validation window): 55%",
+        "Explains why this avoids leakage / respects causality: 35%",
+        "Mentions expanding vs rolling training window (either is fine): 10%",
+      ],
+      reference_solution_md:
+        "Walk-forward: train on past, validate on the next future block; move forward and repeat. Avoids leakage because validation is always after training.\n",
+    },
+  },
+  {
+    slug: "ts-ljung-box-what-tests-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Ljung–Box Test — What Does It Test?",
+    prompt_md:
+      "What is the Ljung–Box test commonly used to test in time series modeling?",
+    solution_md:
+      "It tests whether a set of autocorrelations up to some lag are jointly zero (i.e., whether residuals look like white noise). Often used as a diagnostic on model residuals.",
+    answer_kind: "mcq",
+    answer_value: "autocorr",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["time-series", "diagnostics", "autocorrelation"],
+    source: "Time series diagnostics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "autocorr",
+          label:
+            "Whether autocorrelations up to a chosen lag are jointly zero (residuals are consistent with white noise).",
+          correct: true,
+        },
+        { id: "unitroot", label: "Whether the series has a unit root (non-stationarity).", correct: false },
+        { id: "hetero", label: "Whether the errors are heteroskedastic (ARCH effects).", correct: false },
+        { id: "normal", label: "Whether the innovations are Gaussian.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "ts-seasonality-handling-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Handling Seasonality",
+    prompt_md:
+      "You observe strong weekly seasonality in a daily series. Give two ways to model or remove seasonality before/while fitting a forecasting model.\n\nAnswer in 4–8 sentences.",
+    solution_md:
+      "Options include: seasonal differencing (e.g. $X_t-X_{t-7}$), adding seasonal dummy variables, Fourier terms, or using a seasonal ARIMA/SARIMAX specification. You can also decompose into trend/seasonal/residual components and model the residuals, or use models that naturally capture seasonality (e.g. TBATS/Prophet-style components).",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "seasonality", "modeling"],
+    source: "Forecasting fundamentals",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 70,
+      rubric: [
+        "Gives two distinct seasonality strategies (seasonal differencing, dummies, Fourier, SARIMA, decomposition): 70%",
+        "Explains at least one briefly in terms of what it removes/captures: 20%",
+        "Keeps the answer time-order aware (no random splits / no leakage): 10%",
+      ],
+      reference_solution_md:
+        "E.g. seasonal differencing $X_t-X_{t-7}$, seasonal dummies/Fourier terms, SARIMA/SARIMAX, or decomposition then model residual.\n",
+    },
+  },
+  {
     slug: "ts-white-noise-vs-martingale-diff-freeform",
     topic: "Statistics",
     track: "researcher",

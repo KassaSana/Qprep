@@ -10,8 +10,8 @@ export default function NotFound() {
           Not found.
         </h1>
         <p className="mt-3 text-sm text-fg-muted">
-          That page doesn't exist (anymore). It may have been a question slug
-          that hasn't been seeded yet — try the question bank.
+          That page doesn&apos;t exist (anymore). It may have been a question slug
+          that hasn&apos;t been seeded yet — try the question bank.
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
           <Link href="/questions">

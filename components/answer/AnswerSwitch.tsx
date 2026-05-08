@@ -120,7 +120,7 @@ function UnconfiguredKindNotice({ kind }: { kind: string }) {
       </div>
       <p className="mt-2">
         This question is missing its <code>answer_meta</code> payload, so the
-        answer form can't render. If you wrote it locally, double-check the
+        answer form can&apos;t render. If you wrote it locally, double-check the
         seed file for the {kind} configuration.
       </p>
     </div>

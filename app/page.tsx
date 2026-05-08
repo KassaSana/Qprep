@@ -23,7 +23,7 @@ export default function Home() {
         </h1>
         <p className="mt-4 max-w-2xl text-fg-muted">
           Probability, statistics, algorithms, low-level design, and
-          concurrency drills. Submit an answer; if it's wrong, ask for a
+          concurrency drills. Submit an answer; if it&apos;s wrong, ask for a
           nudge — three escalating hints that point at your specific gap
           without revealing the number.
         </p>

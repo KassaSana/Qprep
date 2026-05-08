@@ -322,4 +322,316 @@ export const PROBABILITY_SEED: SeedQuestion[] = [
     companies: ["Two Sigma"],
     source: "Queueing / reliability classic",
   },
+  {
+    slug: "mosteller-urn-two-red-one-blue",
+    topic: "Probability",
+    track: "researcher",
+    title: "Urn: Two Red, One Blue (Without Replacement)",
+    prompt_md:
+      "An urn has 2 red balls and 1 blue ball. You draw two balls uniformly at random without replacement. What is the probability the two drawn balls are the same color?",
+    solution_md:
+      "The only way to match is drawing two reds. Total pairs: choose 2 of 3 balls = 3. Favorable pairs: choose 2 of the 2 reds = 1. Probability $1/3$.",
+    answer_kind: "fraction",
+    answer_value: "1/3",
+    answer_tolerance: 1e-3,
+    difficulty: 1,
+    tags: ["combinatorics", "urns"],
+    source: "Mosteller-style warm-up",
+    target_roles: ["All"],
+  },
+  {
+    slug: "expected-rolls-until-two-sixes",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Rolls Until Two Sixes",
+    prompt_md:
+      "You roll a fair six-sided die repeatedly. What is the expected number of rolls required to see **two** sixes (not necessarily consecutive)?",
+    solution_md:
+      "Time to first six is geometric with mean 6. After the first six, time to the second six is independent geometric with mean 6. By linearity, expected total is $6+6=12$.",
+    answer_kind: "numeric",
+    answer_value: "12",
+    answer_tolerance: 1e-9,
+    difficulty: 1,
+    tags: ["expectation", "geometric", "linearity-of-expectation"],
+    source: "Stat 110 style",
+    target_roles: ["All"],
+  },
+  {
+    slug: "expected-flips-until-hth",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Flips Until HTH",
+    prompt_md:
+      "You flip a fair coin until the pattern **HTH** appears as a contiguous substring. What is the expected number of flips?",
+    solution_md:
+      "Use states for the longest suffix that is a prefix of HTH.\nLet $E_0$ be expected flips from no match, $E_1$ after seeing H, $E_2$ after seeing HT.\nThen $E_0=1+\\tfrac12 E_1+\\tfrac12 E_0$, $E_1=1+\\tfrac12 E_1+\\tfrac12 E_2$, $E_2=1+\\tfrac12\\cdot 0+\\tfrac12 E_0$.\nSolve: $E_0=10$.",
+    answer_kind: "numeric",
+    answer_value: "10",
+    answer_tolerance: 1e-9,
+    difficulty: 4,
+    tags: ["markov", "recurrence", "patterns"],
+    source: "Classic pattern waiting time",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "bayes-two-coins-picked",
+    topic: "Probability",
+    track: "researcher",
+    title: "Bayes: Pick a Coin",
+    prompt_md:
+      "You have two coins: one fair and one double-headed. You pick a coin uniformly at random and flip it once; it lands heads. What is the probability you picked the double-headed coin?",
+    solution_md:
+      "$P(DH\\mid H)=\\dfrac{P(H\\mid DH)P(DH)}{P(H\\mid DH)P(DH)+P(H\\mid F)P(F)}=\\dfrac{1\\cdot 1/2}{1\\cdot 1/2 + (1/2)\\cdot 1/2}=\\dfrac{1/2}{3/4}=2/3$.",
+    answer_kind: "fraction",
+    answer_value: "2/3",
+    answer_tolerance: 1e-3,
+    difficulty: 2,
+    tags: ["bayes", "conditioning"],
+    source: "Classic",
+    target_roles: ["All"],
+  },
+  {
+    slug: "poisson-approx-binomial-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Poisson Approximation — When?",
+    prompt_md:
+      "When is a Poisson approximation to a Binomial($n,p$) distribution typically appropriate?",
+    solution_md:
+      "When $n$ is large, $p$ is small, and $\\lambda=np$ is of moderate size; then Binomial($n,p$) is close to Poisson($\\lambda$).",
+    answer_kind: "mcq",
+    answer_value: "rare-events",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["poisson", "approximation", "binomial"],
+    source: "Stat 110 staple",
+    target_roles: ["All"],
+    answer_meta: {
+      options: [
+        {
+          id: "rare-events",
+          label: "$n$ large, $p$ small, with $\\lambda=np$ moderate (rare events).",
+          correct: true,
+        },
+        { id: "p-half", label: "$p\\approx 1/2$ and $n$ large.", correct: false },
+        { id: "small-n", label: "$n$ small and $p$ arbitrary.", correct: false },
+        { id: "always", label: "Always; Poisson is a universal approximation.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "birthday-approx-derivation-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Birthday Paradox — Approximation",
+    prompt_md:
+      "Derive the common approximation for the probability of **at least one shared birthday** among $n$ people (ignore leap days).\n\nProvide an approximation in terms of $n$ and 365 using $e^x$.",
+    solution_md:
+      "Probability of all distinct:\n\n$$P(\\text{all distinct})=\\prod_{k=0}^{n-1}\\left(1-\\frac{k}{365}\\right)\\approx \\exp\\left(-\\sum_{k=0}^{n-1}\\frac{k}{365}\\right)=\\exp\\left(-\\frac{n(n-1)}{2\\cdot 365}\\right).$$\n\nSo $P(\\text{collision})\\approx 1-\\exp\\left(-\\frac{n(n-1)}{2\\cdot 365}\\right)$.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["birthday", "approximation", "log"],
+    source: "Stat 110 / classic",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 70,
+      rubric: [
+        "Starts from product for all-distinct birthdays: 35%",
+        "Uses log/exp approximation to get $\\exp(-n(n-1)/(2\\cdot 365))$: 45%",
+        "Converts to collision probability $1-\\exp(\\cdot)$: 20%",
+      ],
+      reference_solution_md:
+        "$$P(\\text{collision})\\approx 1-\\exp\\left(-\\frac{n(n-1)}{2\\cdot 365}\\right).$$",
+    },
+  },
+  {
+    slug: "coupon-collector-n-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Coupon Collector — $n$ Types",
+    prompt_md:
+      "There are $n$ equally likely coupon types. You draw coupons with replacement until you have seen all $n$ types.\n\nCompute the expected number of draws.",
+    solution_md:
+      "After collecting $k$ distinct types, probability the next draw is new is $(n-k)/n$, so expected additional draws to get a new type is $n/(n-k)$. Summing:\n\n$$E[T]=\\sum_{k=0}^{n-1}\\frac{n}{n-k}=n\\sum_{j=1}^n \\frac{1}{j}=nH_n.$$\n",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["expectation", "linearity-of-expectation", "coupon-collector"],
+    source: "Mosteller / Stat 110 classic",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 60,
+      rubric: [
+        "Uses decomposition into stages with success prob $(n-k)/n$: 50%",
+        "Gets the sum $\\sum_{k=0}^{n-1} n/(n-k)$: 30%",
+        "Simplifies to $nH_n$ (harmonic number): 20%",
+      ],
+      reference_solution_md:
+        "$$E[T]=\\sum_{k=0}^{n-1}\\frac{n}{n-k}=n\\sum_{j=1}^n \\frac{1}{j}=nH_n.$$",
+    },
+  },
+  {
+    slug: "order-stat-max-of-n-uniforms-cdf-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Max of $n$ Uniforms — CDF",
+    prompt_md:
+      "Let $U_1,\\dots,U_n$ be iid $\\text{Uniform}(0,1)$ and let $M=\\max_i U_i$.\n\nDerive the CDF $F_M(x)=P(M\\le x)$ for $x\\in[0,1]$.",
+    solution_md:
+      "$$P(M\\le x)=P(U_1\\le x,\\dots,U_n\\le x)=\\prod_{i=1}^n P(U_i\\le x)=x^n,\\quad x\\in[0,1].$$",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["order-statistics", "cdf", "iid"],
+    source: "Stat 110 classic",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 35,
+      rubric: [
+        "Uses event $\\{M\\le x\\}=\\cap_i\\{U_i\\le x\\}$: 35%",
+        "Uses independence to multiply probabilities: 35%",
+        "Gets the final CDF $x^n$ on $[0,1]$: 30%",
+      ],
+      reference_solution_md: "$$F_M(x)=x^n\\ \\text{for}\\ x\\in[0,1].$$",
+    },
+  },
+  {
+    slug: "order-stat-min-of-n-uniforms-ev",
+    topic: "Probability",
+    track: "researcher",
+    title: "$E[\\min(U_1,\\dots,U_n)]$",
+    prompt_md:
+      "Let $U_1,\\dots,U_n$ be iid $\\text{Uniform}(0,1)$. Compute $E[\\min(U_1,\\dots,U_n)]$ as a function of $n$.",
+    solution_md:
+      "Let $Z=\\min_i U_i$. Then $P(Z>t)=P(U_1>t,\\dots,U_n>t)=(1-t)^n$. So\n\n$$E[Z]=\\int_0^1 P(Z>t)\\,dt=\\int_0^1 (1-t)^n\\,dt=\\frac{1}{n+1}.$$",
+    answer_kind: "exact",
+    answer_value: "1/(n+1)",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["order-statistics", "tail-integral", "uniform"],
+    source: "Order statistics staple",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "conditioning-dice-at-least-one-six",
+    topic: "Probability",
+    track: "researcher",
+    title: "Two Dice — Given At Least One Six",
+    prompt_md:
+      "You roll two fair six-sided dice. Given that **at least one** die shows a 6, what is the probability that **both** dice show 6?",
+    solution_md:
+      "Conditional sample space has 11 outcomes: (6,1..6) and (1..5,6). Only (6,6) satisfies both sixes. Probability $1/11$.",
+    answer_kind: "fraction",
+    answer_value: "1/11",
+    answer_tolerance: 1e-3,
+    difficulty: 2,
+    tags: ["conditioning", "combinatorics"],
+    source: "Classic conditional counting",
+    target_roles: ["All"],
+  },
+  {
+    slug: "bertrand-paradox-why-ambiguous-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Bertrand Paradox — Why It's Ill-Posed",
+    prompt_md:
+      "In the Bertrand paradox (\"pick a random chord in a circle\"), different methods give different probabilities for the chord being longer than the side of the inscribed equilateral triangle.\n\nIn 4–8 sentences, explain **why** the problem is ambiguous (what \"random chord\" fails to specify).",
+    solution_md:
+      "The phrase \"random chord\" does not define a unique probability measure on the space of chords. Different parameterizations (random endpoints on circumference, random radius then random distance from center, random midpoint uniformly in disk, etc.) induce different distributions over chord lengths, so the resulting probability depends on the sampling rule.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["paradox", "measure", "modeling"],
+    source: "Classic probability modeling pitfall",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 70,
+      rubric: [
+        "States that the ambiguity is about the underlying probability measure / sampling rule: 55%",
+        "Gives at least one concrete example of different 'random chord' constructions: 30%",
+        "Connects to different induced chord-length distributions / different answers: 15%",
+      ],
+      reference_solution_md:
+        "Bertrand paradox: 'random chord' doesn't specify a unique measure on chords; different constructions (random endpoints vs random midpoint vs random distance from center) yield different chord-length distributions and probabilities.\n",
+    },
+  },
+  {
+    slug: "occupancy-balls-bins-empty-expected",
+    topic: "Probability",
+    track: "researcher",
+    title: "Expected Empty Bins",
+    prompt_md:
+      "You throw $m$ balls independently and uniformly into $n$ bins.\n\nWhat is the expected number of empty bins?",
+    solution_md:
+      "Let $I_j$ be indicator bin $j$ is empty. Then $E[I_j]=P(\\text{bin }j\\text{ gets no balls})=(1-1/n)^m$. By linearity,\n\n$$E[\\#\\text{ empty}]=\\sum_{j=1}^n E[I_j]=n(1-1/n)^m.$$",
+    answer_kind: "exact",
+    answer_value: "n(1-1/n)^m",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["linearity-of-expectation", "occupancy", "indicators"],
+    source: "Stat 110 classic",
+    target_roles: ["Researcher"],
+  },
+  {
+    slug: "probability-union-bound-mcq",
+    topic: "Probability",
+    track: "researcher",
+    title: "Union Bound",
+    prompt_md:
+      "Which inequality is the union bound?",
+    solution_md:
+      "For events $A_1,\\dots,A_k$, $P(\\cup_i A_i)\\le \\sum_i P(A_i)$.",
+    answer_kind: "mcq",
+    answer_value: "union",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["inequalities", "union-bound"],
+    source: "Basic probability tool",
+    target_roles: ["All"],
+    answer_meta: {
+      options: [
+        {
+          id: "union",
+          label: "$P\\left(\\bigcup_{i=1}^k A_i\\right) \\le \\sum_{i=1}^k P(A_i)$",
+          correct: true,
+        },
+        {
+          id: "intersection",
+          label: "$P\\left(\\bigcap_{i=1}^k A_i\\right) \\le \\sum_{i=1}^k P(A_i)$",
+          correct: false,
+        },
+        {
+          id: "bayes",
+          label: "$P(A\\mid B)=\\frac{P(B\\mid A)P(A)}{P(B)}$",
+          correct: false,
+        },
+        {
+          id: "markov",
+          label: "$P(X\\ge a)\\le E[X]/a$",
+          correct: false,
+        },
+      ],
+    },
+  },
+  {
+    slug: "conditional-expectation-tower-property-freeform",
+    topic: "Probability",
+    track: "researcher",
+    title: "Tower Property (Law of Total Expectation)",
+    prompt_md:
+      "State the tower property (law of total expectation).\n\nThen give a one-line explanation of why it is useful for multi-stage random processes.",
+    solution_md:
+      "Tower property: for integrable $X$ and sigma-algebra $\\mathcal{G}$, $E[E[X\\mid \\mathcal{G}]]=E[X]$. It's useful because it lets you condition on an intermediate state and average: compute $E[X\\mid\\text{state}]$ first, then take expectation over states.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["expectation", "conditioning", "tower-property"],
+    source: "Core tool",
+    target_roles: ["All"],
+    answer_meta: {
+      min_words: 45,
+      rubric: [
+        "States the identity $E[E[X\\mid\\mathcal{G}]]=E[X]$ (or equivalent $E[X]=E[E[X\\mid Y]]$): 70%",
+        "Explains it as 'condition on an intermediate state, then average over that state': 30%",
+      ],
+      reference_solution_md:
+        "$$E[X]=E[E[X\\mid Y]].$$\nUseful: break a hard expectation into conditional expectations on a simpler intermediate state.\n",
+    },
+  },
 ];

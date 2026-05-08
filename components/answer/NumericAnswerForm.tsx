@@ -175,7 +175,7 @@ export function NumericAnswerForm({
 
       {isWrong && (
         <div className="rounded-md border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
-          That's not quite right. Try again, or ask for a nudge below.
+          That&apos;s not quite right. Try again, or ask for a nudge below.
         </div>
       )}
 
@@ -201,7 +201,7 @@ export function NumericAnswerForm({
 
       {alreadySolved && !isCorrect && (
         <div className="rounded-md border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
-          You've solved this one before. Solution is unlocked below — or have
+          You&apos;ve solved this one before. Solution is unlocked below — or have
           another go.
         </div>
       )}
@@ -217,7 +217,7 @@ export function NumericAnswerForm({
         <div className="rounded-md border border-border bg-bg-subtle px-4 py-3 text-sm">
           <div className="font-medium text-fg">Stuck?</div>
           <p className="mt-1 text-xs text-fg-muted">
-            You've taken {wrongAttemptCount}{" "}
+            You&apos;ve taken {wrongAttemptCount}{" "}
             {wrongAttemptCount === 1 ? "shot" : "shots"}
             {hintLevelsUsed >= 3 ? " and used all three nudges" : ""}. Reveal
             the worked solution if you want to study it — your streak still

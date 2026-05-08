@@ -130,8 +130,8 @@ export function NudgePanel({ attemptId, onLevelRevealed }: NudgePanelProps) {
 
       {nextLevel === null && (
         <div className="mt-3 text-xs text-fg-subtle">
-          You've used all three nudges. Try the answer again — or peek at the
-          solution after you've taken your best shot.
+          You&apos;ve used all three nudges. Try the answer again — or peek at the
+          solution after you&apos;ve taken your best shot.
         </div>
       )}
 

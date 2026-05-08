@@ -223,6 +223,169 @@ export const STATISTICS_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "lln-vs-clt-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "LLN vs CLT — What Each Gives You",
+    prompt_md:
+      "In 4–8 sentences, explain the difference between the Law of Large Numbers (LLN) and the Central Limit Theorem (CLT).\n\nBe explicit about what converges, and at what rate.",
+    solution_md:
+      "LLN: sample average $\\bar X_n$ converges (typically in probability) to the mean $\\mu$ under mild conditions; it is about consistency.\n\nCLT: the centered and scaled sum (or mean) converges in distribution to a normal: $\\sqrt{n}(\\bar X_n-\\mu)/\\sigma \\Rightarrow \\mathcal{N}(0,1)$ under finite variance; it is about approximate sampling distributions and rates ($1/\\sqrt{n}$ scaling).",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["lln", "clt", "asymptotic"],
+    source: "Core probability/statistics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 60,
+      rubric: [
+        "Correctly states LLN as convergence of $\\bar X_n$ to $\\mu$ (type of convergence ok): 45%",
+        "Correctly states CLT as distributional convergence of a standardized sum/mean to normal: 45%",
+        "Mentions the $\\sqrt{n}$ rate/scaling (or $1/\\sqrt{n}$ error scale): 10%",
+      ],
+      reference_solution_md:
+        "LLN: $\\bar X_n\\to\\mu$ (consistency). CLT: $(\\bar X_n-\\mu)/(\\sigma/\\sqrt{n})\\Rightarrow \\mathcal{N}(0,1)$ (sampling distribution + $\\sqrt{n}$ scaling).\n",
+    },
+  },
+  {
+    slug: "bootstrap-what-it-estimates-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Bootstrap — What Is It Approximating?",
+    prompt_md:
+      "What does the (nonparametric) bootstrap primarily approximate?",
+    solution_md:
+      "It approximates the sampling distribution of a statistic by resampling from the empirical distribution of the observed data.",
+    answer_kind: "mcq",
+    answer_value: "sampling",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["bootstrap", "inference", "resampling"],
+    source: "Classical bootstrap interpretation",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "sampling",
+          label: "The sampling distribution of a statistic (via resampling from the empirical distribution).",
+          correct: true,
+        },
+        { id: "prior", label: "A Bayesian prior distribution for the parameter.", correct: false },
+        { id: "true-data", label: "The true data-generating distribution exactly.", correct: false },
+        { id: "mle", label: "The maximum likelihood estimator in closed form.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "p-value-definition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "What Is a p-value?",
+    prompt_md:
+      "Define a p-value in the context of hypothesis testing.\n\nAnswer in 3–6 sentences. Include what distribution it is computed under.",
+    solution_md:
+      "A p-value is the probability, under the null hypothesis (i.e., under the null distribution of the test statistic), of observing a test statistic at least as extreme as the one observed. It is computed assuming $H_0$ is true and the model assumptions for the test hold.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["hypothesis-testing", "p-values", "inference"],
+    source: "Interview staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 40,
+      rubric: [
+        "Defines p-value as a probability of 'as/extreme or more' under $H_0$: 60%",
+        "Explicitly notes it is computed under the null distribution / assuming $H_0$ true: 30%",
+        "Avoids incorrect interpretation as $P(H_0\\mid data)$ (not required, but penalize if asserted): 10%",
+      ],
+      reference_solution_md:
+        "p-value = $P(T\\ge T_{obs}\\mid H_0)$ (or two-sided analog), computed under the null distribution; it is not $P(H_0\\mid data)$.\n",
+    },
+  },
+  {
+    slug: "multiple-testing-fdr-vs-fwer-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Multiple Testing — FWER vs FDR",
+    prompt_md:
+      "Which statement best describes the difference between FWER and FDR control?",
+    solution_md:
+      "FWER controls the probability of making at least one false discovery; FDR controls the expected proportion of false discoveries among the rejected hypotheses (or equivalently the expected false discovery rate).",
+    answer_kind: "mcq",
+    answer_value: "fwer-vs-fdr",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["multiple-testing", "fdr", "fwer"],
+    source: "Benjamini–Hochberg vs Bonferroni framing",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "fwer-vs-fdr",
+          label:
+            "FWER controls $P(\\text{at least one false positive})$; FDR controls $E[\\#FP/\\#rejections]$ (in expectation).",
+          correct: true,
+        },
+        {
+          id: "same",
+          label: "They are the same notion; the terms are interchangeable.",
+          correct: false,
+        },
+        {
+          id: "variance",
+          label: "FWER controls variance, while FDR controls bias.",
+          correct: false,
+        },
+        {
+          id: "bayes",
+          label: "FWER is Bayesian and FDR is frequentist.",
+          correct: false,
+        },
+      ],
+    },
+  },
+  {
+    slug: "gauss-markov-assumptions-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Gauss–Markov — What Do You Need for BLUE?",
+    prompt_md:
+      "In the linear model $y=X\\beta+\\varepsilon$, which set of assumptions is sufficient for OLS to be the **best linear unbiased estimator** (BLUE)?",
+    solution_md:
+      "Gauss–Markov requires linear model with full column rank, exogeneity $E[\\varepsilon\\mid X]=0$, and homoskedastic uncorrelated errors $\\mathrm{Var}(\\varepsilon\\mid X)=\\sigma^2 I$. Normality is not required for BLUE (only for exact finite-sample normal inference).",
+    answer_kind: "mcq",
+    answer_value: "gm",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["ols", "gauss-markov", "inference"],
+    source: "Econometrics staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "gm",
+          label:
+            "Exogeneity $E[\\varepsilon\\mid X]=0$ and $\\mathrm{Var}(\\varepsilon\\mid X)=\\sigma^2 I$ (plus full rank). No normality needed.",
+          correct: true,
+        },
+        {
+          id: "normality",
+          label: "Errors must be Gaussian; otherwise OLS is biased.",
+          correct: false,
+        },
+        {
+          id: "independence",
+          label: "Only independence of rows of $X$ is needed; no condition on $\\varepsilon$.",
+          correct: false,
+        },
+        {
+          id: "no-intercept",
+          label: "Model must exclude an intercept term; otherwise BLUE fails.",
+          correct: false,
+        },
+      ],
+    },
+  },
+  {
     slug: "clt-does-not-mean-normal-sample-mcq",
     topic: "Statistics",
     track: "researcher",

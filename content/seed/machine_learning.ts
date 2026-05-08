@@ -240,6 +240,116 @@ export const MACHINE_LEARNING_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ml-logloss-vs-mse-when-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Log Loss vs MSE — Why Not Use MSE for Classification?",
+    prompt_md:
+      "For binary classification with probabilistic outputs, why is log loss (cross-entropy) typically preferred over mean squared error?",
+    solution_md:
+      "Cross-entropy is the proper scoring rule for Bernoulli likelihood: it corresponds to maximizing the conditional log-likelihood and strongly penalizes confident wrong predictions, leading to better calibrated probabilities. MSE can behave poorly for probabilities and is not aligned with the Bernoulli likelihood.",
+    answer_kind: "mcq",
+    answer_value: "likelihood",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["classification", "loss-functions", "calibration"],
+    source: "Likelihood/proper scoring rule explanation",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "likelihood",
+          label:
+            "It matches the Bernoulli log-likelihood (proper scoring rule) and penalizes confident wrong predictions appropriately.",
+          correct: true,
+        },
+        { id: "convex", label: "MSE is non-convex but log loss is convex.", correct: false },
+        { id: "faster", label: "Log loss always converges faster for any optimizer.", correct: false },
+        { id: "variance", label: "MSE estimates variance, while log loss estimates bias.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "ml-precision-recall-imbalanced-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Precision vs Recall Under Class Imbalance",
+    prompt_md:
+      "In an imbalanced classification problem (rare positives), explain why precision and recall can be more informative than accuracy.\n\nGive one scenario where you would prioritize recall over precision, and one where you would prioritize precision over recall.",
+    solution_md:
+      "Accuracy can be high by always predicting the majority class. Precision/recall focus on performance on the positive class: recall measures how many true positives you catch; precision measures how many predicted positives are actually correct.\n\nPrioritize recall when missing positives is costly (e.g. fraud/cancer screening). Prioritize precision when false alarms are costly (e.g. manual review budget, alert fatigue).",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["evaluation", "precision-recall", "class-imbalance"],
+    source: "Practical ML evaluation",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Explains why accuracy can be misleading under class imbalance: 35%",
+        "Defines/contrasts precision and recall correctly: 35%",
+        "Gives one correct scenario prioritizing recall and one prioritizing precision: 30%",
+      ],
+      reference_solution_md:
+        "Imbalance: predicting all negatives can yield high accuracy. Recall = TP/(TP+FN), precision = TP/(TP+FP). Recall-priority when FN costly; precision-priority when FP costly.\n",
+    },
+  },
+  {
+    slug: "ml-pr-auc-vs-roc-auc-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "PR-AUC vs ROC-AUC Under Imbalance",
+    prompt_md:
+      "In heavily imbalanced problems with rare positives, which metric is often more informative for the positive class, and why?",
+    solution_md:
+      "PR-AUC is often more informative because precision is sensitive to false positives when positives are rare; ROC-AUC can look deceptively strong even with many false positives due to the large number of true negatives.",
+    answer_kind: "mcq",
+    answer_value: "prauc",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["evaluation", "auc", "class-imbalance"],
+    source: "ML evaluation best practice",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      options: [
+        {
+          id: "prauc",
+          label:
+            "PR-AUC, because it focuses on precision/recall for the positive class; ROC-AUC can be misleading with many true negatives.",
+          correct: true,
+        },
+        { id: "rocauc", label: "ROC-AUC, because it ignores class imbalance.", correct: false },
+        { id: "accuracy", label: "Accuracy, because it is threshold-free.", correct: false },
+        { id: "mse", label: "MSE, because it measures probability calibration.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "ml-xgboost-why-works-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Why Gradient-Boosted Trees Work So Well",
+    prompt_md:
+      "In 5–10 sentences, explain (at a high level) why gradient-boosted decision trees (e.g. XGBoost/LightGBM) often perform strongly on tabular data.\n\nMention at least: additive model / boosting idea, handling nonlinearity/interactions, and regularization/early stopping.",
+    solution_md:
+      "Boosting builds an additive model by fitting each new tree to the current residuals/negative gradient of the loss, gradually improving fit. Trees naturally capture nonlinearities and feature interactions without manual feature engineering. Modern implementations add regularization (shrinkage/learning rate, tree depth limits, subsampling, column sampling) and early stopping to control overfitting, plus efficient handling of missing values and sparsity.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["xgboost", "boosting", "generalization"],
+    source: "Practical ML interviews",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 90,
+      rubric: [
+        "Explains boosting as an additive model fitting residuals / negative gradients iteratively: 45%",
+        "Mentions trees capture nonlinearities and interactions on tabular data: 30%",
+        "Mentions concrete regularization controls (learning rate, depth, subsampling, early stopping): 25%",
+      ],
+      reference_solution_md:
+        "Boosting adds trees sequentially to reduce loss (fit residuals/gradients). Trees capture nonlinearities/interactions. Regularization via shrinkage, depth constraints, subsampling/column sampling, and early stopping prevents overfit.\n",
+    },
+  },
+  {
     slug: "ml-cross-validation-when-not-freeform",
     topic: "Statistics",
     track: "researcher",

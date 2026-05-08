@@ -79,7 +79,7 @@ export function McqAnswerForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
-      <ol className="space-y-2">
+      <ol className="space-y-2" aria-label={`Answer choices for ${questionTitle}`}>
         {answerMeta.options.map((opt, idx) => {
           const isSelected = selected === opt.id;
           const showAsCorrect = isCorrect && opt.correct;

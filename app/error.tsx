@@ -33,7 +33,7 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
         <p className="mt-3 text-sm text-fg-muted">
           {looksLikeSupabase ? (
             <>
-              The app couldn't talk to Supabase. Most often this means your{" "}
+              The app couldn&apos;t talk to Supabase. Most often this means your{" "}
               <code className="rounded bg-bg-subtle px-1 py-0.5 text-xs">
                 .env.local
               </code>{" "}

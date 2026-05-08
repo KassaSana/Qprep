@@ -208,9 +208,7 @@ export function inferTargetRolesFromTopic(topic: Topic): TargetRole[] {
     case "Statistics":
     case "Pure Math":
       return ["Researcher"];
-    default: {
-      const _exhaustive: never = topic;
-      return ["All"];
-    }
+    default:
+      throw new Error(`Unhandled topic: ${topic satisfies never}`);
   }
 }
