@@ -1,5 +1,5 @@
 /**
- * Seed Supabase with the current question bank and curated playlists.
+ * Seed Supabase with the unified question bank and curated playlists.
  *
  * Usage:
  *   npm run seed
@@ -8,10 +8,11 @@
  * Idempotent: questions upsert on `slug`, playlists upsert on `slug`,
  * playlist_questions are wiped and reinserted per playlist.
  *
- * The script writes the v2 columns (topic, companies, answer_meta, is_premium)
- * and also fills in the legacy `track` column (when a question carries one)
- * so installations still on the v1 schema keep working until they apply
- * `0002_unified_bank.sql`.
+ * Writes the unified-bank columns (topic, target_roles, companies,
+ * answer_meta, is_premium) plus the legacy `track` column when present so
+ * installations that haven't yet applied `0002_unified_bank.sql` keep
+ * working. `target_roles` is inferred from `topic` when a seed file
+ * doesn't set it explicitly.
  */
 
 import { config as loadEnv } from "dotenv";

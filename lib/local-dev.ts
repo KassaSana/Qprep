@@ -439,34 +439,14 @@ function tagDrivenHint(question: LocalQuestion, level: 1 | 2 | 3): string {
     return "Your next intermediate step is the full EV expression with each scenario written out term by term.";
   }
 
-  if (tags.has("market-making") || tags.has("spread") || tags.has("fill-probability")) {
-    if (level === 1) {
-      return "Be careful about where you start relative to the mid, because crossing or capturing half the spread changes the sign of the edge.";
-    }
-    if (level === 2) {
-      return "Split the problem into spread capture, directional move, and fill probability, then combine them in one expectation.";
-    }
-    return "Your next intermediate quantity should be either the half-spread cost or the conditional EV given a fill, depending on the prompt.";
-  }
-
   if (tags.has("mental-math") || tags.has("percentages") || tags.has("bps")) {
     if (level === 1) {
-      return "Use benchmark percentages like $1\\%$, $10\\%$, or half the spread first, then scale from there mentally.";
+      return "Use benchmark percentages like $1\\%$, $10\\%$, or $50\\%$ first, then scale from there mentally.";
     }
     if (level === 2) {
-      return "Rewrite the computation into an easy base unit, such as basis points, one percent, or half a quoted spread.";
+      return "Rewrite the computation into an easy base unit, such as basis points or one percent, before you scale.";
     }
     return "Your next intermediate number should be the clean benchmark quantity before you adjust it up or down.";
-  }
-
-  if (tags.has("options") || tags.has("payoff") || tags.has("greeks")) {
-    if (level === 1) {
-      return "First decide whether the option finishes in the money at all before you compute any payoff.";
-    }
-    if (level === 2) {
-      return "Use the expiry payoff formula directly: for a call take $\\max(S-K,0)$, and for a put take $\\max(K-S,0)$.";
-    }
-    return "Your next intermediate step is the intrinsic value before considering any premium or transaction cost.";
   }
 
   if (tags.has("signal-combination")) {

@@ -169,7 +169,7 @@ export const ALGORITHMS_SEED: SeedQuestion[] = [
       "Maintain two rolling sums: `sumPV = Σ(p·v)` and `sumV = Σ(v)`. Slide the window by adding the new row and removing the row that falls off. Reduce the fraction by gcd each step. $O(n)$ time.",
     answer_kind: "code",
     difficulty: 4,
-    tags: ["sliding-window", "gcd", "finance"],
+    tags: ["sliding-window", "gcd", "applications"],
     companies: ["Optiver", "IMC"],
     source: "Execution analytics primitive",
     answer_meta: {

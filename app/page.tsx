@@ -5,10 +5,10 @@ import { PLAYLISTS } from "@/content/playlists";
 /**
  * Landing page.
  *
- * The new flow is QuantGuide-style: a featured playlist strip plus a
+ * The flow is QuantGuide-style: a featured playlist strip plus a
  * "Browse all questions" CTA that drops the user into the unified bank.
- * Tracks (researcher / trader / dev) are no longer routes — the legacy
- * ones still work via the redirects in `next.config.ts`.
+ * The legacy per-track routes (`/researcher`, `/trader`) have been
+ * retired entirely — there is one bank, filtered by topic and role.
  */
 export default function Home() {
   const featured = PLAYLISTS.slice(0, 4);
@@ -22,10 +22,10 @@ export default function Home() {
           <span className="text-accent"> agentic tutor</span>.
         </h1>
         <p className="mt-4 max-w-2xl text-fg-muted">
-          Probability, finance, algorithms, low-level design, and concurrency
-          drills. Submit an answer; if it's wrong, ask for a nudge — three
-          escalating hints that point at your specific gap without revealing
-          the number.
+          Probability, statistics, algorithms, low-level design, and
+          concurrency drills. Submit an answer; if it's wrong, ask for a
+          nudge — three escalating hints that point at your specific gap
+          without revealing the number.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           <Link href="/questions">

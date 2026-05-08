@@ -16,7 +16,7 @@ export const PURE_MATH_SEED: SeedQuestion[] = [
       "For convex \(f\), \(E[f(X)] \\ge f(E[X])\). For concave \(f\), the inequality reverses. Application: \(\\log\\) is concave, so \(E[\\log(1+R)] \\le \\log(1+E[R])\) — volatility drag in geometric growth. This is also why log utility implies risk aversion.",
     answer_kind: "freeform",
     difficulty: 3,
-    tags: ["inequalities", "convexity", "finance"],
+    tags: ["inequalities", "convexity", "applications"],
     source: "Core inequality",
     answer_meta: {
       rubric: [
