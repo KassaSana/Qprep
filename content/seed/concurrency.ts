@@ -181,4 +181,147 @@ export const CONCURRENCY_SEED: SeedQuestion[] = [
         "ABA occurs when a value changes from A to B and back to A between a read and a CAS, so the CAS 'succeeds' despite an intervening change (often due to freed/reused nodes). Mitigate with version tags, hazard pointers, or epoch-based reclamation.",
     },
   },
+  {
+    slug: "memory-order-acq-rel-what-guarantees-freeform",
+    topic: "Concurrency",
+    track: "dev",
+    title: "Acquire/Release — What Guarantee Does It Provide?",
+    prompt_md:
+      "In C++ atomics, explain what guarantee you get from a `store(..., std::memory_order_release)` in one thread paired with a `load(..., std::memory_order_acquire)` in another thread.\n\nAnswer in 6–10 sentences. Use the terms *happens-before* and *publishing*.",
+    solution_md:
+      "If a thread performs a release store to an atomic variable and another thread later reads that value (or a later value in the release sequence) with an acquire load, then the release synchronizes-with the acquire. This establishes a happens-before relation: all writes in the releasing thread that occurred before the release store become visible to the acquiring thread after the acquire load.\n\nThis is the standard \"publish data then set a flag\" pattern: store data (non-atomic ok if not raced) then release-store the flag; reader acquire-loads the flag and then safely reads the published data.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["atomics", "memory-order", "happens-before"],
+    source: "C++ memory model staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 120,
+      rubric: [
+        "States release store + acquire load (when the value is observed) synchronizes-with and creates a happens-before edge: 50%",
+        "Explains visibility/order guarantee: prior writes before release become visible after acquire: 35%",
+        "Connects to the publish-flag pattern (data then flag; read flag then data): 15%",
+      ],
+      reference_solution_md:
+        "release-store + acquire-load (when acquire reads the released value) synchronizes-with and establishes happens-before: writes before release become visible after acquire. This is the publish-flag pattern.\n",
+    },
+  },
+  {
+    slug: "memory-order-seq-cst-when-use-freeform",
+    topic: "Concurrency",
+    track: "dev",
+    title: "When Would You Use `memory_order_seq_cst`?",
+    prompt_md:
+      "When is it reasonable to use `std::memory_order_seq_cst` instead of acquire/release or relaxed?\n\nAnswer in 5–10 sentences and mention the idea of a single total order and debugging/correctness tradeoffs.",
+    solution_md:
+      "`seq_cst` provides the strongest guarantee: all seq-cst operations participate in a single total order consistent with program order, which makes reasoning simpler. It's reasonable when correctness is more important than micro-optimizing, when you're first implementing something and want the simplest correct semantics, or when you need global ordering across multiple atomics.\n\nYou can often relax to acquire/release after proving the minimal required ordering. The tradeoff is potential performance cost on some architectures due to stronger fences/order constraints.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["atomics", "memory-order", "performance"],
+    source: "C++ concurrency practice",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 110,
+      rubric: [
+        "Explains seq_cst as imposing a single total order (strongest ordering) for those atomics: 50%",
+        "Gives at least one good use case (simpler reasoning, cross-atomic ordering, correctness-first): 30%",
+        "Mentions tradeoff (possible perf cost; can later relax after proof): 20%",
+      ],
+      reference_solution_md:
+        "seq_cst gives a single global total order for seq-cst ops, simplifying reasoning and sometimes needed across multiple atomics. Use when correctness/simplicity first; later relax if proven. Stronger ordering can cost performance.\n",
+    },
+  },
+  {
+    slug: "condition-variable-missed-wakeup-why-freeform",
+    topic: "Concurrency",
+    track: "dev",
+    title: "Condition Variables — What Causes a Missed Wakeup?",
+    prompt_md:
+      "Explain what a \"missed wakeup\" is with condition variables, and how the standard pattern avoids it.\n\nAnswer in 6–10 sentences. Mention the predicate, the mutex, and the `while` loop.",
+    solution_md:
+      "A missed wakeup occurs when a thread goes to sleep even though the condition it cares about is already true, or when a notify happens before the waiter is actually waiting and the waiter sleeps forever. The standard pattern avoids this by protecting the predicate with a mutex and using `while (!pred) cv.wait(lock)`.\n\nThe mutex ensures the check and the decision to sleep are atomic with respect to predicate changes; the `while` loop handles spurious wakeups and re-checks the predicate after being notified.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["condition-variables", "synchronization"],
+    source: "Concurrency interview staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 120,
+      rubric: [
+        "Defines missed wakeup in terms of predicate/notify timing and sleeping incorrectly: 35%",
+        "Explains the role of the mutex in protecting the predicate and making check+sleep atomic: 40%",
+        "Mentions the `while` predicate loop (spurious wakeups + re-check): 25%",
+      ],
+      reference_solution_md:
+        "Missed wakeup: waiter sleeps though predicate true or notify happens before it waits. Fix: protect predicate with mutex and use `while(!pred) cv.wait(lock)`, re-checking after wake (also handles spurious wakeups).\n",
+    },
+  },
+  {
+    slug: "lock-free-progress-guarantees-mcq",
+    topic: "Concurrency",
+    track: "dev",
+    title: "Progress Guarantees: Wait-Free vs Lock-Free vs Obstruction-Free",
+    prompt_md:
+      "Which statement best matches the standard progress guarantees terminology?",
+    solution_md:
+      "Wait-free: every thread completes in a bounded number of steps. Lock-free: system as a whole makes progress (some thread completes) even if others are stalled. Obstruction-free: a thread completes if it runs alone for long enough.",
+    answer_kind: "mcq",
+    answer_value: "definitions",
+    answer_tolerance: null,
+    difficulty: 4,
+    tags: ["lock-free", "theory"],
+    source: "Concurrency terminology",
+    target_roles: ["Dev"],
+    answer_meta: {
+      options: [
+        {
+          id: "definitions",
+          label:
+            "Wait-free: each thread finishes in bounded steps. Lock-free: overall progress (some thread finishes). Obstruction-free: finishes if runs alone.",
+          correct: true,
+        },
+        {
+          id: "swap",
+          label:
+            "Lock-free: each thread finishes in bounded steps. Wait-free: only overall progress is guaranteed.",
+          correct: false,
+        },
+        {
+          id: "mutex",
+          label: "Obstruction-free means it uses a mutex but avoids deadlock.",
+          correct: false,
+        },
+        {
+          id: "none",
+          label: "These terms have no standard meaning; everyone defines them differently.",
+          correct: false,
+        },
+      ],
+    },
+  },
+  {
+    slug: "hazard-pointers-what-problem-freeform",
+    topic: "Concurrency",
+    track: "dev",
+    title: "Hazard Pointers — What Problem Do They Solve?",
+    prompt_md:
+      "What problem do hazard pointers solve in lock-free data structures?\n\nAnswer in 6–10 sentences. Mention memory reclamation and why naive `delete` is unsafe.",
+    solution_md:
+      "Hazard pointers solve safe memory reclamation: in lock-free structures, one thread may remove a node while another thread still holds a pointer to it. If the remover immediately `delete`s the node, the other thread may dereference freed memory (use-after-free), or the memory could be recycled causing ABA-style bugs.\n\nWith hazard pointers, threads publish which nodes they might access; a node can only be reclaimed when no hazard pointer references it. This makes reclamation safe without stopping the world.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["lock-free", "memory-reclamation", "hazard-pointers"],
+    source: "Lock-free engineering staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 130,
+      rubric: [
+        "States the problem: safe memory reclamation / use-after-free in lock-free structures: 45%",
+        "Explains why immediate delete is unsafe (other threads may still read pointers): 35%",
+        "Explains the hazard-pointer idea (publish protected pointers; reclaim only when none reference): 20%",
+      ],
+      reference_solution_md:
+        "Hazard pointers address lock-free memory reclamation: removed nodes can't be deleted immediately because other threads may still hold pointers. Threads publish hazard pointers; reclaim only when node not present in any hazard pointer set.\n",
+    },
+  },
 ];

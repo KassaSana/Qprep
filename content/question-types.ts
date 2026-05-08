@@ -15,10 +15,12 @@ export type Topic =
   | "Statistics"
   | "Pure Math"
   | "Concurrency"
+  | "Systems"
   | "LLD"
   | "System Design"
   | "Algorithms"
-  | "Data Structures";
+  | "Data Structures"
+  | "C++ Deep Dives";
 
 export const TOPICS: readonly Topic[] = [
   "Probability",
@@ -26,10 +28,12 @@ export const TOPICS: readonly Topic[] = [
   "Statistics",
   "Pure Math",
   "Concurrency",
+  "Systems",
   "LLD",
   "System Design",
   "Algorithms",
   "Data Structures",
+  "C++ Deep Dives",
 ] as const;
 
 /**
@@ -199,6 +203,8 @@ export function inferTargetRolesFromTopic(topic: Topic): TargetRole[] {
     case "Algorithms":
     case "Data Structures":
     case "Concurrency":
+    case "Systems":
+    case "C++ Deep Dives":
     case "LLD":
     case "System Design":
       return ["Dev"];

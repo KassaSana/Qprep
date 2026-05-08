@@ -58,4 +58,54 @@ export const SYSTEM_DESIGN_SEED: SeedQuestion[] = [
         "Do risk checks inside the order gateway thread as a fast in-process function call. Store limits in cache-resident structs, avoid allocations/rehash, avoid syscalls, and log asynchronously. Checks include max size/notional, price bands (fat-finger), position limits, and per-symbol throttles. Pin cores and pre-touch memory to control tail latency.",
     },
   },
+  {
+    slug: "sysdesign-order-gateway-architecture-freeform",
+    topic: "System Design",
+    track: "dev",
+    title: "Order Gateway Architecture (Low Latency + Safety)",
+    prompt_md:
+      "Design an order gateway that accepts strategy orders and sends them to an exchange.\n\nCover:\n\n- where risk checks happen\n- how you handle exchange acks/fills and correlation IDs\n- how you avoid latency spikes on the hot path\n- what you persist/log and where (hot vs cold path)\n\nAssume a colocated machine; keep the answer bounded (no cloud infra).",
+    solution_md:
+      "A typical design runs the gateway as a single-threaded event loop pinned to a core: it receives orders from strategy via an in-process queue (SPSC) or shared-memory IPC, runs risk checks inline, assigns a unique client order ID/correlation ID, and sends to the exchange via a low-latency session handler. Exchange acks/fills are processed on the same thread (or a dedicated network thread feeding an SPSC) to update state and notify strategy.\n\nAvoid spikes by preallocating objects, using fixed-capacity maps/arrays for hot state, avoiding rehashing/allocations, and making logging asynchronous (ring buffer to a logger thread). Persist critical audit trails (orders/acks/fills) asynchronously to disk or a replicated log, but do not block the hot path on IO.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "order-entry", "low-latency"],
+    companies: ["Citadel Securities", "HRT", "Jump Trading"],
+    source: "Quant-dev system design staple",
+    answer_meta: {
+      min_words: 160,
+      rubric: [
+        "Places risk checks on the hot path before send and explains why: 25%",
+        "Describes correlation IDs / state machine for acks/fills and strategy notification: 35%",
+        "Mentions hot-path latency controls (no allocations/rehash, pinned threads, SPSC queues, async logging): 30%",
+        "Mentions what is persisted and how to keep persistence off the hot path: 10%",
+      ],
+      reference_solution_md:
+        "Single-threaded pinned gateway: receive → risk-check inline → assign client order ID → send. Process acks/fills to update state and notify strategy. Avoid spikes via preallocation, fixed-capacity state, no syscalls/allocs; async logging/persistence via ring buffer to separate thread.\n",
+    },
+  },
+  {
+    slug: "sysdesign-time-sync-ptp-vs-ntp-freeform",
+    topic: "System Design",
+    track: "dev",
+    title: "Time Sync in Colocation: PTP vs NTP",
+    prompt_md:
+      "In a colocated trading environment, how would you think about time synchronization for timestamping and latency measurement?\n\nCompare NTP vs PTP at a high level and mention one failure mode/operational risk.",
+    solution_md:
+      "NTP is general-purpose and can be accurate to milliseconds/sub-millisecond depending on environment, but it can still have jitter and step adjustments that complicate latency measurement. PTP (IEEE 1588) with hardware timestamping can achieve much tighter synchronization (microsecond or better) in controlled networks, making it preferable for precise timestamping.\n\nOperational risks include misconfiguration, asymmetric network delays, or time stepping; robust systems monitor clock offset/drift and prefer monotonic clocks for internal durations while using synchronized wall time for cross-machine correlation.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "time", "latency"],
+    source: "Colo operations staple",
+    answer_meta: {
+      min_words: 135,
+      rubric: [
+        "Contrasts NTP vs PTP at high level (accuracy/jitter; hardware timestamping for PTP): 55%",
+        "Mentions at least one operational risk/failure mode (stepping, asymmetry, misconfig, monitoring drift): 30%",
+        "Mentions using monotonic clocks for durations vs synced time for correlation: 15%",
+      ],
+      reference_solution_md:
+        "NTP is general-purpose with more jitter; PTP with hardware timestamping can be much tighter. Risks: stepping/asymmetry/misconfig; monitor offset and use monotonic for durations.\n",
+    },
+  },
 ];

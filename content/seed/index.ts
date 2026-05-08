@@ -23,6 +23,8 @@ import { LLD_SEED } from "./lld";
 import { SYSTEM_DESIGN_SEED } from "./system_design";
 import { PURE_MATH_SEED } from "./pure_math";
 import { DATA_STRUCTURES_SEED } from "./data_structures";
+import { CPP_DEEP_DIVES_SEED } from "./cpp_deep_dives";
+import { SYSTEMS_SEED } from "./systems";
 
 export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
   ...PROBABILITY_SEED,
@@ -33,6 +35,8 @@ export const ALL_SEED_QUESTIONS: SeedQuestion[] = [
   ...BRAINTEASERS_SEED,
   ...ALGORITHMS_SEED,
   ...CONCURRENCY_SEED,
+  ...SYSTEMS_SEED,
+  ...CPP_DEEP_DIVES_SEED,
   ...LLD_SEED,
   ...SYSTEM_DESIGN_SEED,
   ...PURE_MATH_SEED,
@@ -48,6 +52,8 @@ export {
   BRAINTEASERS_SEED,
   ALGORITHMS_SEED,
   CONCURRENCY_SEED,
+  SYSTEMS_SEED,
+  CPP_DEEP_DIVES_SEED,
   LLD_SEED,
   SYSTEM_DESIGN_SEED,
   PURE_MATH_SEED,

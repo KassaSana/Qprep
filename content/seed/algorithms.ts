@@ -185,4 +185,61 @@ export const ALGORITHMS_SEED: SeedQuestion[] = [
       memory_limit_mb: 128,
     },
   },
+  {
+    slug: "streaming-median",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Streaming Median",
+    prompt_md:
+      "You receive a stream of integers. After each new integer arrives, output the median of all numbers seen so far.\n\nInput format:\n- First line: integer $n$\n- Next $n$ lines: one integer per line\n\nOutput format:\n- After each insertion, print the median on its own line.\n- If the count is odd, the median is the middle number.\n- If the count is even, define the median as the average of the two middle numbers, printed as a reduced fraction `A/B`.\n\nExample:\n\nInput:\n```\n5\n1\n5\n2\n10\n-1\n```\nOutput:\n```\n1/1\n3/1\n2/1\n7/2\n2/1\n```",
+    solution_md:
+      "Maintain two heaps: a max-heap for the lower half and a min-heap for the upper half. Rebalance so their sizes differ by at most 1 and all elements in lower ≤ all in upper. Median is top of max-heap if odd; if even, it's the average of the two tops. Use gcd to reduce the fraction for even case.",
+    answer_kind: "code",
+    difficulty: 4,
+    tags: ["heaps", "streaming", "median"],
+    companies: ["Jane Street", "Citadel", "HRT"],
+    source: "Streaming primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport heapq\nimport math\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    n = int(data[0])\n    xs = list(map(int, data[1:1+n]))\n\n    lo = []  # max-heap via negative values\n    hi = []  # min-heap\n\n    out = []\n    for x in xs:\n        if not lo or x <= -lo[0]:\n            heapq.heappush(lo, -x)\n        else:\n            heapq.heappush(hi, x)\n\n        # rebalance\n        if len(lo) > len(hi) + 1:\n            heapq.heappush(hi, -heapq.heappop(lo))\n        elif len(hi) > len(lo):\n            heapq.heappush(lo, -heapq.heappop(hi))\n\n        if len(lo) == len(hi):\n            a = -lo[0]\n            b = hi[0]\n            num = a + b\n            den = 2\n            g = math.gcd(abs(num), den)\n            out.append(f\"{num//g}/{den//g}\")\n        else:\n            out.append(f\"{-lo[0]}/1\")\n\n    sys.stdout.write(\"\\n\".join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "5\n1\n5\n2\n10\n-1\n", expected: "1/1\n3/1\n2/1\n7/2\n2/1" },
+        { input: "1\n42\n", expected: "42/1" },
+        { input: "2\n1\n2\n", expected: "1/1\n3/2" },
+        { input: "4\n-5\n-1\n-3\n-2\n", expected: "-5/1\n-3/1\n-3/1\n-5/2", hidden: true },
+        { input: "6\n1\n1\n1\n1\n1\n1\n", expected: "1/1\n1/1\n1/1\n1/1\n1/1\n1/1", hidden: true },
+      ],
+      time_limit_ms: 2500,
+      memory_limit_mb: 128,
+    },
+  },
+  {
+    slug: "top-k-frequent-stream",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Top-K Frequent Elements (Streaming Log)",
+    prompt_md:
+      "You are given a log of integer event IDs. Output the $k$ most frequent IDs.\n\nInput format:\n- First line: integer $k$\n- Second line: space-separated integers (the event IDs)\n\nOutput format:\n- Print the top $k$ IDs in descending frequency.\n- Break ties by smaller ID first.\n- Output as space-separated integers on one line.\n\nExample:\n\nInput:\n```\n2\n1 1 1 2 2 3\n```\nOutput:\n```\n1 2\n```",
+    solution_md:
+      "Count frequencies with a hash map. Then sort unique IDs by (-freq, id) and take the first k. For large domains you could maintain a min-heap of size k, but sorting is fine given typical interview constraints.",
+    answer_kind: "code",
+    difficulty: 2,
+    tags: ["hashmap", "sorting", "heaps"],
+    companies: ["Citadel", "Two Sigma"],
+    source: "Interview staple",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nfrom collections import Counter\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    k = int(data[0])\n    ids = list(map(int, data[1:]))\n    c = Counter(ids)\n    items = sorted(c.items(), key=lambda kv: (-kv[1], kv[0]))\n    ans = [str(x) for x, _ in items[:k]]\n    sys.stdout.write(' '.join(ans))\n\nsolve()\n",
+      test_cases: [
+        { input: "2\n1 1 1 2 2 3\n", expected: "1 2" },
+        { input: "1\n4 4 4 4\n", expected: "4" },
+        { input: "3\n5 6 7\n", expected: "5 6 7", hidden: true },
+        { input: "2\n2 2 3 3 1 1\n", expected: "1 2", hidden: true },
+      ],
+      time_limit_ms: 2000,
+      memory_limit_mb: 64,
+    },
+  },
 ];
