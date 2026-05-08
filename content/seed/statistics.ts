@@ -773,6 +773,354 @@ export const STATISTICS_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "weak-instruments-why-bad-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Weak Instruments — Why Are They a Problem?",
+    prompt_md:
+      "Explain why weak instruments cause problems for IV estimates.\n\nIn 5–10 sentences: mention variance, finite-sample bias, and one diagnostic idea.",
+    solution_md:
+      "If the instrument is weakly correlated with the endogenous regressor, the first stage provides little exogenous variation, so IV estimates become noisy (high variance). In finite samples, weak instruments can also induce bias toward OLS and lead to misleading inference (non-normal sampling distributions, size distortions). Diagnostics include first-stage F-statistics, partial $R^2$, and robust weak-IV methods/tests (e.g., Anderson–Rubin-type inference).",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["iv", "endogeneity", "inference"],
+    source: "Econometrics staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Mentions high variance/noise due to weak first stage: 40%",
+        "Mentions finite-sample bias/inference distortions (bias toward OLS, wrong size): 40%",
+        "Mentions at least one diagnostic/mitigation (first-stage F, partial R^2, weak-IV robust tests): 20%",
+      ],
+      reference_solution_md:
+        "Weak instruments → weak first stage → high variance; finite-sample bias toward OLS and distorted inference. Diagnose via first-stage F/partial R^2; use weak-IV robust inference.\n",
+    },
+  },
+  {
+    slug: "simpsons-paradox-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Simpson's Paradox",
+    prompt_md:
+      "What is Simpson's paradox?\n\nGive a brief description (4–8 sentences) and explain what it teaches you about aggregation and confounding.",
+    solution_md:
+      "Simpson's paradox occurs when a trend present in several groups reverses when the groups are aggregated. The reversal is typically due to a confounding variable (group membership) affecting both the predictor and outcome and changing the weighting of groups. It teaches that marginal associations can be misleading; you often need to stratify/adjust for confounders to interpret relationships.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["confounding", "causality", "paradox"],
+    source: "Classic",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Defines the reversal between within-group and aggregated association: 55%",
+        "Mentions confounding/weighting as the mechanism: 35%",
+        "States the lesson: adjust/stratify rather than rely on marginal associations: 10%",
+      ],
+      reference_solution_md:
+        "Simpson's paradox: within-group trend reverses when aggregated due to confounding/weighting differences. Lesson: marginal associations can mislead; stratify/adjust.\n",
+    },
+  },
+  {
+    slug: "wald-score-lrt-differences-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Wald vs Score vs Likelihood Ratio Tests",
+    prompt_md:
+      "Compare the Wald test, score (LM) test, and likelihood ratio test.\n\nIn 6–10 sentences: say what each evaluates (where it is computed) and one practical difference (e.g. needing to fit under $H_0$ vs $H_1$).",
+    solution_md:
+      "Wald: uses the unrestricted estimate and its standard error to test whether the estimate is far from the null value; computed under the alternative fit.\n\nScore/LM: evaluates whether the likelihood slope at the null is large; computed using only the null fit.\n\nLRT: compares maximized likelihoods under null vs alternative; requires fitting both.\n\nAsymptotically under regularity, they often agree (chi-square), but can differ in small samples or under constraints/boundaries.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["hypothesis-testing", "lrt", "wald", "score"],
+    source: "Asymptotic testing staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 110,
+      rubric: [
+        "Correctly characterizes Wald as using unrestricted estimate + SE relative to null: 35%",
+        "Correctly characterizes score/LM as using gradient at null and requiring only null fit: 35%",
+        "Correctly characterizes LRT as comparing maximized likelihoods (requires both fits): 20%",
+        "Mentions asymptotic equivalence but possible small-sample differences: 10%",
+      ],
+      reference_solution_md:
+        "Wald: test based on unrestricted estimate distance from null. Score/LM: test based on likelihood slope at null (needs only null fit). LRT: compare maximized likelihoods under null vs alt (needs both fits). Often asymptotically equivalent but can differ finite-sample.\n",
+    },
+  },
+  {
+    slug: "multicollinearity-what-happens-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Multicollinearity — What Happens in OLS?",
+    prompt_md:
+      "What is multicollinearity in regression, and what does it do to coefficient estimates and standard errors?\n\nAnswer in 5–10 sentences and mention at least one mitigation.",
+    solution_md:
+      "Multicollinearity means regressors are highly correlated, making $X^\\top X$ ill-conditioned. Coefficient estimates can become unstable (sensitive to small data changes) and individual standard errors inflate, so $t$-stats can look insignificant even if the model predicts well. Mitigations include collecting more data, removing/recombining correlated features, using regularization (ridge), or using PCA/partial least squares.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["ols", "linear-algebra", "inference"],
+    source: "Regression diagnostics",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 90,
+      rubric: [
+        "Defines multicollinearity as high correlation / ill-conditioning in regressors: 35%",
+        "Explains instability of coefficients and inflated SEs / weak individual t-stats: 45%",
+        "Mentions at least one mitigation (ridge, feature removal, PCA): 20%",
+      ],
+      reference_solution_md:
+        "Multicollinearity: regressors highly correlated → ill-conditioned $X^TX$. Coefs unstable and SEs inflate; mitigate via ridge, remove/combine features, PCA, more data.\n",
+    },
+  },
+  {
+    slug: "clustered-standard-errors-why-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Clustered Standard Errors — Why?",
+    prompt_md:
+      "When would you use clustered standard errors?\n\nAnswer in 4–8 sentences and explain what dependence structure clustering is meant to handle.",
+    solution_md:
+      "Clustered standard errors are used when observations are not independent within groups (clusters), e.g. repeated measurements per user, firm, or time period, but clusters are approximately independent of each other. Clustering allows arbitrary correlation and heteroskedasticity within a cluster, producing more reliable inference than naive iid or only-heteroskedastic robust SEs.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["inference", "standard-errors", "dependence"],
+    source: "Applied econometrics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 75,
+      rubric: [
+        "States the within-cluster dependence motivation (non-iid within groups): 55%",
+        "Describes 'arbitrary correlation within cluster, independent across clusters' idea: 30%",
+        "Contrasts with plain robust SEs (heteroskedastic only) or iid SEs: 15%",
+      ],
+      reference_solution_md:
+        "Use clustered SEs when errors are correlated within groups (users/firms/time). Clustering allows arbitrary within-cluster correlation and heteroskedasticity while treating clusters as independent.\n",
+    },
+  },
+  {
+    slug: "robust-vs-clustered-se-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Robust vs Clustered SEs",
+    prompt_md:
+      "Which statement best contrasts heteroskedasticity-robust standard errors with clustered standard errors?",
+    solution_md:
+      "Robust (White) SEs handle heteroskedasticity with independent observations; clustered SEs additionally allow correlation within clusters (and heteroskedasticity) while assuming clusters are independent.",
+    answer_kind: "mcq",
+    answer_value: "cluster",
+    answer_tolerance: null,
+    difficulty: 4,
+    tags: ["inference", "standard-errors", "dependence"],
+    source: "Applied econometrics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "cluster",
+          label:
+            "Robust SEs handle heteroskedasticity with iid observations; clustered SEs also allow within-cluster correlation.",
+          correct: true,
+        },
+        {
+          id: "same",
+          label: "They are the same thing; the terms are interchangeable.",
+          correct: false,
+        },
+        {
+          id: "bayes",
+          label: "Robust SEs are Bayesian, clustered SEs are frequentist.",
+          correct: false,
+        },
+        {
+          id: "normality",
+          label: "Clustered SEs require normal errors; robust SEs do not.",
+          correct: false,
+        },
+      ],
+    },
+  },
+  {
+    slug: "p-hacking-garden-forking-paths-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "p-hacking / Garden of Forking Paths",
+    prompt_md:
+      "What is p-hacking (\"the garden of forking paths\"), and why does it inflate false positives?\n\nAnswer in 5–10 sentences and mention one mitigation.",
+    solution_md:
+      "p-hacking refers to trying many analyses/specifications (different subsets, transforms, models, outcomes) and reporting only those with significant p-values. Even if all nulls are true, searching many tests increases the chance at least one appears significant by chance, inflating the effective Type I error. Mitigations include pre-registration, correcting for multiple testing (Bonferroni/FDR), holding out a confirmatory test set, or reporting all tried specifications.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["multiple-testing", "inference", "reproducibility"],
+    source: "Research practice",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Defines p-hacking as trying many analyses and selectively reporting significant results: 50%",
+        "Explains why it inflates false positives (multiple comparisons / effective alpha increases): 35%",
+        "Mentions at least one mitigation (pre-reg, FDR/Bonferroni, holdout confirmatory): 15%",
+      ],
+      reference_solution_md:
+        "p-hacking: many specs tried, only significant reported → multiple comparisons inflate false positives. Mitigate with pre-registration, multiple-testing correction, confirmatory holdout.\n",
+    },
+  },
+  {
+    slug: "aic-vs-bic-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "AIC vs BIC (Model Selection)",
+    prompt_md:
+      "Which statement best contrasts AIC and BIC for model selection?",
+    solution_md:
+      "Both trade off fit and complexity. BIC penalizes complexity more strongly (penalty grows like $\\log n$), often favoring simpler models as $n$ grows; AIC uses a constant penalty per parameter and is more prediction-focused.",
+    answer_kind: "mcq",
+    answer_value: "bic-stronger",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["model-selection", "aic", "bic"],
+    source: "Classical criteria",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "bic-stronger",
+          label:
+            "BIC penalizes complexity more strongly (penalty involves $\\log n$), often choosing simpler models for large $n$.",
+          correct: true,
+        },
+        { id: "same", label: "They are identical criteria with different names.", correct: false },
+        { id: "bayes", label: "AIC is Bayesian while BIC is frequentist.", correct: false },
+        { id: "always", label: "AIC always selects simpler models than BIC.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "bootstrap-ci-percentile-basic-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Bootstrap Percentile CI (Basic Idea)",
+    prompt_md:
+      "Describe the bootstrap percentile confidence interval method in 5–10 sentences.\n\nYou can assume you have B bootstrap resamples and a statistic $\\hat\\theta$.",
+    solution_md:
+      "Resample the dataset with replacement B times. For each bootstrap sample, compute the statistic, yielding bootstrap replicates $\\hat\\theta^{*(1)},\\dots,\\hat\\theta^{*(B)}$. Then take the empirical quantiles: the $(\\alpha/2)$ and $(1-\\alpha/2)$ quantiles of the bootstrap replicates form an approximate $(1-\\alpha)$ CI. Intuition: bootstrap replicates approximate the sampling distribution of $\\hat\\theta$.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["bootstrap", "confidence-interval", "inference"],
+    source: "Bootstrap basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Mentions resampling with replacement B times and recomputing the statistic: 45%",
+        "Mentions taking empirical quantiles of bootstrap replicates for CI: 45%",
+        "Connects to approximating sampling distribution: 10%",
+      ],
+      reference_solution_md:
+        "Bootstrap percentile CI: resample with replacement B times, compute $\\hat\\theta^*$ each time, then take empirical quantiles of the $\\hat\\theta^*$ distribution as CI endpoints.\n",
+    },
+  },
+  {
+    slug: "score-test-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Score (LM) Test — Intuition",
+    prompt_md:
+      "Explain the intuition of the score (Lagrange multiplier / LM) test.\n\nIn 4–8 sentences: mention evaluating the gradient at the null and why only fitting under $H_0$ is enough.",
+    solution_md:
+      "The score test asks whether the log-likelihood would increase rapidly if you moved away from the null: it evaluates the gradient (score) at the null parameter value. If the score is near zero, the null is locally optimal; if large, the null fits poorly relative to nearby alternatives. Because it's evaluated at the null, you only need to fit the restricted (null) model.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["hypothesis-testing", "score", "mle"],
+    source: "Asymptotic testing staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Mentions gradient/score of log-likelihood evaluated at null: 55%",
+        "Explains why large score indicates improvement by moving away from null: 25%",
+        "Mentions only needing to fit under $H_0$ (restricted model): 20%",
+      ],
+      reference_solution_md:
+        "Score/LM test evaluates the log-likelihood gradient at the null; large score implies moving away improves fit. Computed using only the restricted null fit.\n",
+    },
+  },
+  {
+    slug: "cross-validation-vs-bootstrap-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Cross-Validation vs Bootstrap (When/Why)",
+    prompt_md:
+      "Compare cross-validation and the bootstrap for estimating model performance or uncertainty.\n\nIn 6–10 sentences: say what each resamples/splits, a typical use case, and one limitation.",
+    solution_md:
+      "Cross-validation splits data into folds, training on subsets and evaluating on held-out folds, commonly used for model selection and performance estimation. Bootstrap resamples the dataset with replacement to approximate the sampling distribution of a statistic (uncertainty / confidence intervals) and can also be used for optimism-corrected performance.\n\nLimitations: CV can have high variance for small datasets and can leak structure if folds are not group/time aware; bootstrap percentile CIs can be biased for some statistics and naive bootstrap performance estimates can be optimistic without correction.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["evaluation", "cross-validation", "bootstrap"],
+    source: "Applied ML/stats",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 110,
+      rubric: [
+        "Correctly describes CV as repeated train/holdout fold evaluation for performance/model selection: 40%",
+        "Correctly describes bootstrap as resampling-with-replacement to approximate sampling distribution/uncertainty: 40%",
+        "Mentions one limitation for each (structure leakage, bias/optimism): 20%",
+      ],
+      reference_solution_md:
+        "CV: fold splits for performance/model selection. Bootstrap: resample with replacement to approximate sampling distribution/uncertainty. Each has limitations (structure leakage in CV; bias/optimism in naive bootstrap).\n",
+    },
+  },
+  {
+    slug: "t-test-assumptions-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "One-Sample t-test — Key Assumption",
+    prompt_md:
+      "For the classic one-sample t-test of a mean, which assumption is most critical for the exact finite-sample t distribution result?",
+    solution_md:
+      "Exact t distribution relies on normality of the data (or of the error term). Without normality, the t-test can still be approximately valid by CLT for large n, but the exact result is lost.",
+    answer_kind: "mcq",
+    answer_value: "normality",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["hypothesis-testing", "t-test", "assumptions"],
+    source: "Classical inference",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "normality", label: "Normality (exact finite-sample t distribution).", correct: true },
+        { id: "linearity", label: "Linearity of the mean in parameters.", correct: false },
+        { id: "independence-only", label: "Only independence; distribution shape never matters.", correct: false },
+        { id: "bounded", label: "Bounded support.", correct: false },
+      ],
+    },
+  },
+  {
+    slug: "regularization-selection-cv-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Choosing Regularization Strength",
+    prompt_md:
+      "In practice, how do you usually choose the regularization strength (e.g., $\\lambda$ in ridge/lasso)?",
+    solution_md:
+      "Commonly via validation / cross-validation (possibly nested CV), selecting the value that optimizes an out-of-sample metric.",
+    answer_kind: "mcq",
+    answer_value: "cv",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["regularization", "cross-validation", "model-selection"],
+    source: "Practical ML",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      options: [
+        { id: "cv", label: "Use a validation set or cross-validation to pick $\\lambda$ by out-of-sample performance.", correct: true },
+        { id: "always-zero", label: "Set $\\lambda=0$ unless the model overfits.", correct: false },
+        { id: "maximize-train", label: "Pick $\\lambda$ that minimizes training error.", correct: false },
+        { id: "pvalue", label: "Pick $\\lambda$ so every coefficient has p-value < 0.05.", correct: false },
+      ],
+    },
+  },
+  {
     slug: "bessel-correction-intuition-freeform",
     topic: "Statistics",
     track: "researcher",

@@ -165,6 +165,55 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ts-feature-leakage-rolling-window-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Leakage via Rolling Windows",
+    prompt_md:
+      "Give one example of how rolling-window features can accidentally leak future information in time-series ML, and how to fix it.\n\nAnswer in 4–8 sentences.",
+    solution_md:
+      "Leakage can occur if you compute a centered rolling mean (uses future points) or compute rolling statistics over a window that extends past the prediction timestamp. Fix by using strictly backward-looking (causal) windows with explicit cutoffs and by writing unit tests that assert feature timestamps are <= label timestamp.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "leakage", "features"],
+    source: "Practical time-series ML",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 75,
+      rubric: [
+        "Provides a concrete leakage example (centered window, future-inclusive window, label lookahead): 55%",
+        "Provides a concrete fix (causal windows, strict cutoffs, fit-on-train): 35%",
+        "Mentions timestamp discipline/tests as a guardrail: 10%",
+      ],
+      reference_solution_md:
+        "Leakage: centered rolling stats or windows extending into future. Fix: strictly backward-looking windows and timestamp cutoffs; add tests enforcing causality.\n",
+    },
+  },
+  {
+    slug: "ts-arima-order-selection-aic-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "ARIMA Order Selection — AIC",
+    prompt_md:
+      "A common way to select ARIMA(p,d,q) orders among candidate models is to minimize which criterion?",
+    solution_md: "AIC (or BIC) is commonly used; AIC is a standard default in many workflows.",
+    answer_kind: "mcq",
+    answer_value: "aic",
+    answer_tolerance: null,
+    difficulty: 2,
+    tags: ["time-series", "arima", "model-selection"],
+    source: "Forecasting practice",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        { id: "aic", label: "AIC (Akaike Information Criterion)", correct: true },
+        { id: "mse-train", label: "Training-set MSE only", correct: false },
+        { id: "pvalue", label: "Smallest p-value among coefficients", correct: false },
+        { id: "accuracy", label: "Classification accuracy", correct: false },
+      ],
+    },
+  },
+  {
     slug: "ts-ar1-stationarity-condition-mcq",
     topic: "Statistics",
     track: "researcher",
@@ -320,6 +369,56 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ts-impulse-response-what-is-it-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Impulse Response — What Is It?",
+    prompt_md:
+      "In VAR modeling, what is an impulse response function (IRF)?\n\nAnswer in 4–8 sentences. Mention identification caveat (ordering/structural assumptions).",
+    solution_md:
+      "An IRF traces how a shock to one variable (or one equation's innovation) propagates through the system over future horizons, affecting the variables over time. In reduced-form VARs, innovations are correlated; to interpret a shock as a structural impulse, you need identification (e.g. Cholesky ordering, sign restrictions, external instruments). Different identification choices can change the IRFs.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["time-series", "var", "irf"],
+    source: "Econometrics basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "Defines IRF as dynamic response path over time horizons to a shock: 55%",
+        "Mentions cross-variable propagation in multivariate system: 20%",
+        "Mentions identification caveat (ordering/structural assumptions): 25%",
+      ],
+      reference_solution_md:
+        "IRF: response of variables over time to a shock. In VARs, need identification (Cholesky/sign restrictions/instruments) to interpret shocks structurally.\n",
+    },
+  },
+  {
+    slug: "ts-forecast-horizon-direct-vs-iterated-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Forecasting — Direct vs Iterated",
+    prompt_md:
+      "In time series forecasting, what is a common downside of iterated (recursive) multi-step forecasting using a one-step model?",
+    solution_md:
+      "Errors can compound as predictions are fed back in as inputs, leading to drift/instability at longer horizons. Direct multi-step models avoid feeding predictions as inputs but require separate models per horizon.",
+    answer_kind: "mcq",
+    answer_value: "error-compound",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["time-series", "forecasting", "evaluation"],
+    source: "Forecasting practice",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      options: [
+        { id: "error-compound", label: "Forecast errors can compound when predictions are fed back recursively.", correct: true },
+        { id: "always-better", label: "Iterated forecasting is always better than direct forecasting.", correct: false },
+        { id: "no-data", label: "It requires no historical data beyond one step.", correct: false },
+        { id: "only-linear", label: "It only works for linear models.", correct: false },
+      ],
+    },
+  },
+  {
     slug: "ts-seasonality-handling-freeform",
     topic: "Statistics",
     track: "researcher",
@@ -367,6 +466,106 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
       ],
       reference_solution_md:
         "Trend-stationary: detrend to get stationary; shocks are mean-reverting around trend. Difference-stationary: unit root; difference to get stationary; shocks persist in levels.\n",
+    },
+  },
+  {
+    slug: "ts-engle-granger-two-step-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Engle–Granger (Two-Step) Cointegration Test — Intuition",
+    prompt_md:
+      "Describe the Engle–Granger two-step procedure for testing cointegration between two $I(1)$ series.\n\nAnswer in 5–10 sentences and include what you test in step 2.",
+    solution_md:
+      "Step 1: regress one series on the other (possibly with intercept/trend) to estimate the long-run relation and obtain residuals $\\hat u_t$.\n\nStep 2: test the residuals for stationarity (unit root test on $\\hat u_t$, e.g. ADF with modified critical values). If residuals are stationary, the series are cointegrated (the linear combination is $I(0)$).",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["time-series", "cointegration", "adf"],
+    source: "Econometrics staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "States step 1 regression to estimate long-run relation and extract residuals: 45%",
+        "States step 2 tests residuals for stationarity / unit root (ADF on residuals): 45%",
+        "Concludes stationarity of residuals implies cointegration: 10%",
+      ],
+      reference_solution_md:
+        "Engle–Granger: regress to get residuals, then unit-root test residuals. Stationary residuals → cointegration.\n",
+    },
+  },
+  {
+    slug: "ts-vecm-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "VECM — Intuition",
+    prompt_md:
+      "What is a vector error correction model (VECM), and when do you use it?\n\nAnswer in 5–10 sentences, referencing cointegration and error-correction term.",
+    solution_md:
+      "A VECM is a reparameterization of a VAR for cointegrated $I(1)$ series. It models differences (short-run dynamics) while including an error-correction term that measures deviation from the long-run cointegrating relationship. You use it when multiple non-stationary series are cointegrated: it preserves long-run equilibrium while allowing short-run adjustment dynamics.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["time-series", "cointegration", "vecm"],
+    source: "Econometrics staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "States VECM is used for cointegrated $I(1)$ series (VAR with cointegration): 50%",
+        "Mentions modeling differences + an error-correction term for long-run equilibrium: 40%",
+        "Mentions short-run adjustment dynamics interpretation: 10%",
+      ],
+      reference_solution_md:
+        "VECM: VAR form for cointegrated I(1) series; models differences plus an error-correction term capturing deviations from long-run equilibrium.\n",
+    },
+  },
+  {
+    slug: "ts-cross-correlation-why-care-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Cross-Correlation — Why It Matters",
+    prompt_md:
+      "What is the cross-correlation function between two time series, and what can it be used for?\n\nAnswer in 4–8 sentences and mention lag relationships.",
+    solution_md:
+      "Cross-correlation measures correlation between $X_t$ and $Y_{t+k}$ as a function of lag $k$, capturing lead–lag relationships. It can be used to identify whether one series tends to move before the other (predictive lags), guide feature engineering (lagged predictors), and diagnose relationships in multivariate time series. Interpretation requires care due to autocorrelation and confounding.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "correlation", "lags"],
+    source: "Time series basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Defines cross-correlation as correlation across lags (X_t with Y_{t+k}): 55%",
+        "Mentions lead–lag / predictive lag use: 30%",
+        "Mentions caveat about autocorrelation/confounding or need for care: 15%",
+      ],
+      reference_solution_md:
+        "Cross-correlation: corr(X_t, Y_{t+k}) vs k; used for lead–lag/predictive lag discovery and lagged features, but interpret carefully due to autocorrelation/confounding.\n",
+    },
+  },
+  {
+    slug: "ts-var-stability-what-means-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "VAR Stability Condition (High Level)",
+    prompt_md:
+      "What does it mean for a VAR model to be stable/stationary?\n\nAnswer in 4–8 sentences and mention the eigenvalue/spectral-radius criterion at a high level.",
+    solution_md:
+      "A VAR is stable if shocks do not cause the system to explode and the process has a stationary distribution (in levels). In matrix form, stability corresponds to the eigenvalues of the companion matrix lying inside the unit circle (spectral radius < 1). This ensures impulse responses decay over time and forecasts remain bounded.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["time-series", "var", "stationarity"],
+    source: "VAR theory basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 80,
+      rubric: [
+        "Defines stability as non-explosive / stationary behavior with decaying shocks: 45%",
+        "Mentions eigenvalues/companion matrix inside unit circle (spectral radius < 1): 45%",
+        "Connects to bounded forecasts / decaying impulse responses: 10%",
+      ],
+      reference_solution_md:
+        "Stable VAR: eigenvalues of companion matrix inside unit circle (spectral radius < 1), so shocks decay and process is stationary/bounded.\n",
     },
   },
   {

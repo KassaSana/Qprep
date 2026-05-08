@@ -450,6 +450,180 @@ export const MACHINE_LEARNING_SEED: SeedQuestion[] = [
     },
   },
   {
+    slug: "ml-bias-variance-knobs-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Bias–Variance Knobs in Practice",
+    prompt_md:
+      "You have a model that underfits (high bias) vs overfits (high variance). Give 2–3 practical actions for each case.\n\nAnswer in 6–10 sentences.",
+    solution_md:
+      "High bias: increase model capacity (richer features, deeper model), reduce regularization, train longer, reduce constraints. High variance: increase regularization, reduce model capacity, get more data, use ensembling, early stopping, data augmentation, or stronger cross-validation.\n\nIn both cases, validate with a held-out set and watch the training vs validation gap.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["bias-variance", "generalization", "practice"],
+    source: "Practical ML interviews",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Gives at least two correct actions for high bias (increase capacity, reduce regularization, etc.): 40%",
+        "Gives at least two correct actions for high variance (regularize, more data, ensembling, etc.): 40%",
+        "Mentions train vs validation behavior / gap as a diagnostic: 20%",
+      ],
+      reference_solution_md:
+        "High bias: increase capacity / features, reduce regularization. High variance: regularize, more data, early stopping/ensembles. Diagnose via train vs validation gap.\n",
+    },
+  },
+  {
+    slug: "ml-bagging-vs-boosting-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Bagging vs Boosting",
+    prompt_md:
+      "Compare bagging (e.g., random forests) and boosting (e.g., gradient boosting).\n\nIn 6–10 sentences: mention how models are trained (parallel vs sequential), what error type they mainly reduce (variance vs bias), and one practical tradeoff.",
+    solution_md:
+      "Bagging trains many base learners on bootstrap samples in parallel and averages them, primarily reducing variance. Random forests add feature subsampling to decorrelate trees further.\n\nBoosting trains learners sequentially, each correcting residuals/gradients of the previous ensemble, often reducing bias while controlling variance via shrinkage/early stopping.\n\nTradeoffs: boosting can be more sensitive to hyperparameters and overfitting if not regularized; bagging is more robust but may underfit if base learners are weak.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["ensembles", "bagging", "boosting"],
+    source: "ML interviews",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 105,
+      rubric: [
+        "Correctly contrasts training style: bagging parallel bootstrap averaging vs boosting sequential residual/gradient fitting: 50%",
+        "Mentions variance reduction for bagging and bias reduction tendency for boosting (with caveats): 30%",
+        "Gives at least one practical tradeoff (robustness vs tuning/overfit): 20%",
+      ],
+      reference_solution_md:
+        "Bagging: parallel bootstrap averaging → variance reduction. Boosting: sequentially fit residuals/gradients → often reduces bias; needs regularization (shrinkage/early stopping).\n",
+    },
+  },
+  {
+    slug: "ml-ensemble-why-helps-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Why Ensembling Helps",
+    prompt_md:
+      "In 4–8 sentences, explain why averaging multiple models can improve generalization.\n\nMention the role of error correlation.",
+    solution_md:
+      "Averaging can reduce variance: if individual model errors are not perfectly correlated, their fluctuations partially cancel. The more diverse (less correlated) the models, the larger the variance reduction. If models make identical errors (highly correlated), ensembling provides little benefit. Ensembling can also smooth decision boundaries and improve robustness.",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["ensembles", "bias-variance", "generalization"],
+    source: "Core ML intuition",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 70,
+      rubric: [
+        "Explains variance reduction via averaging: 45%",
+        "Mentions error correlation / diversity as key: 40%",
+        "Mentions correlated-errors → little gain (or equivalent): 15%",
+      ],
+      reference_solution_md:
+        "Averaging reduces variance if model errors aren't perfectly correlated; more diversity → more gain; perfectly correlated errors → little benefit.\n",
+    },
+  },
+  {
+    slug: "ml-feature-scaling-why-matters-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Feature Scaling — When It Matters",
+    prompt_md:
+      "When does feature scaling/standardization matter in ML, and when does it mostly not?\n\nAnswer in 5–10 sentences and give examples of model classes for each.",
+    solution_md:
+      "Scaling matters for models that depend on distances, dot-products, or gradient conditioning: kNN, k-means, SVMs, linear/logistic regression with regularization, and neural networks often benefit. It matters because features with larger scale dominate and because optimization can be ill-conditioned.\n\nTree-based models (decision trees, random forests, gradient-boosted trees) are largely scale-invariant because they split by thresholds on individual features, so scaling typically doesn't change performance much (though it can still affect some implementations or regularization settings).",
+    answer_kind: "freeform",
+    difficulty: 2,
+    tags: ["pipelines", "optimization", "regularization"],
+    source: "Practical ML",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Names at least two model classes where scaling matters (kNN/kmeans/SVM/regularized linear/NN): 45%",
+        "Names at least one model class where scaling usually doesn't matter (trees/GBDT/RF): 35%",
+        "Explains why (distance/dot-product dominance or optimization conditioning): 20%",
+      ],
+      reference_solution_md:
+        "Scaling matters for distance/dot-product/gradient-based models (kNN, kmeans, SVM, regularized linear, NN). Trees/GBDT are mostly scale-invariant. Reason: scale dominates distances and affects conditioning.\n",
+    },
+  },
+  {
+    slug: "ml-hyperparameter-tuning-leakage-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Hyperparameter Tuning Leakage",
+    prompt_md:
+      "Explain how hyperparameter tuning can cause leakage if done incorrectly.\n\nIn 4–8 sentences: describe the mistake and the correct evaluation protocol.",
+    solution_md:
+      "Leakage occurs if you tune hyperparameters on the test set (directly or indirectly by repeatedly evaluating on it), effectively overfitting to the test set. The correct protocol is to keep a truly held-out test set used once at the end, and tune on a validation set or via cross-validation inside the training data (nested CV if you need an unbiased performance estimate).",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["evaluation", "leakage", "model-selection"],
+    source: "ML evaluation practice",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "States the mistake: using the test set to tune / repeated peeking: 50%",
+        "States correct protocol: validation/CV for tuning, final test once: 40%",
+        "Mentions nested CV as a best practice (optional but strong): 10%",
+      ],
+      reference_solution_md:
+        "Tuning on the test set leaks information and overfits to it. Correct: tune on validation/CV within training; keep test set held out for one final evaluation (nested CV for unbiased estimates).\n",
+    },
+  },
+  {
+    slug: "ml-threshold-selection-costs-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Choosing a Classification Threshold with Costs",
+    prompt_md:
+      "You have predicted probabilities for a binary classifier. False positives and false negatives have different costs.\n\nIn 5–10 sentences, describe how you would choose a decision threshold.",
+    solution_md:
+      "Define an expected cost function based on FP and FN costs (and possibly prevalence). For each threshold, compute expected cost on a validation set (or via cross-validation) using the confusion matrix at that threshold, and choose the threshold minimizing expected cost. If probabilities are calibrated, you can derive an analytic threshold based on cost ratio, but still validate empirically. Avoid tuning threshold on the test set.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["evaluation", "thresholding", "cost-sensitive"],
+    source: "Practical ML interviews",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Mentions defining costs and selecting threshold by minimizing expected cost (confusion-matrix-based): 55%",
+        "Mentions using validation/CV (not the test set) for threshold selection: 25%",
+        "Mentions calibration/cost-ratio link as optional refinement: 20%",
+      ],
+      reference_solution_md:
+        "Pick threshold to minimize expected FP/FN cost on validation/CV; if calibrated, cost ratio suggests a threshold but still validate; don't tune on test.\n",
+    },
+  },
+  {
+    slug: "ml-confusion-matrix-terms-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Confusion Matrix — Terminology",
+    prompt_md:
+      "If the true label is positive but the model predicts negative, what is this called?",
+    solution_md: "This is a false negative.",
+    answer_kind: "mcq",
+    answer_value: "fn",
+    answer_tolerance: null,
+    difficulty: 1,
+    tags: ["evaluation", "confusion-matrix"],
+    source: "Core definition",
+    target_roles: ["All"],
+    answer_meta: {
+      options: [
+        { id: "fn", label: "False negative", correct: true },
+        { id: "fp", label: "False positive", correct: false },
+        { id: "tp", label: "True positive", correct: false },
+        { id: "tn", label: "True negative", correct: false },
+      ],
+    },
+  },
+  {
     slug: "ml-feature-importance-pitfalls-freeform",
     topic: "Statistics",
     track: "researcher",
