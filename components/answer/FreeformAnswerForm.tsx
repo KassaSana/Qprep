@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Latex } from "@/components/Latex";
 import { NudgePanel } from "@/components/NudgePanel";
+import { NextQuestionCTA } from "@/components/answer/NextQuestionCTA";
 import type { FreeformMeta } from "@/content/question-types";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,8 @@ interface FreeformAnswerFormProps {
   answerMeta: FreeformMeta;
   solutionMd: string | null;
   alreadySolved?: boolean;
+  nextHref?: string | null;
+  nextLabel?: string | null;
 }
 
 interface CheckResponse {
@@ -40,6 +43,8 @@ export function FreeformAnswerForm({
   answerMeta,
   solutionMd,
   alreadySolved = false,
+  nextHref = null,
+  nextLabel = null,
 }: FreeformAnswerFormProps) {
   const router = useRouter();
   const [value, setValue] = React.useState("");
@@ -187,6 +192,11 @@ export function FreeformAnswerForm({
             </span>
           </div>
           {graded.feedback && <p className="text-sm">{graded.feedback}</p>}
+          {graded.correct && nextHref && (
+            <div className="mt-3">
+              <NextQuestionCTA href={nextHref} label={nextLabel} />
+            </div>
+          )}
         </div>
       )}
 

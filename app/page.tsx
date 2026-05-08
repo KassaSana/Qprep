@@ -70,7 +70,7 @@ function ReturningHero({
 
       {nextUp ? (
         <Link
-          href={`/questions/${nextUp.questionSlug}`}
+          href={`/questions/${nextUp.questionSlug}?from=playlist:${nextUp.playlistSlug}`}
           className="card group block p-6 transition hover:border-accent/40 hover:bg-bg-raised"
         >
           <div className="mb-2 text-xs font-medium uppercase tracking-wider text-fg-muted">

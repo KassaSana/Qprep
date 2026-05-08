@@ -87,6 +87,7 @@ export default async function PlaylistDetailPage({ params }: PageProps) {
 
       <QuestionTable
         showPosition
+        linkSuffix={`?from=playlist:${playlist.slug}`}
         questions={questions.map((q) => ({
           id: q.id,
           slug: q.slug,

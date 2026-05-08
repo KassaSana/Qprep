@@ -20,6 +20,8 @@ interface QuestionTableProps {
   questions: QuestionRow[];
   /** When provided, shows a per-question position number on the row. */
   showPosition?: boolean;
+  /** Appended to each question link (e.g. `?from=playlist:slug`) so the question page can compute auto-advance scope. */
+  linkSuffix?: string;
 }
 
 const KIND_LABEL: Record<string, string> = {
@@ -31,7 +33,11 @@ const KIND_LABEL: Record<string, string> = {
   code: "Code",
 };
 
-export function QuestionTable({ questions, showPosition }: QuestionTableProps) {
+export function QuestionTable({
+  questions,
+  showPosition,
+  linkSuffix = "",
+}: QuestionTableProps) {
   if (questions.length === 0) {
     return (
       <div className="card px-5 py-8 text-sm text-fg-muted">
@@ -45,7 +51,7 @@ export function QuestionTable({ questions, showPosition }: QuestionTableProps) {
       {questions.map((q, idx) => (
         <li key={q.id}>
           <Link
-            href={`/questions/${q.slug}`}
+            href={`/questions/${q.slug}${linkSuffix}`}
             className="flex items-center gap-4 px-5 py-3 transition hover:bg-bg-raised"
           >
             <StatusDot status={q.status} />
