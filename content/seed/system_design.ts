@@ -23,10 +23,10 @@ export const SYSTEM_DESIGN_SEED: SeedQuestion[] = [
     source: "Quant dev system design staple",
     answer_meta: {
       rubric: [
-        "Mentions sequence numbers and gap detection",
-        "Proposes a gap recovery mechanism (gap-fill channel, snapshot, A/B feeds)",
-        "Describes a threading model with dedicated cores and a queue/ring buffer handoff",
-        "Addresses tail latency (avoid allocations, pin cores, histograms, page faults/NUMA)",
+        "Mentions sequence numbers and gap detection and what state is tracked per feed/symbol: 25%",
+        "Proposes a gap recovery mechanism (gap-fill channel, snapshot, A/B feeds + dedup): 30%",
+        "Describes a threading model with dedicated cores and a queue/ring buffer handoff: 25%",
+        "Addresses tail latency controls (avoid allocs, pin cores, pre-touch, measure histograms): 20%",
       ],
       min_words: 120,
       reference_solution_md:
@@ -49,9 +49,9 @@ export const SYSTEM_DESIGN_SEED: SeedQuestion[] = [
     source: "HFT system design",
     answer_meta: {
       rubric: [
-        "Places checks on the hot path (in-process gateway) and explains why",
-        "Names at least two concrete checks (size, price band, position, notional, rate limits)",
-        "Mentions techniques to avoid latency spikes (no allocations, pre-reserve, async logging, pin cores)",
+        "Places checks on the hot path (in-process gateway) and explains why: 35%",
+        "Names at least two concrete checks (size, price band, position/notional, throttles): 35%",
+        "Mentions techniques to avoid latency spikes (no allocs/rehash, async logging, pin cores): 30%",
       ],
       min_words: 100,
       reference_solution_md:
@@ -106,6 +106,186 @@ export const SYSTEM_DESIGN_SEED: SeedQuestion[] = [
       ],
       reference_solution_md:
         "NTP is general-purpose with more jitter; PTP with hardware timestamping can be much tighter. Risks: stepping/asymmetry/misconfig; monitor offset and use monotonic for durations.\n",
+    },
+  },
+  {
+    slug: "sysdesign-sequencing-and-dedup-market-data",
+    topic: "System Design",
+    track: "dev",
+    title: "Sequencing and De-dup (A/B Feeds)",
+    prompt_md:
+      "You ingest two redundant market data feeds (A and B) that carry the same messages, sometimes with different latency and occasional drops.\n\nDesign the logic that:\n- deduplicates messages\n- ensures you apply updates in sequence\n- handles gaps (fast detect + recovery)\n\nFocus on the in-process algorithm and data structures. Assume each message has (symbol, seq, payload).",
+    solution_md:
+      "Maintain per-symbol next_expected_seq and a small reorder buffer keyed by seq. When a message arrives from either feed:\n- if seq < next_expected, drop (duplicate/stale)\n- if seq == next_expected, apply and advance; then drain buffered contiguous seq\n- if seq > next_expected, buffer and trigger gap logic (request retransmit/snapshot) if gap persists beyond a small threshold.\n\nDedup is naturally handled by the seq check and a \"seen\" window. Keep buffers bounded; if too large, fall back to snapshot recovery.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "market-data", "sequencing"],
+    source: "Quant-dev primitive",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines per-symbol next_expected_seq and how to handle seq<,==,> expected: 45%",
+        "Explains bounded reordering buffer and draining contiguous sequences: 25%",
+        "Explains gap detection + recovery trigger (retransmit/snapshot) and bounding memory: 30%",
+      ],
+      reference_solution_md:
+        "Track per-symbol next_expected_seq and a bounded map seq→payload. Drop seq<expected, apply seq==expected and drain buffered, buffer seq>expected and trigger gap fill if missing persists. Bound buffer; fallback to snapshot.\n",
+    },
+  },
+  {
+    slug: "sysdesign-replay-and-backfill",
+    topic: "System Design",
+    track: "dev",
+    title: "Replay/Backfill Pipeline for Research",
+    prompt_md:
+      "Design a replay/backfill system to feed historical market data into research/simulation.\n\nCover:\n- storage format (partitioning, compression)\n- indexing and random access\n- reproducing original timing vs running as fast as possible\n- handling schema evolution\n\nKeep it at the system level (components + tradeoffs).",
+    solution_md:
+      "Store time-partitioned files (e.g., by date/venue/symbol) with chunked formats and compression. Maintain an index from time→file/offset and per-symbol offsets for fast seeks. Replay reads chunks, decodes, and emits events; a scheduler can sleep to match timing or run in fast mode.\n\nSchema evolution: version messages and maintain decoders per version; optionally normalize to a canonical internal event model. Track correctness/lag and gap validation.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "data", "replay"],
+    source: "Quant research systems staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Proposes storage/partitioning approach and compression tradeoffs: 30%",
+        "Explains indexing/random access (time→offset, per-symbol seeks): 30%",
+        "Explains timing modes (real-time vs fast) and scheduler: 20%",
+        "Mentions schema evolution/versioning or canonical model: 20%",
+      ],
+      reference_solution_md:
+        "Partition by date/venue/symbol with compressed chunks and time→offset indexes. Replay decodes and emits; scheduler supports real-time pacing or fast mode. Handle schema evolution via versioned decoders and/or canonical normalization.\n",
+    },
+  },
+  {
+    slug: "sysdesign-idempotency-ordering-order-events",
+    topic: "System Design",
+    track: "dev",
+    title: "Idempotency and Ordering for Order Events",
+    prompt_md:
+      "You have an order event stream (new/ack/fill/cancel) and multiple downstream consumers.\n\nDesign how you ensure:\n- per-order ordering\n- de-duplication (retries)\n- idempotent processing\n\nAssume at-least-once delivery from the transport.",
+    solution_md:
+      "Include (order_id, event_seq) on every event. Partition the stream by order_id to preserve per-order ordering within a partition. Consumers store last_seen_seq per order; drop duplicates (<= last_seen) and buffer/reject out-of-order as needed.\n\nIdempotency is achieved by guarding state updates on event_seq. Persist offsets/checkpoints for restart correctness.",
+    answer_kind: "freeform",
+    difficulty: 5,
+    tags: ["system-design", "streaming", "correctness"],
+    source: "Distributed systems staple adapted",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines event identity (order_id + event_seq) and per-order ordering approach (partitioning): 45%",
+        "Explains dedup/idempotency via last_seen_seq/guards and update semantics: 35%",
+        "Mentions checkpoints/offset persistence and restart behavior: 20%",
+      ],
+      reference_solution_md:
+        "Use (order_id,event_seq) and partition by order_id. Consumers track last_seen_seq and apply only if seq advances, making processing idempotent under retries. Persist offsets/checkpoints for restart.\n",
+    },
+  },
+  {
+    slug: "sysdesign-observability-low-latency",
+    topic: "System Design",
+    track: "dev",
+    title: "Observability for Low-Latency Systems",
+    prompt_md:
+      "Design an observability approach for a low-latency trading system.\n\nCover:\n- latency measurement (what to timestamp, how)\n- metrics (what histograms matter)\n- logging/trace strategy without adding tail latency\n- alerting for correctness issues (gaps, seq, clock)\n\nKeep it bounded but concrete.",
+    solution_md:
+      "Timestamp key edges (receive→decode→normalize→strategy→send→ack) using monotonic clocks for durations and PTP/NTP wall time for cross-machine correlation. Track percentile histograms and queue depths.\n\nLog asynchronously via ring buffers and batching; avoid formatting/allocations on hot path. Alert on gaps/seq discontinuities, clock drift, heartbeat misses, and abnormal dedup/gap-fill rates.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "observability", "latency"],
+    source: "Production engineering staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Defines what to timestamp and uses monotonic clocks for durations: 30%",
+        "Mentions histograms/percentiles and queue depth as key metrics: 25%",
+        "Explains async logging/tracing without hot-path allocations/formatting: 25%",
+        "Mentions correctness alerts (seq/gaps/clock drift/heartbeats): 20%",
+      ],
+      reference_solution_md:
+        "Instrument pipeline edges with monotonic timestamps; track p99/p99.9 histograms and queue depths. Use async ring-buffer logging/batching and avoid formatting on hot path. Alert on gaps/seq errors, clock drift, and heartbeat misses.\n",
+    },
+  },
+  {
+    slug: "sysdesign-kill-switch",
+    topic: "System Design",
+    track: "dev",
+    title: "Design a Kill Switch (Fast Risk Shutdown)",
+    prompt_md:
+      "Design a kill switch that can rapidly stop order flow across strategies.\n\nRequirements:\n- flip to \"deny\" within milliseconds\n- audit trail of who/why flipped\n- allow gradual re-enable\n- avoid blocking the hot path\n\nDescribe components and failure modes.",
+    solution_md:
+      "Put a cheap hot-path check in the gateway/risk module (atomic/RCU-published config flag). Control plane publishes a new config snapshot setting deny mode. Audit is written asynchronously to durable storage.\n\nGradual re-enable uses scoped flags per strategy/symbol. Failure modes: split brain, stale config; mitigate with single authority, versioning, signed updates, and conservative defaults.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "risk", "control-plane"],
+    source: "Trading controls staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 160,
+      rubric: [
+        "Places decision on hot path as cheap check (atomic/RCU config) and explains why: 45%",
+        "Describes control-plane update and async audit trail: 25%",
+        "Mentions gradual re-enable/scoping and rollback: 15%",
+        "Mentions at least one failure mode and mitigation (authority/versioning/defaults): 15%",
+      ],
+      reference_solution_md:
+        "Hot path checks an atomic/RCU deny flag in gateway/risk. Control plane publishes config snapshot; audit asynchronously. Re-enable via scoped flags per strategy/symbol. Handle failure modes with single authority and versioned/signed config.\n",
+    },
+  },
+  {
+    slug: "sysdesign-schema-migrations-in-hot-systems",
+    topic: "System Design",
+    track: "dev",
+    title: "Schema Evolution Without Downtime (Hot Systems)",
+    prompt_md:
+      "Design a strategy for evolving message schemas (and stored data schemas) without downtime.\n\nCover:\n- forward/backward compatibility\n- rolling deployments\n- version negotiation/feature flags\n- validation to prevent silent corruption\n\nAnswer for a system where both low-latency online components and offline research readers exist.",
+    solution_md:
+      "Use versioned schemas with optional fields and defaults; readers tolerate unknown fields. Deploy readers first, then writers. Use feature flags/version negotiation to gate new behavior. Validate via dual-read/dual-write comparisons, checksums, and metrics. Keep offline decoders for historical versions and normalize into a canonical model.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "schema", "migrations"],
+    source: "Production engineering staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 180,
+      rubric: [
+        "Explains forward/backward compat rules (optional fields, defaults, tolerate unknown): 40%",
+        "Explains rollout order (readers first, writers later) and flags/negotiation: 30%",
+        "Mentions validation against silent corruption (dual read/write, metrics): 20%",
+        "Mentions offline/historical readers and canonical model: 10%",
+      ],
+      reference_solution_md:
+        "Version schemas with optional fields/defaults; readers ignore unknowns. Roll readers first then writers and gate via flags/negotiation. Validate via dual-read/dual-write and metrics/checksums. Keep offline decoders for old versions and normalize to a canonical model.\n",
+    },
+  },
+  {
+    slug: "sysdesign-rate-limits-strategy-to-gateway",
+    topic: "System Design",
+    track: "dev",
+    title: "Rate Limiting Strategy → Gateway",
+    prompt_md:
+      "Design rate limiting between strategies and an order gateway.\n\nRequirements:\n- per-strategy and per-symbol limits\n- bursts allowed up to a bound\n- minimal overhead on hot path\n- enforce limits consistently even if strategy is buggy\n\nDescribe where limits live and the data structures used.",
+    solution_md:
+      "Enforce at the gateway (authoritative) with token buckets per (strategy_id, symbol) and a per-strategy global bucket. Use fixed-capacity maps/arrays keyed by small ids; update on the gateway thread to avoid locks. Reject fast with reason codes.\n\nOptionally add a soft limiter in strategy to reduce rejects, but treat gateway as source of truth and measure rates for tuning.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["system-design", "rate-limiting", "risk"],
+    source: "Trading controls staple",
+    target_roles: ["Dev"],
+    answer_meta: {
+      min_words: 170,
+      rubric: [
+        "Places authoritative limits at gateway (not strategy) and explains why: 35%",
+        "Defines per-(strategy,symbol) + per-strategy buckets with burst semantics: 35%",
+        "Mentions hot-path perf (single-threaded, fixed-capacity state, no locks): 20%",
+        "Mentions tuning/observability or soft limiter as optional: 10%",
+      ],
+      reference_solution_md:
+        "Authoritative enforcement in gateway via token buckets per (strategy,symbol) plus per-strategy global bucket. Keep state in fixed-capacity arrays/maps on single thread; reject quickly. Optionally soft-limit in strategy; tune via metrics.\n",
     },
   },
 ];

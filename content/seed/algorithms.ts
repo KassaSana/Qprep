@@ -907,4 +907,214 @@ export const ALGORITHMS_SEED: SeedQuestion[] = [
       memory_limit_mb: 128,
     },
   },
+  {
+    slug: "order-book-imbalance-l1",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Order Book Imbalance (L1)",
+    prompt_md:
+      "Given a stream of best bid/ask sizes, compute L1 order book imbalance at each step.\n\nDefine imbalance:\n\\[ I = \\frac{b - a}{b + a} \\]\nwhere b=bid_size and a=ask_size.\n\nInput:\n- Line 1: n\n- Next n lines: `bid_size ask_size` (nonnegative integers)\n\nOutput:\n- Print n lines: reduced fraction `A/B` for I.\n- If b+a=0, define I = 0/1.\n\nExample:\nInput:\n```\n3\n10 10\n15 5\n0 0\n```\nOutput:\n```\n0/1\n1/2\n0/1\n```",
+    solution_md:
+      "Compute numerator (b-a) and denominator (b+a) each line and reduce by gcd. Handle zero denominator as 0/1.",
+    answer_kind: "code",
+    difficulty: 2,
+    tags: ["market-data", "fractions", "streaming"],
+    companies: ["Citadel Securities", "Jump Trading"],
+    source: "Microstructure primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport math\n\ndef solve():\n    lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]\n    if not lines:\n        return\n    n = int(lines[0])\n    out = []\n    for ln in lines[1:1+n]:\n        b, a = map(int, ln.split())\n        den = b + a\n        if den == 0:\n            out.append(\"0/1\")\n            continue\n        num = b - a\n        g = math.gcd(abs(num), den)\n        out.append(f\"{num//g}/{den//g}\")\n    sys.stdout.write(\"\\n\".join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "3\n10 10\n15 5\n0 0\n", expected: "0/1\n1/2\n0/1" },
+        { input: "2\n0 10\n10 0\n", expected: "-1/1\n1/1", hidden: true },
+      ],
+      time_limit_ms: 2000,
+      memory_limit_mb: 128,
+    },
+  },
+  {
+    slug: "realized-correlation-squared",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Realized Correlation (Squared, Exact)",
+    prompt_md:
+      "Given two return series (r_t, m_t), compute squared sample correlation exactly.\n\nFor n>=2, define centered sums:\n- cov_num = n*Σ(rm) - (Σr)(Σm)\n- varr_num = n*Σ(r^2) - (Σr)^2\n- varm_num = n*Σ(m^2) - (Σm)^2\n\nThen \\(\\rho^2 = \\frac{\\text{cov\\_num}^2}{\\text{varr\\_num}\\,\\text{varm\\_num}}\\).\n\nInput:\n- Line 1: n\n- Next n lines: `r m` integers\n\nOutput:\n- `A/B` reduced for rho^2, or `nan` if var is 0.\n\nExample:\nInput:\n```\n3\n1 1\n2 2\n3 3\n```\nOutput:\n```\n1/1\n```",
+    solution_md:
+      "Accumulate sums Sr, Sm, Srr, Smm, Srm. Compute cov_num, varr_num, varm_num. If varr_num==0 or varm_num==0 => nan. Else compute fraction and reduce.",
+    answer_kind: "code",
+    difficulty: 4,
+    tags: ["statistics", "fractions", "risk"],
+    companies: ["Two Sigma", "Citadel"],
+    source: "Risk metric primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport math\n\ndef solve():\n    lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]\n    if not lines:\n        return\n    n = int(lines[0])\n    Sr = Sm = Srr = Smm = Srm = 0\n    for ln in lines[1:1+n]:\n        r, m = map(int, ln.split())\n        Sr += r\n        Sm += m\n        Srr += r * r\n        Smm += m * m\n        Srm += r * m\n\n    varr = n * Srr - Sr * Sr\n    varm = n * Smm - Sm * Sm\n    if varr == 0 or varm == 0:\n        sys.stdout.write(\"nan\")\n        return\n    cov = n * Srm - Sr * Sm\n    num = cov * cov\n    den = varr * varm\n    g = math.gcd(abs(num), abs(den))\n    num //= g\n    den //= g\n    sys.stdout.write(f\"{num}/{den}\")\n\nsolve()\n",
+      test_cases: [
+        { input: "3\n1 1\n2 2\n3 3\n", expected: "1/1" },
+        { input: "3\n1 0\n1 0\n1 0\n", expected: "nan", hidden: true },
+        { input: "3\n1 3\n2 2\n3 1\n", expected: "1/1", hidden: true },
+      ],
+      time_limit_ms: 2000,
+      memory_limit_mb: 128,
+    },
+  },
+  {
+    slug: "quote-staleness",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Quote Staleness (Time Since Last Update)",
+    prompt_md:
+      "Given a sequence of quote updates with timestamps, output staleness at each step.\n\nInput:\n- Line 1: n\n- Next n lines: `t price` (integers), timestamps non-decreasing\n\nFor each update i, define staleness as t_i - t_{i-1} (with staleness of first update = 0).\n\nOutput:\n- n lines of staleness integers.\n\nExample:\nInput:\n```\n3\n10 100\n10 101\n15 101\n```\nOutput:\n```\n0\n0\n5\n```",
+    solution_md:
+      "Track previous timestamp. For each line, print current_t - prev_t (0 for first).",
+    answer_kind: "code",
+    difficulty: 1,
+    tags: ["streaming", "time-series"],
+    companies: ["Citadel Securities", "Jump Trading"],
+    source: "Market data primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\n\ndef solve():\n    lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]\n    if not lines:\n        return\n    n = int(lines[0])\n    out = []\n    prev_t = None\n    for ln in lines[1:1+n]:\n        t, _p = map(int, ln.split())\n        if prev_t is None:\n            out.append('0')\n        else:\n            out.append(str(t - prev_t))\n        prev_t = t\n    sys.stdout.write('\\n'.join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "3\n10 100\n10 101\n15 101\n", expected: "0\n0\n5" },
+        { input: "1\n0 1\n", expected: "0", hidden: true },
+      ],
+      time_limit_ms: 1500,
+      memory_limit_mb: 64,
+    },
+  },
+  {
+    slug: "hhi-concentration",
+    topic: "Algorithms",
+    track: "dev",
+    title: "HHI Concentration (Exact Fraction)",
+    prompt_md:
+      "Given volumes by participant, compute the Herfindahl–Hirschman Index (HHI) exactly.\n\nHHI is:\n\\[\\sum_i s_i^2\\]\nwhere \\(s_i = v_i / \\sum_j v_j\\).\n\nInput:\n- Line 1: n\n- Line 2: n nonnegative integers v_i\n\nOutput:\n- Reduced fraction `A/B`.\n- If total volume is 0, output `0/1`.\n\nExample:\nInput:\n```\n3\n1 1 2\n```\nOutput:\n```\n3/8\n```",
+    solution_md:
+      "Compute total V. HHI = Σ (v_i^2) / V^2. Reduce by gcd. Handle V=0.",
+    answer_kind: "code",
+    difficulty: 3,
+    tags: ["fractions", "statistics"],
+    companies: ["Optiver", "IMC"],
+    source: "Analytics primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport math\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    n = int(data[0])\n    vs = list(map(int, data[1:1+n]))\n    V = sum(vs)\n    if V == 0:\n        sys.stdout.write('0/1')\n        return\n    num = sum(v * v for v in vs)\n    den = V * V\n    g = math.gcd(num, den)\n    sys.stdout.write(f\"{num//g}/{den//g}\")\n\nsolve()\n",
+      test_cases: [
+        { input: "3\n1 1 2\n", expected: "3/8" },
+        { input: "2\n0 0\n", expected: "0/1", hidden: true },
+        { input: "1\n5\n", expected: "1/1", hidden: true },
+      ],
+      time_limit_ms: 2000,
+      memory_limit_mb: 64,
+    },
+  },
+  {
+    slug: "online-argmax-tie-break",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Online Argmax with Tie-Break",
+    prompt_md:
+      "Given a stream of (id, value) updates, output the current argmax id after each update.\n\nRules:\n- Keep the maximum value seen so far.\n- If there is a tie on value, choose the smaller id.\n\nInput:\n- Line 1: n\n- Next n lines: `id value` (integers)\n\nOutput:\n- n lines, the current argmax id.\n\nExample:\nInput:\n```\n4\n2 10\n1 10\n3 9\n1 11\n```\nOutput:\n```\n2\n1\n1\n1\n```",
+    solution_md:
+      "Track best_value and best_id. On each update, compare value; if value>best or equal and id<best_id, update. Print best_id each step.",
+    answer_kind: "code",
+    difficulty: 1,
+    tags: ["streaming", "ties"],
+    companies: ["Jane Street", "Citadel"],
+    source: "Streaming primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\n\ndef solve():\n    lines = [ln.strip() for ln in sys.stdin.read().splitlines() if ln.strip()]\n    if not lines:\n        return\n    n = int(lines[0])\n    best_id = None\n    best_val = None\n    out = []\n    for ln in lines[1:1+n]:\n        i, v = map(int, ln.split())\n        if best_val is None or v > best_val or (v == best_val and i < best_id):\n            best_val = v\n            best_id = i\n        out.append(str(best_id))\n    sys.stdout.write('\\n'.join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "4\n2 10\n1 10\n3 9\n1 11\n", expected: "2\n1\n1\n1" },
+        { input: "3\n5 -1\n6 -1\n4 -1\n", expected: "5\n5\n4", hidden: true },
+      ],
+      time_limit_ms: 1500,
+      memory_limit_mb: 64,
+    },
+  },
+  {
+    slug: "ewma-abs-return",
+    topic: "Algorithms",
+    track: "dev",
+    title: "EWMA of Absolute Returns (Exact Fractions)",
+    prompt_md:
+      "Given integer returns r_t and \\(\\alpha=p/q\\), compute the EWMA of absolute returns exactly:\n- m_0 = |r_0|\n- m_t = alpha*|r_t| + (1-alpha)*m_{t-1}\n\nInput:\n- Line 1: p q\n- Line 2: n\n- Line 3: n space-separated integers r_t\n\nOutput:\n- n lines: reduced fraction `A/B` for m_t.\n\nExample:\nInput:\n```\n1 2\n3\n-2 0 2\n```\nOutput:\n```\n2/1\n1/1\n3/2\n```",
+    solution_md:
+      "Same as EWMA update but with x=abs(r). Maintain m as rational num/den and reduce each step.",
+    answer_kind: "code",
+    difficulty: 3,
+    tags: ["streaming", "fractions", "risk"],
+    companies: ["Two Sigma", "Citadel"],
+    source: "Risk metric primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport math\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    p = int(data[0]); q = int(data[1])\n    g = math.gcd(p, q)\n    p //= g; q //= g\n    n = int(data[2])\n    rs = list(map(int, data[3:3+n]))\n    xs = [abs(r) for r in rs]\n\n    num = xs[0]\n    den = 1\n    out = [f\"{num}/{den}\"]\n    for x in xs[1:]:\n        new_num = p * x * den + (q - p) * num\n        new_den = q * den\n        gg = math.gcd(abs(new_num), new_den)\n        num = new_num // gg\n        den = new_den // gg\n        out.append(f\"{num}/{den}\")\n\n    sys.stdout.write(\"\\n\".join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "1 2\n3\n-2 0 2\n", expected: "2/1\n1/1\n3/2" },
+        { input: "1 1\n2\n-5 7\n", expected: "5/1\n7/1", hidden: true },
+      ],
+      time_limit_ms: 2500,
+      memory_limit_mb: 128,
+    },
+  },
+  {
+    slug: "rolling-range-window-k",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Rolling Range (Max - Min) (Window K)",
+    prompt_md:
+      "Given a stream of integers, compute the rolling range (max - min) for each window of size K.\n\nInput:\n- Line 1: integer K\n- Line 2: space-separated integers\n\nOutput:\n- For each full window, print one integer: range.\n\nExample:\nInput:\n```\n3\n1 3 -1 -3 5 3\n```\nOutput:\n```\n4\n6\n8\n8\n```",
+    solution_md:
+      "Maintain two monotonic deques of indices: one decreasing for max, one increasing for min. Slide window, pop out-of-window indices. Range is a[maxdq[0]] - a[mindq[0]].",
+    answer_kind: "code",
+    difficulty: 3,
+    tags: ["sliding-window", "monotonic-queue"],
+    companies: ["Jump Trading", "Citadel"],
+    source: "Streaming primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nfrom collections import deque\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    K = int(data[0])\n    a = list(map(int, data[1:]))\n    if K <= 0 or K > len(a):\n        return\n\n    maxdq = deque()  # indices, values decreasing\n    mindq = deque()  # indices, values increasing\n    out = []\n\n    for i, x in enumerate(a):\n        while maxdq and a[maxdq[-1]] <= x:\n            maxdq.pop()\n        maxdq.append(i)\n        while mindq and a[mindq[-1]] >= x:\n            mindq.pop()\n        mindq.append(i)\n\n        if maxdq[0] <= i - K:\n            maxdq.popleft()\n        if mindq[0] <= i - K:\n            mindq.popleft()\n\n        if i >= K - 1:\n            out.append(str(a[maxdq[0]] - a[mindq[0]]))\n\n    sys.stdout.write(\"\\n\".join(out))\n\nsolve()\n",
+      test_cases: [
+        { input: "3\n1 3 -1 -3 5 3\n", expected: "4\n6\n8\n8" },
+        { input: "1\n5 4 3\n", expected: "0\n0\n0", hidden: true },
+      ],
+      time_limit_ms: 2500,
+      memory_limit_mb: 128,
+    },
+  },
+  {
+    slug: "downside-deviation-squared",
+    topic: "Algorithms",
+    track: "dev",
+    title: "Downside Deviation (Squared, Exact)",
+    prompt_md:
+      "Given integer returns r_t and a threshold T (integer), compute the *squared downside deviation* exactly.\n\nDefine downside deviations d_t = min(r_t - T, 0).\nDefine downside variance (population) as:\n\\[ \\sigma_d^2 = \\frac{1}{n} \\sum d_t^2 \\]\n\nOutput \\(\\sigma_d^2\\) as a reduced fraction `A/B`.\n\nInput:\n- Line 1: T\n- Line 2: n\n- Line 3: space-separated integer returns\n\nExample:\nInput:\n```\n0\n4\n1 -2 0 -3\n```\nOutput:\n```\n13/4\n```",
+    solution_md:
+      "Compute sum of squared negative parts: Σ(min(r-T,0)^2). Output over n as reduced fraction.",
+    answer_kind: "code",
+    difficulty: 2,
+    tags: ["risk", "fractions"],
+    companies: ["Two Sigma", "Citadel"],
+    source: "Risk metric primitive",
+    answer_meta: {
+      language: "python",
+      starter_code:
+        "import sys\nimport math\n\ndef solve():\n    data = sys.stdin.read().strip().split()\n    if not data:\n        return\n    T = int(data[0])\n    n = int(data[1])\n    rs = list(map(int, data[2:2+n]))\n    s = 0\n    for r in rs:\n        d = r - T\n        if d < 0:\n            s += d * d\n    num = s\n    den = n\n    g = math.gcd(num, den)\n    sys.stdout.write(f\"{num//g}/{den//g}\")\n\nsolve()\n",
+      test_cases: [
+        { input: "0\n4\n1 -2 0 -3\n", expected: "13/4" },
+        { input: "5\n3\n5 6 7\n", expected: "0/1", hidden: true },
+      ],
+      time_limit_ms: 2000,
+      memory_limit_mb: 128,
+    },
+  },
 ];
