@@ -1310,4 +1310,96 @@ export const STATISTICS_SEED: SeedQuestion[] = [
       ],
     },
   },
+  {
+    slug: "cramer-rao-lower-bound-statement-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Cramér–Rao Lower Bound (Scalar Parameter)",
+    prompt_md:
+      "State the Cramér–Rao lower bound (CRLB) for an unbiased estimator of a scalar parameter $\\theta$.\n\nIn 4–8 sentences: define Fisher information (at least informally) and state the inequality.",
+    solution_md:
+      "For an unbiased estimator $T$ of scalar $\\theta$, under regularity conditions,\n\n$$\\mathrm{Var}(T)\\ge \\frac{1}{I(\\theta)},$$\n\nwhere Fisher information can be written as $I(\\theta)=E\\big[\\big(\\partial_\\theta \\log f(X;\\theta)\\big)^2\\big]$ (per observation) or equivalently $-E[\\partial_\\theta^2\\log f(X;\\theta)]$ (depending on convention). For $n$ iid observations, information adds, giving $\\mathrm{Var}(T)\\ge 1/(n I_1(\\theta))$ if $I_1$ is per-observation info.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["crlb", "fisher-information", "asymptotic"],
+    source: "Classical estimation theory",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 85,
+      rubric: [
+        "States the CRLB inequality Var(estimator) ≥ 1/I(θ) (or matrix form mention is ok but scalar required): 55%",
+        "Defines Fisher information via score variance or expected negative curvature: 35%",
+        "Mentions iid-additivity / factor of n (optional but strong): 10%",
+      ],
+      reference_solution_md:
+        "CRLB: if $T$ is unbiased for scalar $\\theta$, then $\\mathrm{Var}(T)\\ge 1/I(\\theta)$ under regularity. $I(\\theta)=E[(\\partial_\\theta\\log f(X;\\theta))^2]= -E[\\partial_\\theta^2\\log f(X;\\theta)]$; for $n$ iid, info adds.\n",
+    },
+  },
+  {
+    slug: "bonferroni-vs-holm-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Bonferroni vs Holm (FWER Control)",
+    prompt_md:
+      "You want to control family-wise error rate (FWER) when testing $m$ hypotheses. Which statement best describes Holm's procedure relative to Bonferroni?",
+    solution_md:
+      "Holm's step-down procedure controls FWER like Bonferroni but is typically less conservative (more powerful). It sorts p-values and uses sequentially adjusted thresholds; Bonferroni uses a single threshold $\\alpha/m$ for each test.",
+    answer_kind: "mcq",
+    answer_value: "holm-less-conservative",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["multiple-testing", "fwer", "holm", "bonferroni"],
+    source: "Multiple testing basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "holm-less-conservative",
+          label:
+            "Holm controls FWER with a step-down procedure and is usually less conservative (more powerful) than Bonferroni.",
+          correct: true,
+        },
+        {
+          id: "holm-fdr",
+          label: "Holm controls FDR, while Bonferroni controls FWER.",
+          correct: false,
+        },
+        {
+          id: "same",
+          label: "Holm and Bonferroni are identical procedures with different names.",
+          correct: false,
+        },
+        {
+          id: "needs-independence",
+          label: "Holm only works under independence, while Bonferroni works under any dependence.",
+          correct: false,
+        },
+      ],
+    },
+  },
+  {
+    slug: "permutation-test-intuition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Permutation Test — Intuition",
+    prompt_md:
+      "Explain the intuition of a permutation (randomization) test for comparing two groups.\n\nIn 5–10 sentences: describe what you permute, what the null hypothesis is, and how you get a p-value.",
+    solution_md:
+      "Under the null of no treatment/group effect, the group labels are exchangeable: any assignment of labels to observed outcomes is equally likely. A permutation test computes a test statistic on the observed labeling (e.g., difference in means), then repeatedly permutes/shuffles the labels to generate the null distribution of the statistic. The p-value is the fraction of permutations where the statistic is at least as extreme as observed (one- or two-sided). This avoids parametric assumptions beyond exchangeability.",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["hypothesis-testing", "permutation-test", "exchangeability"],
+    source: "Nonparametric inference staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "States the null as exchangeability / no effect so labels can be permuted: 40%",
+        "Describes computing statistic on observed data and on many label permutations to form a null distribution: 45%",
+        "Defines the p-value as tail probability under that permutation null: 15%",
+      ],
+      reference_solution_md:
+        "Permutation test: under $H_0$ labels are exchangeable. Compute statistic (e.g., diff in means), shuffle labels many times to get null distribution, p-value = fraction of shuffled stats as/extreme as observed.\n",
+    },
+  },
 ];

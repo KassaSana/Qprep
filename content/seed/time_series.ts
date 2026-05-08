@@ -810,5 +810,85 @@ export const TIME_SERIES_SEED: SeedQuestion[] = [
       ],
     },
   },
+  {
+    slug: "ts-newey-west-when-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Newey–West (HAC) Standard Errors — When/Why?",
+    prompt_md:
+      "When would you use Newey–West (HAC) standard errors in a regression with time-series data?\n\nAnswer in 5–10 sentences: mention autocorrelation, heteroskedasticity, and what HAC is trying to correct.",
+    solution_md:
+      "In time-series regressions, residuals are often serially correlated and may be heteroskedastic, violating the iid/homoskedastic assumptions behind classical OLS standard errors. Newey–West provides heteroskedasticity-and-autocorrelation-consistent (HAC) standard errors: it estimates the long-run variance of the score/residual process using a lag window (bandwidth) so inference remains approximately valid under weak dependence. It does not change coefficient estimates; it changes the estimated covariance matrix used for t-stats/intervals.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["time-series", "inference", "standard-errors"],
+    source: "Econometrics staple",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "States the motivation: serial correlation and/or heteroskedasticity makes naive OLS SEs wrong: 55%",
+        "Defines HAC at a high level (consistent covariance under autocorrelation + heteroskedasticity; long-run variance): 35%",
+        "Mentions it affects SE/inference not point estimates (and/or bandwidth/lag window): 10%",
+      ],
+      reference_solution_md:
+        "Use Newey–West when regression errors are autocorrelated and/or heteroskedastic. It gives HAC standard errors (long-run variance estimator) so t-stats/CIs are more valid; coefficients unchanged.\n",
+    },
+  },
+  {
+    slug: "ts-pacf-definition-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "PACF — What Does It Measure?",
+    prompt_md:
+      "Define the partial autocorrelation function (PACF) at lag $k$.\n\nAnswer in 3–6 sentences and connect it to the idea of \"correlation after controlling for intermediate lags\".",
+    solution_md:
+      "The PACF at lag $k$ is the correlation between $X_t$ and $X_{t-k}$ after linearly controlling for the intervening lags $X_{t-1},\\dots,X_{t-k+1}$. Equivalently, it is the coefficient on $X_{t-k}$ in the best linear prediction/regression of $X_t$ on $X_{t-1},\\dots,X_{t-k}$ (with appropriate normalization). This motivates the AR identification heuristic (PACF cutoffs for AR processes).",
+    answer_kind: "freeform",
+    difficulty: 3,
+    tags: ["time-series", "pacf", "acf"],
+    source: "Time series basics",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      min_words: 60,
+      rubric: [
+        "Defines PACF as correlation between $X_t$ and $X_{t-k}$ controlling for lags 1..k-1: 65%",
+        "Connects to regression coefficient interpretation (projection on lagged values): 25%",
+        "Mentions identification relevance / intuition briefly (optional): 10%",
+      ],
+      reference_solution_md:
+        "PACF(k) = corr($X_t, X_{t-k}$ | $X_{t-1},...,X_{t-k+1}$); equivalently the coefficient on $X_{t-k}$ in regressing $X_t$ on lags 1..k.\n",
+    },
+  },
+  {
+    slug: "ts-diebold-mariano-what-tests-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Diebold–Mariano Test — What Is It For?",
+    prompt_md:
+      "The Diebold–Mariano test is commonly used to test what in forecasting?",
+    solution_md:
+      "It tests whether two forecasting methods have equal predictive accuracy (e.g., equal expected loss) based on a loss differential time series, accounting for dependence across forecast errors.",
+    answer_kind: "mcq",
+    answer_value: "equal-accuracy",
+    answer_tolerance: null,
+    difficulty: 4,
+    tags: ["time-series", "forecasting", "evaluation"],
+    source: "Forecast comparison staple",
+    target_roles: ["Researcher"],
+    answer_meta: {
+      options: [
+        {
+          id: "equal-accuracy",
+          label:
+            "Whether two forecasts have equal predictive accuracy (equal expected loss) based on a loss-differential series.",
+          correct: true,
+        },
+        { id: "unitroot", label: "Whether a series has a unit root (non-stationarity).", correct: false },
+        { id: "cointegration", label: "Whether two series are cointegrated.", correct: false },
+        { id: "normality", label: "Whether forecast errors are Gaussian.", correct: false },
+      ],
+    },
+  },
 ];
 

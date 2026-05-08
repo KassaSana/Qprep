@@ -797,5 +797,97 @@ export const MACHINE_LEARNING_SEED: SeedQuestion[] = [
         "Time series: random folds leak future into train. Use walk-forward / blocked CV with training windows strictly before validation windows.\n",
     },
   },
+  {
+    slug: "ml-proper-scoring-rules-logloss-vs-brier-mcq",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Probabilistic Forecasts — Log Loss vs Brier",
+    prompt_md:
+      "For binary probabilistic predictions, which statement is most accurate about log loss (cross-entropy) vs the Brier score?",
+    solution_md:
+      "Both are proper scoring rules for probabilistic forecasts (they are minimized in expectation by reporting the true conditional probability). Log loss penalizes confident wrong predictions more strongly; Brier is a squared-error loss on probabilities and can be easier to interpret/calibrate with.",
+    answer_kind: "mcq",
+    answer_value: "both-proper",
+    answer_tolerance: null,
+    difficulty: 3,
+    tags: ["evaluation", "calibration", "loss-functions"],
+    source: "Probabilistic evaluation basics",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      options: [
+        {
+          id: "both-proper",
+          label:
+            "Both are proper scoring rules; log loss penalizes confident wrong predictions more strongly than Brier.",
+          correct: true,
+        },
+        {
+          id: "only-logloss",
+          label: "Only log loss is proper; Brier is always improper.",
+          correct: false,
+        },
+        {
+          id: "same",
+          label: "They are identical metrics (always give the same ranking).",
+          correct: false,
+        },
+        {
+          id: "classification-only",
+          label: "Brier is only for hard labels, not probabilities.",
+          correct: false,
+        },
+      ],
+    },
+  },
+  {
+    slug: "ml-nested-cross-validation-why-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Nested Cross-Validation — Why Use It?",
+    prompt_md:
+      "Explain nested cross-validation.\n\nIn 5–10 sentences: describe the inner vs outer loops and what problem it solves when tuning hyperparameters.",
+    solution_md:
+      "Nested CV uses an inner loop to tune hyperparameters (or select models) and an outer loop to estimate generalization performance. For each outer fold, you hold out a test fold; within the remaining training data, you run cross-validation to choose hyperparameters, then fit the model on the full outer-train data and evaluate once on the outer-test fold. This prevents optimistic bias that occurs when you use the same CV both to tune and to report performance; the outer loop provides an unbiased (or less biased) estimate of performance under the full selection procedure.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["evaluation", "cross-validation", "model-selection"],
+    source: "Model selection best practice",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 95,
+      rubric: [
+        "Describes inner loop for tuning/selection and outer loop for performance estimation: 55%",
+        "Explains the leakage/optimism problem it addresses (selection bias in reported metric): 35%",
+        "Mentions re-fitting on outer-train then evaluating once on outer-test per fold: 10%",
+      ],
+      reference_solution_md:
+        "Nested CV: inner CV selects hyperparameters; outer CV estimates performance of that selection procedure. Prevents optimistic bias from tuning on the same folds you report.\n",
+    },
+  },
+  {
+    slug: "ml-label-shift-vs-covariate-shift-freeform",
+    topic: "Statistics",
+    track: "researcher",
+    title: "Label Shift vs Covariate Shift",
+    prompt_md:
+      "Explain the difference between label shift and covariate shift.\n\nIn 6–10 sentences: state what distribution changes in each case and one mitigation idea (e.g. reweighting).",
+    solution_md:
+      "Covariate shift means $P(X)$ changes between training and deployment while $P(Y\\mid X)$ stays (approximately) the same. Label shift means the class prior $P(Y)$ changes while $P(X\\mid Y)$ stays (approximately) the same; equivalently the prevalence changes but class-conditional feature distributions are stable. Mitigations: for covariate shift, importance-weighting / domain adaptation or collecting new training data; for label shift, estimate new priors (e.g. via confusion-matrix / EM methods) and reweight or adjust decision thresholds/calibration accordingly. In both cases, monitoring drift signals and recalibrating helps.",
+    answer_kind: "freeform",
+    difficulty: 4,
+    tags: ["distribution-shift", "deployment", "evaluation"],
+    source: "Production ML concepts",
+    target_roles: ["Researcher", "Dev"],
+    answer_meta: {
+      min_words: 110,
+      rubric: [
+        "Correctly defines covariate shift as change in $P(X)$ with stable $P(Y\\mid X)$: 40%",
+        "Correctly defines label shift as change in $P(Y)$ with stable $P(X\\mid Y)$ (or equivalent): 40%",
+        "Gives at least one mitigation idea for each (reweighting, prior estimation, threshold adjust): 20%",
+      ],
+      reference_solution_md:
+        "Covariate shift: $P(X)$ changes, $P(Y|X)$ stable → importance-weight / adapt. Label shift: $P(Y)$ changes, $P(X|Y)$ stable → estimate new priors and reweight/adjust thresholds.\n",
+    },
+  },
 ];
 
