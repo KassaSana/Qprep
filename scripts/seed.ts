@@ -103,8 +103,14 @@ async function main() {
   // We try the full v2 shape first, then fall back to omitting that column.
   const qTable = sb.from("questions");
 
-  let questions: { id: string; slug: string; title: string; topic: string; answer_kind: string }[] | null =
-    null;
+  type SeededRow = {
+    id: string;
+    slug: string;
+    title: string;
+    topic: string;
+    answer_kind: string;
+  };
+  let questions: SeededRow[] | null = null;
 
   const first = await qTable
     .upsert(rows, { onConflict: "slug" })
@@ -124,13 +130,13 @@ async function main() {
         console.error("Question upsert failed:", second.error.message);
         process.exit(1);
       }
-      questions = second.data as typeof questions;
+      questions = second.data as SeededRow[];
     } else {
       console.error("Question upsert failed:", first.error.message);
       process.exit(1);
     }
   } else {
-    questions = first.data as typeof questions;
+    questions = first.data as SeededRow[];
   }
 
   for (const row of questions ?? []) {
