@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PageView } from "@/components/PageView";
+import { ResurfaceLink } from "@/components/ResurfaceLink";
 import { getAnonId } from "@/lib/anon";
 import {
   loadHomeData,
@@ -22,6 +24,7 @@ export default async function Home() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
+      <PageView path="/" />
       {data.hasAttempts ? (
         <ReturningHero profile={data.profile} nextUp={data.nextUp} />
       ) : (
@@ -241,8 +244,10 @@ function ResurfaceSection({ items }: { items: HomeResurface[] }) {
       <ul className="card divide-y divide-border">
         {items.map((it) => (
           <li key={it.questionSlug}>
-            <Link
-              href={`/questions/${it.questionSlug}?from=resurface`}
+            <ResurfaceLink
+              slug={it.questionSlug}
+              daysSinceLastWrong={it.daysSinceLastWrong}
+              wrongAttemptCount={it.wrongAttemptCount}
               className="flex items-center gap-4 px-5 py-3 transition hover:bg-bg-raised"
             >
               <span
@@ -261,7 +266,7 @@ function ResurfaceSection({ items }: { items: HomeResurface[] }) {
                 </div>
               </div>
               <span className="text-fg-subtle">→</span>
-            </Link>
+            </ResurfaceLink>
           </li>
         ))}
       </ul>

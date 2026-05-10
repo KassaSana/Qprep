@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { PageView } from "@/components/PageView";
+import { TodayStatusEmitter } from "@/components/TodayStatusEmitter";
 import { getAnonId } from "@/lib/anon";
 import { loadAllQuestions, type LoadedQuestion } from "@/lib/questions-data";
 import {
@@ -8,6 +11,17 @@ import {
 import { difficultyLabel } from "@/content/question-types";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Today",
+  description:
+    "Two new quant interview questions every day — one for the researcher loop, one for the dev loop. Same pair worldwide, deterministic by UTC date.",
+  openGraph: {
+    title: "Today's pair · QPrep",
+    description:
+      "Two new quant interview questions every day — one researcher, one dev.",
+  },
+};
 
 /**
  * Two questions a day, deterministic by UTC date — one Researcher, one Dev.
@@ -27,14 +41,23 @@ export default async function TodayPage() {
   );
   const attemptedIds = new Set(attempts.map((a) => a.question_id));
 
+  const researcherSolved =
+    pair.researcher != null && solvedIds.has(pair.researcher.id);
+  const devSolved = pair.dev != null && solvedIds.has(pair.dev.id);
   const cleared =
-    (pair.researcher == null || solvedIds.has(pair.researcher.id)) &&
-    (pair.dev == null || solvedIds.has(pair.dev.id));
+    (pair.researcher == null || researcherSolved) &&
+    (pair.dev == null || devSolved);
 
   const dateLabel = formatDateLabel(pair.dateKey);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
+      <PageView path="/today" />
+      <TodayStatusEmitter
+        researcherSolved={researcherSolved}
+        devSolved={devSolved}
+        cleared={cleared}
+      />
       <header className="mb-8">
         <div className="flex items-center justify-between gap-4">
           <div>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NudgePanel } from "@/components/NudgePanel";
@@ -49,6 +49,8 @@ export function NumericAnswerForm({
   nextLabel = null,
 }: NumericAnswerFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from") ?? undefined;
   const [value, setValue] = React.useState("");
   const [status, setStatus] = React.useState<Status>({ kind: "idle" });
   const [hintLevelsUsed, setHintLevelsUsed] = React.useState(0);
@@ -70,6 +72,7 @@ export function NumericAnswerForm({
           questionId,
           submittedAnswer: value.trim(),
           hintLevelsUsed,
+          from: fromParam,
         }),
       });
       const data = (await res.json()) as

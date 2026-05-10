@@ -19,8 +19,31 @@ import {
   type NudgeLevel,
 } from "@/lib/anthropic";
 import { generateNudgeMultiProvider } from "@/lib/nudge-engine";
+import { track } from "@/lib/analytics";
 
 const DAILY_NUDGE_LIMIT = 30;
+
+/**
+ * Fire the structured `nudge_requested` analytics event.
+ *
+ * Wrapped so a malformed level can never break a real hint request — analytics
+ * always fails open. Centralized here so all four return paths (cached + live
+ * across both Supabase and local-dev) stay in sync.
+ */
+function emitNudgeEvent(
+  questionId: string,
+  level: 1 | 2 | 3,
+  source: "cached" | "provider" | "rate_limited" | "error"
+): void {
+  try {
+    track({
+      name: "nudge_requested",
+      properties: { questionId, level, source },
+    });
+  } catch {
+    // intentional
+  }
+}
 
 const Body = z.object({
   attemptId: z.string().uuid(),
@@ -49,6 +72,10 @@ export async function POST(req: Request) {
     const usageCount = bumpLocalNudgeUsage(anonId);
     const dailyLimit = getLocalDailyNudgeLimit();
     if (usageCount > dailyLimit) {
+      // We don't have the questionId yet (haven't fetched the attempt), but
+      // for rate-limit volumes we care about the count, not the per-question
+      // breakdown — log with empty questionId.
+      emitNudgeEvent("", payload.level, "rate_limited");
       return NextResponse.json(
         {
           error: "rate_limited",
@@ -77,6 +104,7 @@ export async function POST(req: Request) {
     const errorSignature = `${attempt.submitted_answer.trim().toLowerCase()}|L${payload.level}`;
     const cached = getLocalCachedHint(question.id, errorSignature, payload.level);
     if (cached) {
+      emitNudgeEvent(question.id, payload.level, "cached");
       return NextResponse.json({
         hint: cached,
         cached: true,
@@ -104,6 +132,7 @@ export async function POST(req: Request) {
       });
 
     setLocalCachedHint(question.id, errorSignature, payload.level, hint);
+    emitNudgeEvent(question.id, payload.level, "provider");
     return NextResponse.json({
       hint,
       cached: false,
@@ -126,6 +155,7 @@ export async function POST(req: Request) {
     );
   }
   if ((usageCount as number) > DAILY_NUDGE_LIMIT) {
+    emitNudgeEvent("", payload.level, "rate_limited");
     return NextResponse.json(
       {
         error: "rate_limited",
@@ -178,6 +208,7 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (cached?.hint_text) {
+    emitNudgeEvent(question.id as string, payload.level, "cached");
     return NextResponse.json({
       hint: cached.hint_text as string,
       cached: true,
@@ -198,6 +229,7 @@ export async function POST(req: Request) {
     ).hint;
   } catch (err) {
     console.error("generateNudge failed", err);
+    emitNudgeEvent(question.id as string, payload.level, "error");
     return NextResponse.json(
       { error: "model_call_failed", details: (err as Error).message },
       { status: 502 }
@@ -205,6 +237,7 @@ export async function POST(req: Request) {
   }
 
   if (!hint) {
+    emitNudgeEvent(question.id as string, payload.level, "error");
     return NextResponse.json(
       { error: "empty_hint" },
       { status: 502 }
@@ -219,6 +252,7 @@ export async function POST(req: Request) {
     hint_text: hint,
   });
 
+  emitNudgeEvent(question.id as string, payload.level, "provider");
   return NextResponse.json({
     hint,
     cached: false,

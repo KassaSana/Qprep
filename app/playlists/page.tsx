@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { PageView } from "@/components/PageView";
 import { getAnonId } from "@/lib/anon";
 import {
   loadPlaylists,
@@ -8,6 +10,17 @@ import {
 } from "@/lib/questions-data";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Playlists",
+  description:
+    "Curated QPrep sequences: warmup quickstart, researcher foundations, researcher advanced, quant dev essentials, low-latency core, and the cross-topic Top 50.",
+  openGraph: {
+    title: "Curated playlists · QPrep",
+    description:
+      "Hand-picked sequences. Work through one for a guided arc.",
+  },
+};
 
 export default async function PlaylistsIndexPage() {
   const anonId = await getAnonId();
@@ -33,6 +46,7 @@ export default async function PlaylistsIndexPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
+      <PageView path="/playlists" />
       <header className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           Curated playlists

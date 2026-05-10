@@ -1,10 +1,23 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { DIAGNOSTIC_SLUGS } from "@/content/diagnostic";
 import { loadAllQuestions, type LoadedQuestion } from "@/lib/questions-data";
 import { getAnonId } from "@/lib/anon";
+import { PageView } from "@/components/PageView";
 import { DiagnosticRunner } from "@/app/diagnostic/DiagnosticRunner";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "60-second diagnostic",
+  description:
+    "Take a 10-question quick diagnostic and get routed to the QPrep playlist that matches your strengths — researcher, dev, or warmup.",
+  openGraph: {
+    title: "60-second diagnostic · QPrep",
+    description:
+      "10 quick MCQs. We route you to the playlist that fits your lane.",
+  },
+};
 
 /**
  * 60-second diagnostic entry.
@@ -58,6 +71,7 @@ export default async function DiagnosticPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">
+      <PageView path="/diagnostic" />
       <header className="mb-6">
         <div className="text-xs font-medium uppercase tracking-wider text-fg-muted">
           60-second diagnostic

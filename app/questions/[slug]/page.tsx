@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Latex } from "@/components/Latex";
+import { PageView } from "@/components/PageView";
 import { AnswerSwitch } from "@/components/answer/AnswerSwitch";
 import type { PriorAttempt } from "@/components/answer/NumericAnswerForm";
 import { getAnonId } from "@/lib/anon";
@@ -21,6 +23,40 @@ export const dynamic = "force-dynamic";
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ from?: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const question = await loadQuestionBySlug(slug);
+  if (!question) {
+    return {
+      title: "Question not found",
+      robots: { index: false, follow: false },
+    };
+  }
+  // Strip markdown to get a clean preview snippet. Conservative: drop fenced
+  // code blocks, $...$ math, and leading/trailing whitespace, then cap.
+  const cleaned = question.prompt_md
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/\$\$[\s\S]*?\$\$/g, "")
+    .replace(/\$[^$\n]*\$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const preview = cleaned.length > 200 ? cleaned.slice(0, 197) + "…" : cleaned;
+  const description =
+    `${question.topic} · ${difficultyLabel(question.difficulty)}` +
+    (preview ? ` — ${preview}` : ".");
+  return {
+    title: question.title,
+    description,
+    openGraph: {
+      title: `${question.title} · QPrep`,
+      description,
+      type: "article",
+    },
+  };
 }
 
 export default async function QuestionDetailPage({
@@ -85,6 +121,7 @@ export default async function QuestionDetailPage({
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
+      <PageView path={`/questions/${slug}`} />
       <Link
         href="/questions"
         className="inline-block text-sm text-fg-muted hover:text-fg"
