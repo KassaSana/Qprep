@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PageView } from "@/components/PageView";
 import { getAnonId } from "@/lib/anon";
 import {
   loadPlaylistBySlug,
@@ -12,6 +14,32 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  // Pass `null` for anonId — metadata generation should be cacheable across
+  // visitors and we don't need user-specific attempts to title the page.
+  const { playlist, questions } = await loadPlaylistBySlug(slug, null);
+  if (!playlist) {
+    return {
+      title: "Playlist not found",
+      robots: { index: false, follow: false },
+    };
+  }
+  const description =
+    playlist.description ??
+    `${questions.length} curated quant interview questions in the "${playlist.name}" playlist on QPrep.`;
+  return {
+    title: playlist.name,
+    description,
+    openGraph: {
+      title: `${playlist.name} · QPrep`,
+      description,
+    },
+  };
 }
 
 export default async function PlaylistDetailPage({ params }: PageProps) {
@@ -30,6 +58,7 @@ export default async function PlaylistDetailPage({ params }: PageProps) {
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
+      <PageView path={`/playlists/${slug}`} />
       <Link
         href="/playlists"
         className="inline-block text-sm text-fg-muted hover:text-fg"

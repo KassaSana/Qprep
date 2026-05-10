@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Latex } from "@/components/Latex";
 import { NudgePanel } from "@/components/NudgePanel";
@@ -47,6 +47,8 @@ export function FreeformAnswerForm({
   nextLabel = null,
 }: FreeformAnswerFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from") ?? undefined;
   const [value, setValue] = React.useState("");
   const [status, setStatus] = React.useState<Status>({ kind: "idle" });
   const [hintLevelsUsed, setHintLevelsUsed] = React.useState(0);
@@ -71,6 +73,7 @@ export function FreeformAnswerForm({
           questionId,
           submittedAnswer: value,
           hintLevelsUsed,
+          from: fromParam,
         }),
       });
       const data = (await res.json()) as CheckResponse | { error: string };

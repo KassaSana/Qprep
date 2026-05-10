@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { track } from "@/lib/analytics";
 import {
   checkMentalMathAnswer,
   generateMentalMathProblem,
@@ -21,6 +22,17 @@ function formatSeconds(s: number): string {
 
 export default function MentalMathPage() {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
+  /** Monotonic id per started session — prevents double `session_completed` in Strict Mode. */
+  const runIdRef = React.useRef(0);
+  const completedRunIdRef = React.useRef<number | null>(null);
+
+  // One-shot pageview, strict-mode safe.
+  const pageviewFired = React.useRef(false);
+  React.useEffect(() => {
+    if (pageviewFired.current) return;
+    pageviewFired.current = true;
+    track({ name: "page_viewed", properties: { path: "/mental-math" } });
+  }, []);
 
   const [difficulty, setDifficulty] = React.useState<MentalMathDifficulty>(2);
   const [durationSec, setDurationSec] = React.useState<number>(60);
@@ -51,6 +63,39 @@ export default function MentalMathPage() {
 
   const accuracy = attempted === 0 ? 0 : correct / attempted;
 
+  const finishSession = React.useCallback(
+    (reason: "timer" | "stop", timeLeftAtFinish: number) => {
+      if (completedRunIdRef.current === runIdRef.current) return;
+      completedRunIdRef.current = runIdRef.current;
+      setState("finished");
+      const elapsedSeconds = Math.max(0, durationSec - timeLeftAtFinish);
+      track({
+        name: "mental_math_session_completed",
+        properties: {
+          reason,
+          durationSec,
+          difficulty,
+          includePercentages,
+          includeBps,
+          elapsedSeconds,
+          attempted,
+          correct,
+          accuracy: attempted === 0 ? 0 : correct / attempted,
+          streakAtEnd: streak,
+        },
+      });
+    },
+    [
+      attempted,
+      correct,
+      streak,
+      durationSec,
+      difficulty,
+      includePercentages,
+      includeBps,
+    ]
+  );
+
   const nextProblem = React.useCallback(() => {
     setProblem(
       generateMentalMathProblem({
@@ -75,6 +120,8 @@ export default function MentalMathPage() {
   }, [durationSec, nextProblem]);
 
   const start = React.useCallback(() => {
+    runIdRef.current += 1;
+    completedRunIdRef.current = null;
     setState("running");
     setTimeLeft(durationSec);
     setAttempted(0);
@@ -93,12 +140,12 @@ export default function MentalMathPage() {
   React.useEffect(() => {
     if (state !== "running") return;
     if (timeLeft <= 0) {
-      setState("finished");
+      finishSession("timer", 0);
       return;
     }
     const t = window.setTimeout(() => setTimeLeft((s) => Math.max(0, s - 1)), 1000);
     return () => window.clearTimeout(t);
-  }, [state, timeLeft]);
+  }, [state, timeLeft, finishSession]);
 
   const submit = React.useCallback(() => {
     if (state !== "running") return;
@@ -168,7 +215,11 @@ export default function MentalMathPage() {
                 Start
               </Button>
             ) : (
-              <Button onClick={() => setState("finished")} variant="danger" size="sm">
+              <Button
+                onClick={() => finishSession("stop", timeLeft)}
+                variant="danger"
+                size="sm"
+              >
                 Stop
               </Button>
             )}

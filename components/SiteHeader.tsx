@@ -24,6 +24,7 @@ export async function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-1 sm:flex">
+          <HeaderLink href="/today" label="Today" />
           <HeaderLink href="/questions" label="Questions" />
           <HeaderLink href="/playlists" label="Playlists" />
           <HeaderLink href="/mental-math" label="Mental math" />

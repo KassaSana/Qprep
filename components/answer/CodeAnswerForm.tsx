@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Latex } from "@/components/Latex";
 import { NudgePanel } from "@/components/NudgePanel";
@@ -100,6 +100,8 @@ export function CodeAnswerForm({
   nextLabel = null,
 }: CodeAnswerFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from") ?? undefined;
   const [source, setSource] = React.useState(answerMeta.starter_code);
   const [status, setStatus] = React.useState<Status>({ kind: "idle" });
   const [hintLevelsUsed, setHintLevelsUsed] = React.useState(0);
@@ -154,6 +156,7 @@ export function CodeAnswerForm({
           questionId,
           submittedAnswer: source,
           hintLevelsUsed,
+          from: fromParam,
         }),
       });
       const data = (await res.json()) as CheckResponse | { error: string };

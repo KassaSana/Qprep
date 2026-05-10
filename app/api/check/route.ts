@@ -34,6 +34,7 @@ import {
   type GraderProvider,
 } from "@/lib/grade-freeform";
 import { runCode } from "@/lib/runner";
+import { track } from "@/lib/analytics";
 import type {
   CodeMeta,
   FreeformMeta,
@@ -48,6 +49,13 @@ const Body = z.object({
   /** For mcq the submission is the option id; for code it is the source. */
   submittedAnswer: z.string().min(1).max(20000),
   hintLevelsUsed: z.number().int().min(0).max(3).default(0),
+  /**
+   * Optional activation context, mirrored from `?from=` on the question page
+   * URL. Forwarded into the `attempt_submitted` analytics event so dashboards
+   * can attribute attempts back to playlists / diagnostic recs / resurface
+   * rows. Capped to keep the payload predictable.
+   */
+  from: z.string().min(1).max(64).optional(),
 });
 
 type Verdict = {
@@ -63,6 +71,7 @@ type Verdict = {
 
 interface QuestionForGrading {
   id: string;
+  slug: string;
   topic: Topic;
   difficulty: number;
   answer_kind: string;
@@ -77,6 +86,43 @@ interface QuestionForGrading {
 
 function hashAnswer(s: string): string {
   return createHash("sha256").update(s).digest("hex");
+}
+
+/**
+ * Fire the structured `attempt_submitted` analytics event.
+ *
+ * Lives outside both code paths so the Supabase, local-dev cached-freeform,
+ * and local-dev main return points all stay in sync. Wrapped in a try so a
+ * malformed `answer_kind` (e.g. content drift) can never break a real
+ * submission — analytics must fail open.
+ */
+function emitAttemptEvent(
+  q: QuestionForGrading,
+  verdict: Pick<Verdict, "correct">,
+  body: z.infer<typeof Body>
+): void {
+  try {
+    track({
+      name: "attempt_submitted",
+      properties: {
+        slug: q.slug,
+        topic: q.topic,
+        kind: q.answer_kind as
+          | "numeric"
+          | "fraction"
+          | "exact"
+          | "mcq"
+          | "freeform"
+          | "code",
+        difficulty: q.difficulty,
+        correct: verdict.correct,
+        hintLevelsUsed: body.hintLevelsUsed,
+        from: body.from,
+      },
+    });
+  } catch {
+    // intentional — analytics must never break a submission
+  }
 }
 
 export async function POST(req: Request) {
@@ -129,6 +175,7 @@ async function handleSupabase(
 
   const q: QuestionForGrading = {
     id: question.id as string,
+    slug: question.slug as string,
     topic: question.topic as Topic,
     difficulty: (question.difficulty as number) ?? 1,
     answer_kind: question.answer_kind as string,
@@ -205,6 +252,8 @@ async function handleSupabase(
     }
   }
 
+  emitAttemptEvent(q, verdict, payload);
+
   return NextResponse.json({
     correct: verdict.correct,
     attemptId: attempt.id as string,
@@ -231,6 +280,7 @@ async function handleLocalDev(
 
   const q: QuestionForGrading = {
     id: question.id,
+    slug: question.slug,
     topic: question.topic,
     difficulty: question.difficulty,
     answer_kind: question.answer_kind,
@@ -257,13 +307,15 @@ async function handleLocalDev(
       if (!local) {
         return NextResponse.json({ error: "question_not_found" }, { status: 404 });
       }
-      return NextResponse.json({
+      const cachedVerdict: Verdict = {
         correct: cached.passed,
         attemptId: local.attempt.id,
         errorSignature: local.result.errorSignature,
         feedback: cached.feedback,
         provider: cached.provider as GraderProvider,
-      } satisfies Verdict);
+      };
+      emitAttemptEvent(q, cachedVerdict, payload);
+      return NextResponse.json(cachedVerdict satisfies Verdict);
     }
   }
 
@@ -289,6 +341,8 @@ async function handleLocalDev(
       provider: verdict.provider,
     });
   }
+
+  emitAttemptEvent(q, verdict, payload);
 
   return NextResponse.json({
     correct: verdict.correct,

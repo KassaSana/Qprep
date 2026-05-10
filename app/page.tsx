@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PageView } from "@/components/PageView";
+import { ResurfaceLink } from "@/components/ResurfaceLink";
 import { getAnonId } from "@/lib/anon";
 import {
   loadHomeData,
+  topicMasteryBars,
+  MAX_DISPLAY_LEVEL,
   type HomeNextUp,
   type HomePlaylist,
   type HomeProfile,
+  type HomeResurface,
+  type MasteryBar,
 } from "@/lib/home-data";
 import { difficultyLabel } from "@/content/question-types";
 
@@ -14,14 +20,22 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const anonId = await getAnonId();
   const data = await loadHomeData(anonId);
+  const masteryBars = topicMasteryBars(data.profile?.topicLevels, 6);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
+      <PageView path="/" />
       {data.hasAttempts ? (
         <ReturningHero profile={data.profile} nextUp={data.nextUp} />
       ) : (
         <FirstTimeHero />
       )}
+
+      {data.resurface.length > 0 && (
+        <ResurfaceSection items={data.resurface} />
+      )}
+
+      {masteryBars.length > 0 && <MasterySection bars={masteryBars} />}
 
       <PlaylistGrid
         playlists={data.playlists}
@@ -61,8 +75,14 @@ function ReturningHero({
           </span>
         )}
         <Link
+          href="/today"
+          className="ml-auto text-sm font-medium text-accent underline-offset-4 hover:underline"
+        >
+          Today&apos;s pair →
+        </Link>
+        <Link
           href="/mental-math"
-          className="ml-auto text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
+          className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
         >
           Warm up with mental math →
         </Link>
@@ -131,14 +151,17 @@ function FirstTimeHero() {
         number.
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
-        <Link href="/questions">
-          <Button>Browse all questions</Button>
+        <Link href="/diagnostic">
+          <Button>Take the 60-second diagnostic</Button>
+        </Link>
+        <Link href="/today">
+          <Button variant="secondary">Today&apos;s pair</Button>
         </Link>
         <Link href="/playlists">
           <Button variant="secondary">Curated playlists</Button>
         </Link>
-        <Link href="/mental-math">
-          <Button variant="secondary">Mental math drill</Button>
+        <Link href="/questions">
+          <Button variant="secondary">Browse all questions</Button>
         </Link>
       </div>
     </header>
@@ -202,6 +225,94 @@ function PlaylistGrid({
             </Link>
           );
         })}
+      </div>
+    </section>
+  );
+}
+
+function ResurfaceSection({ items }: { items: HomeResurface[] }) {
+  return (
+    <section className="mb-12">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-fg-muted">
+          Resurface
+        </h2>
+        <span className="text-xs text-fg-subtle">
+          You missed these — give them another shot
+        </span>
+      </div>
+      <ul className="card divide-y divide-border">
+        {items.map((it) => (
+          <li key={it.questionSlug}>
+            <ResurfaceLink
+              slug={it.questionSlug}
+              daysSinceLastWrong={it.daysSinceLastWrong}
+              wrongAttemptCount={it.wrongAttemptCount}
+              className="flex items-center gap-4 px-5 py-3 transition hover:bg-bg-raised"
+            >
+              <span
+                aria-hidden
+                className="h-2.5 w-2.5 shrink-0 rounded-full bg-warning"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium text-fg">{it.title}</div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
+                  <span className="pill">{it.topic}</span>
+                  <span className="pill">{difficultyLabel(it.difficulty)}</span>
+                  <span>
+                    {it.daysSinceLastWrong}d ago · {it.wrongAttemptCount}{" "}
+                    wrong {it.wrongAttemptCount === 1 ? "try" : "tries"}
+                  </span>
+                </div>
+              </div>
+              <span className="text-fg-subtle">→</span>
+            </ResurfaceLink>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function MasterySection({ bars }: { bars: MasteryBar[] }) {
+  return (
+    <section className="mb-12">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-fg-muted">
+          Topic mastery
+        </h2>
+        <span className="text-xs text-fg-subtle">
+          Level cap shown at {MAX_DISPLAY_LEVEL}; you keep climbing past it
+        </span>
+      </div>
+      <div className="card grid gap-3 p-5 sm:grid-cols-2">
+        {bars.map((b) => (
+          <Link
+            key={b.topic}
+            href={`/questions?topic=${encodeURIComponent(b.topic)}`}
+            className="group block"
+            aria-label={`${b.topic}: level ${b.level}`}
+          >
+            <div className="mb-1 flex items-center justify-between text-sm">
+              <span className="font-medium text-fg group-hover:text-accent">
+                {b.topic}
+              </span>
+              <span className="text-xs text-fg-muted">L{b.level}</span>
+            </div>
+            <div
+              className="h-1.5 w-full overflow-hidden rounded-full bg-bg-subtle"
+              role="progressbar"
+              aria-valuenow={b.level}
+              aria-valuemin={0}
+              aria-valuemax={MAX_DISPLAY_LEVEL}
+            >
+              <div
+                className="h-full rounded-full bg-accent transition-all"
+                style={{ width: `${Math.round(b.fraction * 100)}%` }}
+              />
+            </div>
+          </Link>
+        ))}
       </div>
     </section>
   );

@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { PageView } from "@/components/PageView";
 import { getAnonId } from "@/lib/anon";
 import {
   applyQuestionFilters,
@@ -11,6 +13,17 @@ import {
 import { QuestionTable } from "@/components/QuestionTable";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Question bank",
+  description:
+    "Browse 633 quant interview questions across 11 topics — probability, statistics, pure math, brainteasers, algorithms, data structures, C++, concurrency, systems, LLD, and system design.",
+  openGraph: {
+    title: "Question bank · QPrep",
+    description:
+      "Filter 633 quant interview questions by topic, difficulty, kind, and company.",
+  },
+};
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +67,7 @@ export default async function QuestionsPage({ searchParams }: PageProps) {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
+      <PageView path="/questions" />
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">

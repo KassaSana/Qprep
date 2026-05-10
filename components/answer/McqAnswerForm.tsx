@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Latex } from "@/components/Latex";
 import { NudgePanel } from "@/components/NudgePanel";
@@ -35,6 +35,8 @@ export function McqAnswerForm({
   nextLabel = null,
 }: McqAnswerFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from") ?? undefined;
   const [selected, setSelected] = React.useState<string | null>(null);
   const [status, setStatus] = React.useState<Status>({ kind: "idle" });
   const [hintLevelsUsed, setHintLevelsUsed] = React.useState(0);
@@ -55,6 +57,7 @@ export function McqAnswerForm({
           questionId,
           submittedAnswer: selected,
           hintLevelsUsed,
+          from: fromParam,
         }),
       });
       const data = (await res.json()) as
