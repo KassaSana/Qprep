@@ -2,9 +2,9 @@
 
 > **Purpose:** Single source of truth for "what's done / what's next." Read this first before starting work. Update it as you ship.
 >
-> **Last updated:** 2026-05-10 (later that day)
-> **Current phase:** Phase 2 (✅ code-complete — all 5 retention items implemented in the working tree; not yet committed/deployed)
-> **Next action:** Commit + deploy the Phase 2 work, then Phase 3 prep (60-second diagnostic) **only after** Phase 2 has bake time in prod.
+> **Last updated:** 2026-05-10 (deeper into the night)
+> **Current phase:** Phase 3 (🟡 in progress — 60-second diagnostic is code-complete in the working tree; auth + leaderboards not started)
+> **Next action:** Owner reviews + commits Phase 2 _and_ the new diagnostic. Then validate retention in prod before opening Phase 3 item 2 (real auth).
 
 ---
 
@@ -15,21 +15,24 @@ If you're picking up this project cold, here's what you need to know:
 - Phase 1 (content + schema) is **done and in prod**. 633 questions live in Supabase across 11 topics, 0 Finance. Content-quality CI signal landed too (`content/seed/seed-quality.test.ts`).
 - Phase 1.5 (home page redesign) is **done and in prod** (committed in an earlier session).
 - Phase 2 (retention + cost) is **code-complete in the working tree** but **not yet committed by the owner**: Vercel env vars set + auto-advance + multi-provider nudge engine were already in prior commits; `/today`, per-topic mastery bars, and spaced-repetition resurfacing are uncommitted local edits awaiting the owner's review.
-- Phase 3 (onboarding + auth + social) hasn't started.
-- **Never run git on this repo.** Commits are the owner's job. **Do not** start Phase 3 work yet. **Do not** add new content topics. **Do** validate Phase 2 in prod (after the owner commits + deploys) before opening Phase 3.
+- Phase 3 item 1 (60-second diagnostic) is also **code-complete in the working tree** — owner directed the agent to push forward despite the original "wait for Phase 2 in prod" guidance. Items 2 (real auth) and 3 (leaderboards/payments) haven't started.
+- **Never run git on this repo.** Commits are the owner's job. **Do not** add new content topics.
 
 ---
 
 ## Verified state at this update
 
-Snapshot from the full project sweep on 2026-05-10 after the Phase 2 code push. Trust this if the **Last updated** date above is recent; otherwise re-verify before relying on it.
+Snapshot from the full project sweep on 2026-05-10 after the Phase 2 + Phase 3 (diagnostic) code push. Trust this if the **Last updated** date above is recent; otherwise re-verify before relying on it.
 
-- ✅ `npm test` → **87 passing across 13 files** (vitest 4.1.5, ~0.9s). Up from 63/11 at the start of this session.
+- ✅ `npm test` → **101 passing across 15 files** (vitest 4.1.5, ~0.7s). Up from 87/13 earlier today and 63/11 at the start of this session.
 - ✅ `npx tsc --noEmit` → clean.
-- ✅ `npm run build` → clean. Routes built: `/`, `/today`, `/mental-math`, `/playlists`, `/playlists/[slug]`, `/questions`, `/questions/[slug]`, `/api/check`, `/api/nudge`, `/api/run-code`.
+- ✅ `npm run build` → clean. Routes built: `/`, `/today`, `/diagnostic`, `/mental-math`, `/playlists`, `/playlists/[slug]`, `/questions`, `/questions/[slug]`, `/api/check`, `/api/nudge`, `/api/run-code`.
 - ✅ Seed bundle resolves to **633 questions** matching the canonical breakdown below.
-- ✅ `content/seed/seed-quality.test.ts` and `lib/nudge-engine.ts` were already committed earlier and still pass.
-- 🟡 Uncommitted in working tree this session (owner reviews + commits manually): `lib/today.ts` + `lib/today.test.ts` (new), `lib/spaced-rep.ts` + `lib/spaced-rep.test.ts` (new), `app/today/page.tsx` (new), edits to `lib/home-data.ts`, `lib/home-data.test.ts`, `lib/questions-data.ts`, `app/page.tsx`, `components/SiteHeader.tsx`, and this file.
+- ✅ Diagnostic guard test (`content/diagnostic.test.ts`) confirms all 10 diagnostic slugs resolve to MCQs in the live bundle with valid `answer_value` wiring.
+- 🟡 Uncommitted in working tree across this session (owner reviews + commits manually):
+  - **Phase 2:** `lib/today.ts` + `lib/today.test.ts`, `lib/spaced-rep.ts` + `lib/spaced-rep.test.ts`, `app/today/page.tsx`, edits to `lib/home-data.ts`, `lib/home-data.test.ts`, `lib/questions-data.ts`, `app/page.tsx`, `components/SiteHeader.tsx`.
+  - **Phase 3 item 1:** `content/diagnostic.ts` + `content/diagnostic.test.ts`, `lib/diagnostic.ts` + `lib/diagnostic.test.ts`, `app/diagnostic/page.tsx`, `app/diagnostic/DiagnosticRunner.tsx`, plus a CTA edit on `app/page.tsx`.
+  - This file.
 
 ---
 
@@ -40,7 +43,7 @@ Snapshot from the full project sweep on 2026-05-10 after the Phase 2 code push. 
 - **Seed bundle vs DB:** `content/seed/*` is the source of truth for questions. `npm run seed` pushes to Supabase. The app reads from Supabase when env vars are present, falls back to the bundle otherwise.
 - **Migrations:** in `supabase/migrations/`. Apply with `supabase db push`. Never edit an applied migration — write a new one.
 - **Git is the owner's job — never run `git add`, `git commit`, `git push`, or any git command.** Edit files; the owner reviews and commits.
-- **Tests:** `npx vitest run` (87 currently passing across 13 files). `npx tsc --noEmit` must be clean. `npm run build` must pass.
+- **Tests:** `npx vitest run` (101 currently passing across 15 files). `npx tsc --noEmit` must be clean. `npm run build` must pass.
 - **Multi-provider AI pattern:** `lib/grade-freeform.ts` is the reference shape (groq / anthropic / ollama / keyword fallback). `lib/nudge-engine.ts` follows the same shape. New AI features should follow it too.
 - **Topic ↔ seed-file mapping:** seed files `machine_learning.ts` and `time_series.ts` set `topic: "Statistics"`; `stochastic.ts` sets `topic: "Probability"`. There is no "Machine Learning" / "Time Series" / "Stochastic" topic in the enum. If you add new role-flavored content, pick from the 11 topics in `Topic` (`content/question-types.ts`).
 
@@ -105,9 +108,14 @@ _None. Phase 1's content-quality CI gap is closed by `seed-quality.test.ts`._
 
 ---
 
-## Phase 3 — Onboarding + social (not started, do not start)
+## Phase 3 — Onboarding + social (🟡 in progress; item 1 code-complete)
 
-- [ ] **60-second diagnostic.** ~10 quick questions across topics → routes user to a starter playlist. Leans on `topic_levels`.
+### Done
+- [x] **60-second diagnostic.** 10 hand-picked MCQs (Brainteasers 1, Probability 2, Statistics 1, Pure Math 2, Data Structures 2, C++ 1, Concurrency 1) gated to MCQ-only so the "60-second" promise holds. Researcher-vs-Dev lane scoring routes the user to one of `researcher-foundations` / `quant-dev-essentials` / `top-50` / `warmup-quickstart`. **No DB writes in v1** — `topic_levels` keeps accumulating from real attempts only, which means the diagnostic is pure routing and is safe to retake.
+  - **Touch points:** `content/diagnostic.ts` (`DIAGNOSTIC_SLUGS` curated list + `DIAGNOSTIC_LENGTH`), `content/diagnostic.test.ts` (3 CI guards: every slug resolves, every slug is MCQ, every MCQ has a valid `answer_value`), `lib/diagnostic.ts` (`summarizeAnswers` per-topic + per-lane reducer, `recommendPlaylist` with `STRONG_FRACTION = 0.7` and `LEAN_MARGIN = 0.2`), `lib/diagnostic.test.ts` (11 cases — empty map, lane fractions, brainteaser-doesn't-count, all four routing branches, the close-call → warmup edge), `app/diagnostic/page.tsx` (server loader: pulls from `loadAllQuestions`, drops non-MCQs defensively, renders an "unavailable" notice if zero resolve), `app/diagnostic/DiagnosticRunner.tsx` (client step-through with auto-advance flash + Restart + result card with per-topic bars + dual CTA into the recommended playlist or `/today`), `app/page.tsx` (first-time hero now leads with `Take the 60-second diagnostic`).
+  - **Why MCQ-only:** Algorithms / Systems / LLD / System Design have zero MCQs in the bank. Including numeric/freeform breaks the 60-second promise; signaling those topics indirectly via the Dev lane is an accepted gap and documented in `content/diagnostic.ts`.
+
+### Remaining
 - [ ] **Real auth via Supabase Auth.** `anon_users.id` is already a UUID — rename + Supabase Auth wiring, not an identity rewrite. Migration would attach `user_id` to existing anon rows on first sign-in.
 - [ ] **Leaderboards, payments, sharing.** Social proof + monetization + virality.
 
@@ -115,14 +123,14 @@ _None. Phase 1's content-quality CI gap is closed by `seed-quality.test.ts`._
 
 ## Suggested order from here
 
-Phase 2 code is in the working tree. Owner-only steps next:
+Phase 2 + Phase 3 item 1 are both in the working tree. Owner-only steps next:
 
-1. **Owner: review the diff** (`git status` / `git diff`) and commit the Phase 2 work yourself when satisfied. The agent never touches git.
-2. **Owner: deploy to Vercel** so prod actually runs the new home page + `/today`.
-3. **Watch retention signal in prod.** Day-2 / day-7 return rate, % of returning users that hit `/today`, % of `Resurface` clicks that turn into a correct re-solve. If those numbers are flat, Phase 2 didn't work and Phase 3 won't fix it.
-4. **Tune the spaced-rep parameters** if `Resurface` engagement is low: `minDaysOld` (currently 3) and `limit` (currently 5) in `lib/spaced-rep.ts` are the obvious knobs.
-5. **Then Phase 3 in this order:**
-   - 60-second diagnostic — biggest UX lever (it routes new users into the right playlist using `topic_levels` we now surface).
+1. **Owner: review the diff** and commit the Phase 2 work + the new diagnostic when satisfied. The agent never touches git.
+2. **Owner: deploy to Vercel** so prod actually runs the new home page, `/today`, and `/diagnostic`.
+3. **Watch onboarding signal in prod.** Diagnostic-completion rate, the playlist-CTA click-through from the result card, and 24-hour activation: % of users who finish the diagnostic and submit at least one real answer in the recommended playlist. If activation is below ~30% the routing thresholds (`STRONG_FRACTION`, `LEAN_MARGIN`) in `lib/diagnostic.ts` are the first knobs to turn.
+4. **Watch Phase 2 retention signal in prod.** Day-2 / day-7 return rate, % of returning users that hit `/today`, % of `Resurface` clicks that turn into a correct re-solve. If those numbers are flat, Phase 2 didn't work and the rest of Phase 3 won't fix it.
+5. **Tune the spaced-rep parameters** if `Resurface` engagement is low: `minDaysOld` (currently 3) and `limit` (currently 5) in `lib/spaced-rep.ts` are the obvious knobs.
+6. **Then continue Phase 3 in this order:**
    - Real auth via Supabase Auth — `anon_users.id` is already a UUID; this is wiring, not an identity rewrite.
    - Leaderboards / payments / sharing — only when there's a steady-state user base to share with.
 

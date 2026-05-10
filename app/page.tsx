@@ -148,17 +148,17 @@ function FirstTimeHero() {
         number.
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
-        <Link href="/today">
-          <Button>Today&apos;s pair</Button>
+        <Link href="/diagnostic">
+          <Button>Take the 60-second diagnostic</Button>
         </Link>
-        <Link href="/questions">
-          <Button variant="secondary">Browse all questions</Button>
+        <Link href="/today">
+          <Button variant="secondary">Today&apos;s pair</Button>
         </Link>
         <Link href="/playlists">
           <Button variant="secondary">Curated playlists</Button>
         </Link>
-        <Link href="/mental-math">
-          <Button variant="secondary">Mental math drill</Button>
+        <Link href="/questions">
+          <Button variant="secondary">Browse all questions</Button>
         </Link>
       </div>
     </header>
