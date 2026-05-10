@@ -3,9 +3,13 @@ import { Button } from "@/components/ui/button";
 import { getAnonId } from "@/lib/anon";
 import {
   loadHomeData,
+  topicMasteryBars,
+  MAX_DISPLAY_LEVEL,
   type HomeNextUp,
   type HomePlaylist,
   type HomeProfile,
+  type HomeResurface,
+  type MasteryBar,
 } from "@/lib/home-data";
 import { difficultyLabel } from "@/content/question-types";
 
@@ -14,6 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const anonId = await getAnonId();
   const data = await loadHomeData(anonId);
+  const masteryBars = topicMasteryBars(data.profile?.topicLevels, 6);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
@@ -22,6 +27,12 @@ export default async function Home() {
       ) : (
         <FirstTimeHero />
       )}
+
+      {data.resurface.length > 0 && (
+        <ResurfaceSection items={data.resurface} />
+      )}
+
+      {masteryBars.length > 0 && <MasterySection bars={masteryBars} />}
 
       <PlaylistGrid
         playlists={data.playlists}
@@ -61,8 +72,14 @@ function ReturningHero({
           </span>
         )}
         <Link
+          href="/today"
+          className="ml-auto text-sm font-medium text-accent underline-offset-4 hover:underline"
+        >
+          Today&apos;s pair →
+        </Link>
+        <Link
           href="/mental-math"
-          className="ml-auto text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
+          className="text-sm text-fg-muted underline-offset-4 hover:text-fg hover:underline"
         >
           Warm up with mental math →
         </Link>
@@ -131,8 +148,11 @@ function FirstTimeHero() {
         number.
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
+        <Link href="/today">
+          <Button>Today&apos;s pair</Button>
+        </Link>
         <Link href="/questions">
-          <Button>Browse all questions</Button>
+          <Button variant="secondary">Browse all questions</Button>
         </Link>
         <Link href="/playlists">
           <Button variant="secondary">Curated playlists</Button>
@@ -202,6 +222,50 @@ function PlaylistGrid({
             </Link>
           );
         })}
+      </div>
+    </section>
+  );
+}
+
+function MasterySection({ bars }: { bars: MasteryBar[] }) {
+  return (
+    <section className="mb-12">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-fg-muted">
+          Topic mastery
+        </h2>
+        <span className="text-xs text-fg-subtle">
+          Level cap shown at {MAX_DISPLAY_LEVEL}; you keep climbing past it
+        </span>
+      </div>
+      <div className="card grid gap-3 p-5 sm:grid-cols-2">
+        {bars.map((b) => (
+          <Link
+            key={b.topic}
+            href={`/questions?topic=${encodeURIComponent(b.topic)}`}
+            className="group block"
+            aria-label={`${b.topic}: level ${b.level}`}
+          >
+            <div className="mb-1 flex items-center justify-between text-sm">
+              <span className="font-medium text-fg group-hover:text-accent">
+                {b.topic}
+              </span>
+              <span className="text-xs text-fg-muted">L{b.level}</span>
+            </div>
+            <div
+              className="h-1.5 w-full overflow-hidden rounded-full bg-bg-subtle"
+              role="progressbar"
+              aria-valuenow={b.level}
+              aria-valuemin={0}
+              aria-valuemax={MAX_DISPLAY_LEVEL}
+            >
+              <div
+                className="h-full rounded-full bg-accent transition-all"
+                style={{ width: `${Math.round(b.fraction * 100)}%` }}
+              />
+            </div>
+          </Link>
+        ))}
       </div>
     </section>
   );

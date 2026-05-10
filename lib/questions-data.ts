@@ -54,6 +54,11 @@ export interface LoadedPlaylist {
 export interface AttemptStat {
   question_id: string;
   is_correct: boolean;
+  /**
+   * ISO timestamp from Postgres / local-dev. Optional so legacy callers
+   * that built `AttemptStat` by hand (e.g. the existing tests) don't break.
+   */
+  created_at?: string;
 }
 
 export type QuestionStatus = "correct" | "attempted" | undefined;
@@ -87,6 +92,7 @@ export async function loadAllQuestions(
     const attempts = getLocalAttemptsForUser(anonId).map((a) => ({
       question_id: a.question_id,
       is_correct: a.is_correct,
+      created_at: a.created_at,
     }));
     return { questions, attempts, companies: distinctCompanies(questions) };
   }
@@ -104,7 +110,7 @@ export async function loadAllQuestions(
     anonId
       ? sb
           .from("attempts")
-          .select("question_id, is_correct")
+          .select("question_id, is_correct, created_at")
           .eq("anon_user_id", anonId)
       : Promise.resolve({ data: [] as AttemptStat[] }),
   ]);

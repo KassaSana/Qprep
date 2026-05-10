@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { pickNextUnsolved, type HomePlaylist } from "./home-data";
+import {
+  pickNextUnsolved,
+  topicMasteryBars,
+  MAX_DISPLAY_LEVEL,
+  type HomePlaylist,
+} from "./home-data";
 import type { LoadedQuestion } from "./questions-data";
 import { PLAYLISTS } from "@/content/playlists";
 
@@ -110,5 +115,48 @@ describe("pickNextUnsolved", () => {
       homePlaylist("empty", "Empty", 0, 0),
     ];
     expect(pickNextUnsolved(playlists, new Map(), new Set())).toBeNull();
+  });
+});
+
+describe("topicMasteryBars", () => {
+  it("returns empty for undefined / empty input", () => {
+    expect(topicMasteryBars(undefined)).toEqual([]);
+    expect(topicMasteryBars({})).toEqual([]);
+  });
+
+  it("drops zero / negative levels, sorts by level desc", () => {
+    const bars = topicMasteryBars({
+      Probability: 3,
+      Statistics: 7,
+      Algorithms: 0,
+      Concurrency: 1,
+    });
+    expect(bars.map((b) => b.topic)).toEqual([
+      "Statistics",
+      "Probability",
+      "Concurrency",
+    ]);
+  });
+
+  it("normalizes fraction against MAX_DISPLAY_LEVEL and clamps", () => {
+    const bars = topicMasteryBars({
+      Probability: MAX_DISPLAY_LEVEL,
+      Statistics: MAX_DISPLAY_LEVEL * 3, // way past cap
+      Concurrency: 2,
+    });
+    const byTopic = Object.fromEntries(bars.map((b) => [b.topic, b]));
+    expect(byTopic.Probability.fraction).toBe(1);
+    expect(byTopic.Statistics.fraction).toBe(1);
+    expect(byTopic.Concurrency.fraction).toBeCloseTo(2 / MAX_DISPLAY_LEVEL);
+  });
+
+  it("respects the limit argument", () => {
+    const bars = topicMasteryBars(
+      { Probability: 3, Statistics: 7, Concurrency: 5 },
+      2
+    );
+    expect(bars).toHaveLength(2);
+    expect(bars[0].topic).toBe("Statistics");
+    expect(bars[1].topic).toBe("Concurrency");
   });
 });
