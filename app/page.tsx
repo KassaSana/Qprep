@@ -227,6 +227,48 @@ function PlaylistGrid({
   );
 }
 
+function ResurfaceSection({ items }: { items: HomeResurface[] }) {
+  return (
+    <section className="mb-12">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-fg-muted">
+          Resurface
+        </h2>
+        <span className="text-xs text-fg-subtle">
+          You missed these — give them another shot
+        </span>
+      </div>
+      <ul className="card divide-y divide-border">
+        {items.map((it) => (
+          <li key={it.questionSlug}>
+            <Link
+              href={`/questions/${it.questionSlug}?from=resurface`}
+              className="flex items-center gap-4 px-5 py-3 transition hover:bg-bg-raised"
+            >
+              <span
+                aria-hidden
+                className="h-2.5 w-2.5 shrink-0 rounded-full bg-warning"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium text-fg">{it.title}</div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
+                  <span className="pill">{it.topic}</span>
+                  <span className="pill">{difficultyLabel(it.difficulty)}</span>
+                  <span>
+                    {it.daysSinceLastWrong}d ago · {it.wrongAttemptCount}{" "}
+                    wrong {it.wrongAttemptCount === 1 ? "try" : "tries"}
+                  </span>
+                </div>
+              </div>
+              <span className="text-fg-subtle">→</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function MasterySection({ bars }: { bars: MasteryBar[] }) {
   return (
     <section className="mb-12">
